@@ -41,8 +41,6 @@ module.exports = {
     claimTokensBtn: { css: 'button[data-slot="button"]:has-text("Claim Tokens")' },
     claimTransactionButton: { css: 'button[data-slot="button"]:has-text("Claim")' },
     approveTokenTransferButton: { css: 'button[data-slot="button"]:has-text("Approve Token Transfer")' },
-    bridgingTokensLabel: { css: 'button[data-slot="button"]:has-text("Bridging tokens...")' },
-    approvingTokenTransferLabel: { css: '.button[data-slot="button"]:has-text("Approving token transfer...")' },
     claimLink: { link: 'Claim' },
     faucetLink: { link: 'Faucet' },
     howItWorks: { link: 'How it works' },

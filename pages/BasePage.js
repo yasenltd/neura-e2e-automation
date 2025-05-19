@@ -105,10 +105,9 @@ class BasePage {
    * @param {string} selector - The selector of the input element.
    * @param {string} value - The value to fill in.
    * @param {number|null} [index=null] - Optional index to select a specific element when multiple are present.
-   * @param {number} [timeout=this.DEFAULT_TIMEOUT] - Optional timeout to wait for the element to be visible.
    * @returns {Promise<void>}
    */
-  async fill(selector, value, index = null, timeout = this.DEFAULT_TIMEOUT) {
+  async fill(selector, value, index = null) {
     console.log(`Filling element with selector: ${selector} with value: ${value}`);
     const element = this.getElement(selector, index);
     await element.fill(value);
@@ -703,11 +702,7 @@ class BasePage {
    */
   async getAllTextsInit(desc, state = 'visible', timeout = this.DEFAULT_TIMEOUT) {
     const list = this.#buildLocator(desc);
-
-    // wait for the FIRST match to satisfy the state (strict-mode safe)
     await list.first().waitFor({ state, timeout });
-
-    // now collect every match’listenDeposits.js textContent
     return list.allTextContents();
   }
 
@@ -766,13 +761,8 @@ class BasePage {
    * @returns Promise<boolean>
    */
   async isDisabledTest(desc, nth = 0, timeout = this.DEFAULT_TIMEOUT) {
-    // 1️⃣ build the locator (via #buildLocator → getElementTest)
     const element = this.getElementTest(desc, nth);
-
-    // 2️⃣ do a “zero-wait” visibility check so Playwright still fails early
     await element.waitFor({ state: 'visible', timeout });
-
-    // 3️⃣ ask Playwright whether the element is disabled
     return element.isDisabled();
   }
 
@@ -797,7 +787,6 @@ class BasePage {
   ) {
     console.log(`Checking visibility of role=${role} name=${name ?? '∅'}`);
 
-    // Build the same kind of descriptor your BasePage already understands
     const descriptor = {
       role,
       ...(name !== null ? { name } : {}),
@@ -827,7 +816,7 @@ class BasePage {
       console.log(`✅ Element disappeared: ${JSON.stringify(descriptor)}`);
     } catch (error) {
       console.error(`❌ Element did not disappear: ${JSON.stringify(descriptor)}`);
-      throw error; // rethrow if you want test to fail
+      throw error;
     }
   }
 }

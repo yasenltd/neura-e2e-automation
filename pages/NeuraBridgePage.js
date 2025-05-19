@@ -113,7 +113,11 @@ class NeuraBridgePage extends BasePage {
     await popupWallet.confirmTransaction();
   }
 
-  async retrieveBridgeLayoutDatta() {
+  /**
+   * Retrieves the bridge layout data from the UI
+   * @returns {Promise<Object>} - Returns an object containing the bridge layout data
+   */
+  async retrieveBridgeLayoutData() {
     const bridgeTitle = await this.getTextTest(this.selectors.bridgeDescriptors.neuraBridgeTitleLabel);
     const networks = await this.getAllRowTexts(this.selectors.bridgeDescriptors.bridgeLabels, this.selectors.general.cellCss);
 
@@ -140,7 +144,7 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<Object>} - Returns the page layout object after verification
    */
   async assertAndVerifyPageLayout() {
-    const pageLayout = await this.retrieveBridgeLayoutDatta();
+    const pageLayout = await this.retrieveBridgeLayoutData();
 
     expect(pageLayout.title).toEqual(neuraBridgeAssertions.pageLayout.title);
     expect(pageLayout.labels).toEqual({
@@ -202,7 +206,6 @@ class NeuraBridgePage extends BasePage {
   /**
    * Connect to the Neura dApp using the configured wallet
    * @param {Object} context - The browser context
-   * @param {Object} pageSelectors - The selectors for the page elements
    * @returns {Promise<void>} - Resolves when the connection is complete
    */
   async wireMetaMask(context) {
@@ -224,15 +227,15 @@ class NeuraBridgePage extends BasePage {
   async approveTokenTransfer(context) {
     await this.clickTest(this.selectors.bridgeDescriptors.approveTokenTransferButton);
     await this.confirmTransaction(context);
-    await this.waitForElementToDisappearTest({ text: 'Approving token transfer...' }, { timeout: 30000, longTimeout: 30000 });
+    await this.waitForElementToDisappearTest({ text: 'Approving token transfer...' }, { timeout: 45000, longTimeout: 45000 });
     await this.confirmTransaction(context);
-    await this.waitForElementToDisappearTest({ text: 'Bridging tokens...' }, { timeout: 30000, longTimeout: 30000 });
+    await this.waitForElementToDisappearTest({ text: 'Bridging tokens...' }, { timeout: 45000, longTimeout: 45000 });
   }
 
   async bridgeTokens(context) {
     await this.clickTest(this.selectors.bridgeDescriptors.bridgeTokensBtn);
     await this.confirmTransaction(context);
-    await this.waitForElementToDisappearTest({ text: 'Bridging tokens...' }, { timeout: 30000, longTimeout: 30000 });
+    await this.waitForElementToDisappearTest({ text: 'Bridging tokens...' }, { timeout: 45000, longTimeout: 45000 });
   }
 
   async claimTokens() {

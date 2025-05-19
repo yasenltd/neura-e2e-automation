@@ -18,7 +18,7 @@ class MetamaskPage extends WalletPage {
     // Launch the browser with the extension
     const context = await launchBrowserWithExtension('metamask');
 
-    // Wait for the extension'listenDeposits.js onboarding page to open
+    // Wait for the extensions onboarding page to open
     const extensionPage = await context.waitForEvent('page');
     await extensionPage.waitForURL('**/home.html#onboarding/welcome');
 
