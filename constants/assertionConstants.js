@@ -8,9 +8,7 @@ const metaMaskIntegrationAssertions = {
   neuraWalletLabels: ['ANKR', 'Neura Chain'],
   networkLabels: {
     bscTestnet: ['BSC Testnet'],
-    tbnbDetails: ['tBNB', '0', 'ANKR', '0'],
     holesky: ['Holesky'],
-    ethDetails: ['ETH', '3', 'ANKR', '13'],
   },
   activityLabel: ['Activity'],
 };

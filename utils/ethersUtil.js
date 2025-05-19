@@ -57,6 +57,10 @@ function getWallet(privateKey, networkName) {
   return new ethers.Wallet(privateKey, provider);
 }
 
+function formatBalance(raw, decimals = 1) {
+  return parseFloat(raw).toFixed(decimals).replace(/\.?0+$/, ''); // clean trailing zeros
+}
+
 /**
  * Gets the balance of an address on the specified network
  * @param {string} address - The address to check
@@ -158,6 +162,7 @@ async function verifyBridgeTransaction(address, sourceNetwork, destinationNetwor
 }
 
 module.exports = {
+  formatBalance,
   getProvider,
   getWallet,
   getBalance,

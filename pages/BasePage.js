@@ -660,33 +660,33 @@ class BasePage {
 
   /* -----------------------  Public helpers  ------------------------- */
 
-  getElementTest(descriptor, nth = null) {
+  getElementWithDescLoc(descriptor, nth = null) {
     const loc = this.#buildLocator(descriptor);
     return (nth === null || nth === undefined)   // ◀─ add the guard
       ? loc
       : loc.nth(nth);
   }
 
-  getNestedElementTest(parentDesc, childDesc, pNth = 0, cNth = 0) {
+  getNestedElementWithDescriptorLoc(parentDesc, childDesc, pNth = 0, cNth = 0) {
     return this.getElement(parentDesc, pNth)
       .locator(this.#buildLocator(childDesc))
       .nth(cNth);
   }
 
-  async clickTest(descriptor, nth = 0, timeout = this.DEFAULT_TIMEOUT) {
-    const el = this.getElementTest(descriptor, nth);
+  async clickDescLoc(descriptor, nth = 0, timeout = this.DEFAULT_TIMEOUT) {
+    const el = this.getElementWithDescLoc(descriptor, nth);
     await el.waitFor({ state: 'visible', timeout });
     await el.click();
   }
 
-  async fillTest(descriptor, value, nth = 0, timeout = this.DEFAULT_TIMEOUT) {
-    const el = this.getElementTest(descriptor, nth);
+  async fillDescLoc(descriptor, value, nth = 0, timeout = this.DEFAULT_TIMEOUT) {
+    const el = this.getElementWithDescLoc(descriptor, nth);
     await el.waitFor({ state: 'visible', timeout });
     await el.fill(value);
   }
 
   /** Return the textContent of one element, waiting for it to appear first. */
-  async getTextTest(desc, nth = null, timeout = this.DEFAULT_TIMEOUT) {
+  async getTextByDescLoc(desc, nth = null, timeout = this.DEFAULT_TIMEOUT) {
     const el = await this.waitForElement(desc, nth, 'visible', timeout);
     return el.textContent();
   }
@@ -720,7 +720,7 @@ class BasePage {
    *                                        ['ANKR','0']]
    */
   async getAllRowTexts(rowsDesc, cellCss = ':scope > span') {
-    const rows = this.getElementTest(rowsDesc);           // Locator – all rows
+    const rows = this.getElementWithDescLoc(rowsDesc);           // Locator – all rows
     const rowCount = await rows.count();
     const all = [];
 
@@ -746,7 +746,7 @@ class BasePage {
     state    = 'visible',
     timeout  = this.DEFAULT_TIMEOUT,
   ) {
-    const target = this.getElementTest(desc, nth);   // re-use your builder
+    const target = this.getElementWithDescLoc(desc, nth);   // re-use your builder
     await target.waitFor({ state, timeout });
     return target;
   }
@@ -755,13 +755,13 @@ class BasePage {
    * Return true ⇢ element is disabled, false ⇢ it isn’t.
    *
    * @param {object|string} desc  – the same descriptor / test-id you pass to
-   *                                clickTest(), getTextTest(), etc.
+   *                                clickDescLoc(), getTextDescLoc(), etc.
    * @param {number|null}   nth   – which match to test (default = first)
    * @param {number}         timeout
    * @returns Promise<boolean>
    */
-  async isDisabledTest(desc, nth = 0, timeout = this.DEFAULT_TIMEOUT) {
-    const element = this.getElementTest(desc, nth);
+  async isDisabledByDescLoc(desc, nth = 0, timeout = this.DEFAULT_TIMEOUT) {
+    const element = this.getElementWithDescLoc(desc, nth);
     await element.waitFor({ state: 'visible', timeout });
     return element.isDisabled();
   }
@@ -794,7 +794,7 @@ class BasePage {
     };
 
     try {
-      const element = this.getElementTest(descriptor, index);
+      const element = this.getElementWithDescLoc(descriptor, index);
       await element.waitFor({ state: 'visible', timeout });
       return await element.isVisible();
     } catch {
@@ -802,13 +802,13 @@ class BasePage {
     }
   }
 
-  async waitForElementToDisappearTest(descriptor, options = {}) {
+  async waitForDescLocElementToDisappear(descriptor, options = {}) {
     const timeout = options.timeout ?? this.DEFAULT_TIMEOUT;
     const longTimeout = options.longTimeout ?? this.LONG_TIMEOUT;
 
     console.log(`🔍 Waiting for element [${JSON.stringify(descriptor)}] to disappear...`);
 
-    const locator = this.getElementTest(descriptor, options.nth);
+    const locator = this.getElementWithDescLoc(descriptor, options.nth);
 
     try {
       await locator.waitFor({ state: 'attached', timeout });
