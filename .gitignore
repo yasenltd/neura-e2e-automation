@@ -1,0 +1,38 @@
+# Intellij files
+.idea
+.DS_Store
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+### Node ###
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+#playwright specific
+playwright-report/
+test-results/
+user_data/
+extensions/
+screenshots
+
+# backend
+dapp-example/backend/database.db
