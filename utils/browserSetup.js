@@ -20,8 +20,8 @@ async function launchBrowserWithExtension(walletName) {
 
   // Launch the browser with the extension loaded
   return await chromium.launchPersistentContext(USER_DATA_DIR, {
-    headless: true,
-    channel: 'chromium',
+    headless: false,
+    channel: 'chrome',
     args: [`--disable-extensions-except=${extensionPath}`, `--load-extension=${extensionPath}`],
   });
 }

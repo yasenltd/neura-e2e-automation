@@ -104,10 +104,10 @@ class NeuraBridgePage extends BasePage {
 
   async confirmTransaction(context) {
 
-    // Wait for the extension'listenDeposits.js prompt modal to open
+    // Wait for the extension.js prompt modal to open
     const [extensionPopup] = await Promise.all([context.waitForEvent('page')]);
 
-    // Bring the extension'listenDeposits.js prompt modal to the front
+    // Bring the extension.js prompt modal to the front
     await extensionPopup.bringToFront();
 
     const popupWallet = new this.wallet.constructor(extensionPopup);

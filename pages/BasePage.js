@@ -725,7 +725,7 @@ class BasePage {
     const all = [];
 
     for (let i = 0; i < rowCount; i++) {
-      const cells = rows.nth(i).locator(cellCss);      // only that row’listenDeposits.js cells
+      const cells = rows.nth(i).locator(cellCss);      // only that row cells
       all.push(await cells.allTextContents());
     }
     return all;
