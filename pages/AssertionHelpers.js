@@ -62,6 +62,13 @@ function assertPreviewTransactionLabels(previewTransactionLayout) {
   expect(fromChainLabel).toEqual(expectedLabels.previewLabels.fromChain);
   expect(toChainLabel).toEqual(expectedLabels.previewLabels.toChain);
   expect(amountLabel).toEqual(expectedLabels.previewLabels.amount);
+
+  // Validate the operation button based on which button is present
+  if (previewTransactionLayout.operationButton === expectedLabels.approveTokenTransferButton) {
+    expect(previewTransactionLayout.operationButton).toEqual(expectedLabels.approveTokenTransferButton);
+  } else {
+    expect(previewTransactionLayout.operationButton).toEqual(expectedLabels.bridgeTokenButton);
+  }
 }
 
 /**

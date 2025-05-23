@@ -34,6 +34,7 @@ module.exports = {
     limitLabel: { text: 'Max' },
     bridgeLabel: { text: 'Bridge' },
     enterAmountBtnLabel: { text: 'Enter Amount' },
+    closeBridgeModal: { css: '#radix-«r12» > button' },
     switchBridgeBtn: { css: '.relative.h-0.mt-6 > button' },
     amountLabel: { css: '.justify-between.items-center > div > p' },
     bridgeBtn: { css: 'button[data-slot="button"]:has-text("Bridge")' },

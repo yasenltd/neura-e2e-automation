@@ -32,7 +32,7 @@ const neuraBridgeAssertions = {
   // Preview Transaction Layout assertions
   previewTransactionLayout: {
     title: 'Preview Transaction',
-    bridgeTokenButton: 'Bridge Token',
+    bridgeTokenButton: 'Bridge Tokens',
     approveTokenTransferButton: 'Approve Token Transfer',
     previewLabels: {
       fromChain: 'From Chain:',

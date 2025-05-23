@@ -137,6 +137,43 @@ test.describe('Neura Bridge UI Automation', () => {
   });
 
   /**
+   * Test to verify the approve functionality from Holesky to Neura
+   * This test checks that transaction from Holesky to Neura can be approved
+   */
+  test('Verify Holesky to Neura transaction approval', async () => {
+    test.setTimeout(TEST_TIMEOUT);
+
+    // Step 1: Setup test data
+    const from = process.env.MY_ADDRESS.toLowerCase();
+    const rawAmount = ethers.utils.parseUnits(TEST_AMOUNT, 18); // BigNumber
+    const amount = rawAmount.toString(); // String representation of the amount in wei
+
+    try {
+      // Step 2: Initialize bridge with options (with wallet connection, no network switch)
+      await neuraBridgePage.initializeBridgeWithOptions({
+        context,
+        connectWallet: true,
+        switchNetwork: false
+      });
+
+      // Step 3: Record balances and perform the bridge operation
+      const balances = await neuraBridgePage.recordAndCompareBalances(async () => {
+        // Pass 'true' for approvalStepOnly to only perform token approval (first step of bridging) without completing the bridge
+        await neuraBridgePage.performHoleskyToNeuraOperation(context, TEST_AMOUNT, true);
+        await neuraBridgePage.closeBridgeModal();
+        await neuraBridgePage.clickBridgeButton(false);
+      });
+
+      // Step 4: Verify balance changes
+      // The balance should decrease or remain the same after bridging from Holesky to Neura
+      expect(balances.ankrDiff.lte(ethers.constants.Zero)).toBe(true);
+    } catch (error) {
+      console.error(`❌ Error in Holesky to Neura bridge test: ${error.message}`);
+      throw error;
+    }
+  });
+
+  /**
    * Test to verify the bridge functionality from Holesky to Neura
    * This test checks that tokens can be successfully bridged from Holesky to Neura
    */
@@ -158,7 +195,8 @@ test.describe('Neura Bridge UI Automation', () => {
 
       // Step 3: Record balances and perform the bridge operation
       const balances = await neuraBridgePage.recordAndCompareBalances(async () => {
-        await neuraBridgePage.performHoleskyToNeuraBridge(context, TEST_AMOUNT);
+        // Pass 'false' for approvalStepOnly to perform the complete bridging process (approve token transfer AND bridge tokens)
+        await neuraBridgePage.performHoleskyToNeuraOperation(context, TEST_AMOUNT, false);
 
         // Wait for deposit confirmation in subgraph
         const deposit = await waitForAnyDepositInSubgraph(from, amount);
