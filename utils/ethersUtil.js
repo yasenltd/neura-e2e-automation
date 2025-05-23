@@ -3,6 +3,7 @@
  */
 const { ethers } = require('ethers');
 require('dotenv').config();
+const networks = require('../constants/networkConstants');
 
 // Common ABI for ERC20 tokens
 const ERC20_ABI = [
@@ -17,29 +18,13 @@ const ERC20_ABI = [
   'event Transfer(address indexed from, address indexed to, uint amount)'
 ];
 
-// Network configurations
-const NETWORKS = {
-  neuraTestnet: {
-    name: 'Neura Testnet',
-    rpcUrl: process.env.NEURA_TESTNET_RPC_URL || 'https://testnet.neura.network',
-    chainId: 2191,
-    explorer: 'https://testnet-explorer.neura.network'
-  },
-  holesky: {
-    name: 'Holesky',
-    rpcUrl: process.env.HOLESKY_RPC_URL || 'https://ethereum-holesky.publicnode.com',
-    chainId: 17000,
-    explorer: 'https://holesky.etherscan.io'
-  }
-};
-
 /**
  * Creates a provider for the specified network
  * @param {string} networkName - The name of the network (e.g., 'neuraTestnet', 'holesky')
  * @returns {ethers.JsonRpcProvider} - The provider for the specified network
  */
 function getProvider(networkName) {
-  const network = NETWORKS[networkName];
+  const network = networks[networkName];
   if (!network) {
     throw new Error(`Network ${networkName} not supported`);
   }
@@ -143,20 +128,20 @@ async function verifyTokenTransfer(address, tokenAddress, networkName, expectedB
 async function verifyBridgeTransaction(address, sourceNetwork, destinationNetwork, amount, timeoutMs = 60000) {
   const startTime = Date.now();
   const initialBalance = await getBalance(address, destinationNetwork);
-  
+
   // Poll the destination chain until the balance increases or timeout
   while (Date.now() - startTime < timeoutMs) {
     await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds between checks
-    
+
     const currentBalance = await getBalance(address, destinationNetwork);
-    
+
     // Check if the balance has increased by at least the bridged amount
     if (currentBalance.gt(initialBalance)) {
       console.log(`Bridge verified: Balance on ${destinationNetwork} increased from ${ethers.formatEther(initialBalance)} to ${ethers.formatEther(currentBalance)}`);
       return true;
     }
   }
-  
+
   console.error(`Bridge verification timed out after ${timeoutMs / 1000} seconds`);
   return false;
 }
@@ -170,6 +155,5 @@ module.exports = {
   waitForTransaction,
   verifyTransaction,
   verifyTokenTransfer,
-  verifyBridgeTransaction,
-  NETWORKS
+  verifyBridgeTransaction
 };

@@ -37,7 +37,7 @@ This repository contains an automated end-to-end testing framework for the Neura
    ```
    PRIVATE_KEY=your_wallet_seed_phrase
    WALLET_PASSWORD=your_wallet_password
-   DAPP_URL=https://url-to-neura-bridge-app
+   NEURA_NET_URL=https://url-to-neura-bridge-app
    HOLESKY_RPC_URL=https://holesky-rpc-url
    NEURA_RPC_URL=https://neura-testnet-rpc-url
    ```

@@ -1,9 +1,11 @@
 import BridgeDepositWatcher from '../scripts/BridgeDepositWatcher';
+
 const BasePage = require('./BasePage');
 const selectors = require('../locators/neuraLocators');
-const { expect } = require('@playwright/test');
-const { neuraBridgeAssertions, metaMaskIntegrationAssertions } = require('../constants/assertionConstants');
+const { neuraBridgeAssertions } = require('../constants/assertionConstants');
 const ethersUtil = require('../utils/ethersUtil');
+const assertionHelpers = require('./AssertionHelpers');
+const { ethers } = require('ethers');
 
 class NeuraBridgePage extends BasePage {
   constructor(page) {
@@ -16,21 +18,21 @@ class NeuraBridgePage extends BasePage {
   /**
    * Static method to create a new NeuraBridgePage instance and navigate to the dApp URL
    * @param {context} context - The browser context
-   * @param {string} dappUrl - URL of the dApp
+   * @param {string} bridgePageUrl - URL of the dApp
    * @returns {Promise<NeuraBridgePage>} - Returns a new NeuraBridgePage instance
    */
-  static async initialize(context, dappUrl) {
-    // Open the dApp page
+  static async initialize(context, bridgePageUrl) {
+    // Open the Bridge page
     const page = await context.newPage();
-    await page.goto(dappUrl);
+    await page.goto(bridgePageUrl);
 
     // Create the page object
-    const dappPage = new NeuraBridgePage(page);
+    const bridgePage = new NeuraBridgePage(page);
 
     // Clean up unnecessary pages
-    await dappPage.closeUnnecessaryPages(context);
+    await bridgePage.closeUnnecessaryPages(context);
 
-    return dappPage;
+    return bridgePage;
   }
 
   /**
@@ -84,11 +86,11 @@ class NeuraBridgePage extends BasePage {
   }
 
   async attachWallet(context) {
-    // Wait for the extension'listenDeposits.js prompt modal to open
+    // Wait for the extension prompt modal to open
     const [extensionPopup] = await Promise.all([context.waitForEvent('page')]);
     await extensionPopup.waitForLoadState('domcontentloaded');
 
-    // Bring the extension'listenDeposits.js prompt modal to the front
+    // Bring the extension prompt modal to the front
     await extensionPopup.bringToFront();
 
     const popupWallet = new this.wallet.constructor(extensionPopup);
@@ -104,10 +106,10 @@ class NeuraBridgePage extends BasePage {
 
   async confirmTransaction(context) {
 
-    // Wait for the extension.js prompt modal to open
+    // Wait for the extension prompt modal to open
     const [extensionPopup] = await Promise.all([context.waitForEvent('page')]);
 
-    // Bring the extension.js prompt modal to the front
+    // Bring the extension prompt modal to the front
     await extensionPopup.bringToFront();
 
     const popupWallet = new this.wallet.constructor(extensionPopup);
@@ -144,20 +146,14 @@ class NeuraBridgePage extends BasePage {
    * Assert page layout and verify it against expected values
    * @returns {Promise<Object>} - Returns the page layout object after verification
    */
-  async assertAndVerifyPageLayout() {
+  async assertBridgeWidgetLayout() {
     const pageLayout = await this.retrieveBridgeLayoutData();
-
-    expect(pageLayout.title).toEqual(neuraBridgeAssertions.pageLayout.title);
-    expect(pageLayout.labels).toEqual({
-      toLabel: neuraBridgeAssertions.pageLayout.labels.to,
-      fromLabel: neuraBridgeAssertions.pageLayout.labels.from,
-      amountLabel: neuraBridgeAssertions.pageLayout.labels.amount,
-      limitLabel: neuraBridgeAssertions.pageLayout.labels.limit,
-    });
-    expect(pageLayout.links.claimVisible).toBe(true);
-    expect(pageLayout.links.faucetVisible).toBe(true);
-    expect(pageLayout.links.howItWorksVisible).toBe(true);
-
+    assertionHelpers.validateBridgePageLayout(pageLayout);
+    assertionHelpers.assertNetworkLabels(
+        pageLayout,
+        neuraBridgeAssertions.pageLayout.networks.holesky,
+        neuraBridgeAssertions.pageLayout.networks.neuraTestnet
+    );
     return pageLayout;
   }
 
@@ -177,16 +173,28 @@ class NeuraBridgePage extends BasePage {
     };
   }
 
-  async assertPreviewTransactionLayout() {
+  /**
+   * Asserts the preview transaction layout and optionally checks for the approve token transfer button
+   * @param {boolean} checkApproveButton - Whether to check for the approve token transfer button
+   * @returns {Promise<Object>} - The preview transaction layout
+   */
+  async assertPreviewTransactionLayout(checkApproveButton = false) {
     const title = await this.getTextByDescLoc(this.selectors.bridgeDescriptors.previewTransactionLabel);
-    // const approveTokenTransferButton = await this.getTextByDescLoc(this.selectors.bridgeDescriptors.approveTokenTransferButton);
     const previewLabels = await this.getText(this.selectors.bridgeDescriptors.previewDataTableLabels);
     const previewValues = await this.getText(this.selectors.bridgeDescriptors.previewDataTableValues);
-    return {
-      title:  title,
+
+    const layout = {
+      title: title,
       previewLabels: previewLabels,
       previewValues: previewValues
+    };
+
+    // Check for approve token transfer button if requested
+    if (checkApproveButton) {
+      layout.approveTokenTransferButton = await this.getTextByDescLoc(this.selectors.bridgeDescriptors.approveTokenTransferButton);
     }
+
+    return layout;
   }
 
   /**
@@ -194,8 +202,8 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<void>} - Resolves when the connection is complete
    */
   async connectMetaMaskWallet(context) {
-    const enterAmountBtnShouldNotBeVisiblePriorWalletConnection = await this.isRoleVisible(this.selectors.roles.text, this.selectors.bridgeDescriptors.enterAmountBtnLabel.text);
-    expect(enterAmountBtnShouldNotBeVisiblePriorWalletConnection).toBe(false);
+    const enterAmountBtnIsHidden = await this.isRoleVisible(this.selectors.roles.text, this.selectors.bridgeDescriptors.enterAmountBtnLabel.text);
+    assertionHelpers.assertEnterAmountButtonNotVisible(enterAmountBtnIsHidden);
     await this.wireMetaMask(context);
   }
 
@@ -216,25 +224,28 @@ class NeuraBridgePage extends BasePage {
     await new Promise(r => setTimeout(r, 1500));
   }
 
+  async bridgeTokensFromChainToNeura(context) {
+    await this.approveTokenTransfer(context);
+    await this.approveBridgingTokens(context);
+  }
+
+  async bridgeTokensFromNeuraToChain(context) {
+      await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeTokensBtn);
+      await this.approveBridgingTokens(context);
+  }
+
   async clickBridgeButton() {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn);
     await new Promise(r => setTimeout(r, 3000));
-  }
-
-  async switchBridgeNetwork() {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.switchBridgeBtn);
   }
 
   async approveTokenTransfer(context) {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.approveTokenTransferButton);
     await this.confirmTransaction(context);
     await this.waitForDescLocElementToDisappear({ text: 'Approving token transfer...' }, { timeout: 45000, longTimeout: 45000 });
-    await this.confirmTransaction(context);
-    await this.waitForDescLocElementToDisappear({ text: 'Bridging tokens...' }, { timeout: 45000, longTimeout: 45000 });
   }
 
-  async bridgeTokens(context) {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeTokensBtn);
+  async approveBridgingTokens(context) {
     await this.confirmTransaction(context);
     await this.waitForDescLocElementToDisappear({ text: 'Bridging tokens...' }, { timeout: 45000, longTimeout: 45000 });
   }
@@ -329,37 +340,153 @@ class NeuraBridgePage extends BasePage {
    */
   async verifyMetaMaskWalletScreenWithAssertions() {
     const metaMaskScreenLayout = await this.verifyMetaMaskWalletScreen();
-    expect(metaMaskScreenLayout.neuraWalletLabels).toEqual(metaMaskIntegrationAssertions.neuraWalletLabels);
-    expect(metaMaskScreenLayout.networkLabels[0]).toEqual(metaMaskIntegrationAssertions.networkLabels.bscTestnet);
-    expect(metaMaskScreenLayout.networkLabels[2]).toEqual(metaMaskIntegrationAssertions.networkLabels.holesky);
-    const watcher = new BridgeDepositWatcher();
-    const ethBnbOnChain = '0';
-    const ankrBnbOnChain = '0';
-    const bscBalanceInMetaMask = ['tBNB', ethBnbOnChain, 'ANKR', ankrBnbOnChain];
-    expect(metaMaskScreenLayout.networkLabels[1]).toEqual(bscBalanceInMetaMask);
-    const ethOnChain = ethersUtil.formatBalance(await watcher.getEthBalance());
-    const ankrOnChain = ethersUtil.formatBalance(await watcher.getAnkrBalance());
-    const holeskyBalanceInMetaMask = ['ETH', ethOnChain, 'ANKR', ankrOnChain];
-    expect(metaMaskScreenLayout.networkLabels[3]).toEqual(holeskyBalanceInMetaMask);
-    expect(metaMaskScreenLayout.activityLabel).toEqual(metaMaskIntegrationAssertions.activityLabel);
+    await assertionHelpers.assertMetaMaskWalletScreen(metaMaskScreenLayout);
     await this.clickDescLoc(this.selectors.walletScreen.expandWallet);
     await new Promise(r => setTimeout(r, 1500));
     return metaMaskScreenLayout;
   }
 
 
-  async verifyPreviewTransactionLabels(previewTransactionLayout) {
-    const expectedLabels = neuraBridgeAssertions.previewTransactionLayout;
-    expect(previewTransactionLayout.title).toEqual(expectedLabels.title);
-    const [fromChainLabel, toChainLabel, amountLabel] = previewTransactionLayout.previewLabels;
-    expect(fromChainLabel).toEqual(expectedLabels.previewLabels.fromChain);
-    expect(toChainLabel).toEqual(expectedLabels.previewLabels.toChain);
-    expect(amountLabel).toEqual(expectedLabels.previewLabels.amount);
+  /**
+   * Switch the network direction and verify the new layout
+   * 
+   * @returns {Promise<Object>} - The new page layout after switching
+   */
+  async switchNetworkAndVerify() {
+    await this.clickDescLoc(this.selectors.bridgeDescriptors.switchBridgeBtn);
+    const newPageLayout = await this.retrieveBridgeLayoutData();
+    assertionHelpers.validateBridgePageLayout(newPageLayout);
+    assertionHelpers.assertNetworkLabels(
+      newPageLayout,
+      neuraBridgeAssertions.pageLayout.networks.neuraTestnet,
+      neuraBridgeAssertions.pageLayout.networks.holesky
+    );
+    return newPageLayout;
   }
 
-  async assertNetworkLabels(pageLayout, firstNetworkExpected, secondNetworkExpected) {
-    expect(pageLayout.networks[0]).toEqual(firstNetworkExpected);
-    expect(pageLayout.networks[1]).toEqual(secondNetworkExpected);
+  /**
+   * Initialize the bridge with options
+   * 
+   * @param {Object} options - Configuration options
+   * @param {Object} options.context - The browser context (required)
+   * @param {boolean} [options.connectWallet=false] - Whether to connect the wallet
+   * @param {boolean} [options.switchNetwork=false] - Whether to switch the network direction
+   * @param {boolean} [options.verifyLayout=false] - Whether to verify the page layout
+   * @returns {Promise<Object>} - The page layout after setup
+   */
+  async initializeBridgeWithOptions(options) {
+    const { context, connectWallet = false, switchNetwork = false, verifyLayout = false } = options;
+
+    if (!context) {
+      throw new Error('Context is required for bridge initialization');
+    }
+
+    let pageLayout;
+
+    // Connect wallet if requested
+    if (connectWallet) {
+      await this.connectMetaMaskWallet(context);
+    }
+
+    // Verify the initial layout if requested
+    if (verifyLayout) {
+      pageLayout = await this.assertBridgeWidgetLayout();
+    }
+
+    // Switch network direction if requested
+    if (switchNetwork) {
+      return await this.switchNetworkAndVerify();
+    }
+
+    return pageLayout;
+  }
+
+  /**
+   * Performs the complete Holesky to Neura bridge operation:
+   * 1. Fills amount
+   * 2. Initiates bridge transaction
+   * 3. Verifies preview transaction screen
+   * 4. Approves token transfer
+   * 5. Approves bridging tokens
+   * 
+   * @param {Object} context - The browser context
+   * @param {string} amount - The amount to bridge
+   * @returns {Promise<void>}
+   */
+  async performHoleskyToNeuraBridge(context, amount) {
+    await this.fillAmount(amount);
+    await this.clickBridgeButton();
+    const previewTransactionLayout = await this.assertPreviewTransactionLayout(true);
+    assertionHelpers.assertPreviewTransactionLabels(previewTransactionLayout);
+    await this.bridgeTokensFromChainToNeura(context);
+  }
+
+  /**
+   * Performs the complete Neura to Holesky bridge operation:
+   * 1. Fills amount
+   * 2. Initiates bridge transaction
+   * 3. Verifies preview transaction screen
+   * 4. Approves bridging tokens
+   * 5. Claims tokens
+   * 
+   * @param {Object} context - The browser context
+   * @param {string} amount - The amount to bridge
+   * @returns {Promise<void>}
+   */
+  async performNeuraToHoleskyBridge(context, amount) {
+    await this.fillAmount(amount);
+    await this.clickBridgeButton();
+    const previewTransactionLayout = await this.assertPreviewTransactionLayout(false);
+    assertionHelpers.assertPreviewTransactionLabels(previewTransactionLayout);
+    await this.bridgeTokensFromNeuraToChain(context);
+    await this.claimTokens();
+  }
+
+  /**
+   * Records and compares balances before and after a bridge operation
+   * 
+   * @param {Function} operation - The bridge operation to perform
+   * @returns {Promise<Object>} - The balance differences
+   */
+  async recordAndCompareBalances(operation) {
+    const watcher = new BridgeDepositWatcher();
+
+    // Record balances before bridging
+    const ankrBefore = await watcher.getAnkrBalance();
+    const ethBefore = await watcher.getEthBalance();
+
+    // Perform the bridge operation
+    await operation();
+
+    // Record balances after bridge
+    const ankrAfter = await watcher.getAnkrBalance();
+    const ethAfter = await watcher.getEthBalance();
+
+    console.log(`🪙 ANKR before: ${ankrBefore}`);
+    console.log(`🪙 ANKR after : ${ankrAfter}`);
+    console.log(`💰 ETH before : ${ethBefore}`);
+    console.log(`💰 ETH after  : ${ethAfter}`);
+
+    // Parse balances as BigNumbers and calculate differences
+    const ankrBeforeBN = ethers.utils.parseUnits(ankrBefore, 18);
+    const ankrAfterBN = ethers.utils.parseUnits(ankrAfter, 18);
+    const ethBeforeBN = ethers.utils.parseEther(ethBefore);
+    const ethAfterBN = ethers.utils.parseEther(ethAfter);
+
+    const ankrDiff = ankrAfterBN.sub(ankrBeforeBN);
+    const ethDiff = ethAfterBN.sub(ethBeforeBN);
+
+    console.log('💡 ANKR diff:', ankrDiff.toString());
+    console.log('💡 ETH diff :', ethDiff.toString());
+
+    return {
+      ankrBeforeBN,
+      ankrAfterBN,
+      ethBeforeBN,
+      ethAfterBN,
+      ankrDiff,
+      ethDiff
+    };
   }
 }
 
