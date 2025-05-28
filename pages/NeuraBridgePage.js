@@ -36,16 +36,6 @@ class NeuraBridgePage extends BasePage {
   }
 
   /**
-   * Static method to create a NeuraFaucetPage instance from an existing page
-   * This is used when redirecting from another page (e.g., NeuraBridgePage)
-   * @param {Page} page - The existing page object after redirection
-   * @returns {Promise<NeuraBridgePage>} - Returns a new NeuraFaucetPage instance using the existing page
-   */
-  static async fromExistingPage(page) {
-    return new NeuraBridgePage(page);
-  }
-
-  /**
    * Close any unnecessary pages to keep the browser clean
    * @param {context} context - The browser context
    * @returns {Promise<void>}
@@ -96,10 +86,10 @@ class NeuraBridgePage extends BasePage {
     const popupWallet = new this.wallet.constructor(extensionPopup);
     await popupWallet.connectWallet();
 
-    // Approving Holesky network addition
+    // Signing user message for authentication
     await new Promise(r => setTimeout(r, 1000));
-    await popupWallet.sendSubmission();
-
+    await this.click(this.selectors.connection.signMessage);
+    await this.confirmTransaction(context);
     // Return to the dapp page
     await this.page.bringToFront();
   }
@@ -114,6 +104,134 @@ class NeuraBridgePage extends BasePage {
 
     const popupWallet = new this.wallet.constructor(extensionPopup);
     await popupWallet.confirmTransaction();
+  }
+
+  /**
+   * Confirm MetaMask transaction with flexible tab detection
+   * @param {BrowserContext} context - Playwright browser context
+   * @param {string[]} urlMatchers - URL fragments to identify the correct MetaMask tab
+   */
+  async confirmTransactionWithExplicitPageSearch(context, urlMatchers = ['notification.html', 'metamask']) {
+    let extensionPopup;
+
+    try {
+      [extensionPopup] = await Promise.all([
+        context.waitForEvent('page', {timeout: 1000}),
+        this.page.waitForTimeout(200),
+      ]);
+      console.log('✅ MetaMask popup opened as new tab');
+    } catch {
+      console.log('🔍 Looking for MetaMask popup opened as new tab');
+      extensionPopup = await this.findAndFocusMatchingPage(context, urlMatchers);
+
+      if (!extensionPopup) throw new Error('❌ Could not detect MetaMask popup');
+      console.log('✅ Found already open MetaMask tab');
+    }
+
+    const popupWallet = new this.wallet.constructor(extensionPopup);
+    await popupWallet.confirmTransaction();
+  }
+
+  /**
+   * Search through open tabs and bring matching page to front
+   * @param {BrowserContext} context - Playwright browser context
+   * @param {string[]} urlMatchers - Array of substrings to match in tab URL
+   * @returns {Promise<Page|null>} - The matching page or null if not found
+   */
+  async findAndFocusMatchingPage(context, urlMatchers = []) {
+    const matchingPage = context.pages().find(p => {
+      try {
+        const url = p.url();
+        return urlMatchers.some(matcher => url.includes(matcher));
+      } catch {
+        return false;
+      }
+    });
+
+    if (!matchingPage) return null;
+
+    await matchingPage.bringToFront();
+    return matchingPage;
+  }
+
+  async handleMetaMaskTab(tab) {
+    await tab.bringToFront();
+    await tab.waitForLoadState('domcontentloaded');
+    const popupWallet = new this.wallet.constructor(tab);
+    await popupWallet.sendSubmission();
+  }
+
+  async detectMetaMaskTabWithFallback(timeout = 2000) {
+    return (
+        (await this.waitForMetaMaskTab(timeout)) ||
+        (await this.findExistingMetaMaskTab()) ||
+        (() => {
+          throw new Error('❌ MetaMask tab could not be detected');
+        })()
+    );
+  }
+
+  async findExistingMetaMaskTab() {
+    const context = this.page.context();
+    const pages = context.pages();
+
+    // Process all pages in parallel using Promise.all
+    const pageChecks = await Promise.all(
+      pages.map(async (page) => {
+        try {
+          const url = page.url();
+          // Use a single regex check instead of multiple includes
+          if (/notification\.html|metamask/i.test(url)) {
+            return { found: true, page, url };
+          }
+        } catch (_) {
+          // Silently ignore errors accessing page URLs
+        }
+        return { found: false };
+      })
+    );
+
+    // Find the first matching page
+    const foundPage = pageChecks.find(result => result.found);
+
+    if (foundPage?.page) {
+      console.log('✅ Found existing MetaMask tab:', foundPage.url);
+      return foundPage.page;
+    }
+
+    console.warn('❌ No MetaMask tab found among existing pages');
+    return null;
+  }
+
+  async waitForMetaMaskTab(timeout = 2000) {
+    const context = this.page.context();
+
+    try {
+      const [newPage] = await Promise.all([
+        context.waitForEvent('page', { timeout }),
+        this.page.waitForTimeout(500), // or your click that triggers MetaMask
+      ]);
+
+      await newPage.waitForLoadState('domcontentloaded');
+
+      const url = newPage.url();
+      if (url.includes('notification.html') || url.includes('metamask')) {
+        console.log('✅ MetaMask tab detected via waitForEvent:', url);
+        return newPage;
+      } else {
+        console.warn('⚠️ New tab is not MetaMask:', url);
+      }
+    } catch {
+      console.log('⏱️ No new MetaMask tab appeared within timeout');
+    }
+
+    return null; // fall back if needed
+  }
+
+  async approveCustomChainNetworkTransaction() {
+    const metamaskTab = await this.findExistingMetaMaskTab();
+    if (!metamaskTab) throw new Error('MetaMask tab not found');
+    await this.handleMetaMaskTab(metamaskTab);
   }
 
   /**
@@ -161,6 +279,10 @@ class NeuraBridgePage extends BasePage {
     return await this.isDisabledByDescLoc(this.selectors.bridgeDescriptors.enterAmountBtnLabel);
   }
 
+  async isConnectWalletBtnVisible() {
+    return await this.isRoleVisible(this.selectors.connection.connectWalletButton);
+  }
+
   async assertClaimTokenPageLayout() {
     const title = await this.getTextByDescLoc(this.selectors.claimTokensDescriptors.title);
     const subTitle = await this.getTextByDescLoc(this.selectors.claimTokensDescriptors.subTitle);
@@ -200,26 +322,34 @@ class NeuraBridgePage extends BasePage {
 
   /**
    * Connect to the Neura dApp using the configured wallet
+   * @param {Object} context - The browser context
+   * @param {boolean} [useConnectWalletWidgetButton=false] - Whether to use the widget button (true) or standard button (false)
    * @returns {Promise<void>} - Resolves when the connection is complete
    */
-  async connectMetaMaskWallet(context) {
+  async connectMetaMaskWallet(context, useConnectWalletWidgetButton = false) {
     const enterAmountBtnIsHidden = await this.isRoleVisible(this.selectors.roles.text, this.selectors.bridgeDescriptors.enterAmountBtnLabel.text);
     assertionHelpers.assertEnterAmountButtonNotVisible(enterAmountBtnIsHidden);
-    await this.wireMetaMask(context);
+    await this.wireMetaMask(context, useConnectWalletWidgetButton);
   }
 
   async fillAmount(amount) {
     await new Promise(r => setTimeout(r, 3000));
     await this.fillDescLoc(this.selectors.walletScreen.amountField, amount);
+    return await this.getElementWithDescLoc(this.selectors.walletScreen.amountField).inputValue();
   }
 
   /**
    * Connect to the Neura dApp using the configured wallet
    * @param {Object} context - The browser context
+   * @param {boolean} [useConnectWalletWidgetButton=false] - Whether to use the widget button (true) or standard button (false)
    * @returns {Promise<void>} - Resolves when the connection is complete
    */
-  async wireMetaMask(context) {
-    await this.click(this.selectors.connection.connectWalletButton);
+  async wireMetaMask(context, useConnectWalletWidgetButton = false) {
+    if (useConnectWalletWidgetButton) {
+      await this.clickDescLoc(this.selectors.bridgeDescriptors.connectWallet);
+    } else {
+      await this.clickDescLoc(this.selectors.connection.connectWalletButton);
+    }
     await this.click(this.selectors.connection.selectMetaMaskWallet);
     await this.attachWallet(context);
     await new Promise(r => setTimeout(r, 1500));
@@ -240,16 +370,18 @@ class NeuraBridgePage extends BasePage {
    * @param {boolean} checkApproveButton - Whether to check for the approve token transfer button
    * @returns {Promise<Object>} - The preview transaction layout
    */
-  async clickBridgeButton(checkApproveButton = false) {
+  async clickBridgeButton(context, checkApproveButton = false) {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn);
     await new Promise(r => setTimeout(r, 3000));
+    // await this.approveCustomChainNetworkTransaction();
+    await this.confirmTransactionWithExplicitPageSearch(context);
     return await this.assertPreviewTransactionLayout(checkApproveButton);
   }
 
   async approveTokenTransfer(context) {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.approveTokenTransferButton);
     await this.confirmTransaction(context);
-    await this.waitForDescLocElementToDisappear({ text: 'Approving token transfer...' }, { timeout: 45000, longTimeout: 45000 });
+    await this.waitForDescLocElementToDisappear({ text: 'Approving token transfer...' }, { timeout: 60000, longTimeout: 60000 });
   }
 
   async approveBridgingTokens(context) {
@@ -329,7 +461,7 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<Object>} - Returns an object containing wallet screen layout information
    */
   async verifyMetaMaskWalletScreen() {
-    await this.clickDescLoc(this.selectors.walletScreen.expandWallet);
+    await this.clickDescLoc(this.selectors.connection.avatarButton);
     await new Promise(r => setTimeout(r, 5000));
     const neuraWalletLabels = await this.getAllTextsInit(this.selectors.walletScreen.neuraLabels);
     const testNetLabels = await this.getAllRowTexts(this.selectors.walletScreen.testNetLabels, this.selectors.general.cellCss);
@@ -356,7 +488,7 @@ class NeuraBridgePage extends BasePage {
 
   /**
    * Switch the network direction and verify the new layout
-   * 
+   *
    * @returns {Promise<Object>} - The new page layout after switching
    */
   async switchNetworkAndVerify() {
@@ -373,16 +505,29 @@ class NeuraBridgePage extends BasePage {
 
   /**
    * Initialize the bridge with options
-   * 
+   *
    * @param {Object} options - Configuration options
    * @param {Object} options.context - The browser context (required)
-   * @param {boolean} [options.connectWallet=false] - Whether to connect the wallet
-   * @param {boolean} [options.switchNetwork=false] - Whether to switch the network direction
-   * @param {boolean} [options.verifyLayout=false] - Whether to verify the page layout
+   * @param {Object} [options.walletConnection] - Wallet connection options
+   * @param {boolean} [options.walletConnection.connect=false] - Whether to connect the wallet
+   * @param {boolean} [options.walletConnection.useConnectWalletWidgetButton=false] - Whether to use the widget button (true) or standard button (false)
+   * @param {boolean} [options.switchNetworkDirection=false] - Whether to switch the network direction
+   * @param {boolean} [options.verifyBridgePageLayout=false] - Whether to verify the page layout
    * @returns {Promise<Object>} - The page layout after setup
    */
   async initializeBridgeWithOptions(options) {
-    const { context, connectWallet = false, switchNetwork = false, verifyLayout = false } = options;
+    const {
+      context,
+      walletConnection = {},
+      switchNetworkDirection = false,
+      verifyBridgePageLayout = false
+    } = options;
+
+    // Extract wallet connection options with defaults
+    const {
+      connect: connectWallet = false,
+      useConnectWalletWidgetButton = false
+    } = walletConnection;
 
     if (!context) {
       throw new Error('Context is required for bridge initialization');
@@ -392,16 +537,16 @@ class NeuraBridgePage extends BasePage {
 
     // Connect wallet if requested
     if (connectWallet) {
-      await this.connectMetaMaskWallet(context);
+      await this.connectMetaMaskWallet(context, useConnectWalletWidgetButton);
     }
 
     // Verify the initial layout if requested
-    if (verifyLayout) {
+    if (verifyBridgePageLayout) {
       pageLayout = await this.assertBridgeWidgetLayout();
     }
 
     // Switch network direction if requested
-    if (switchNetwork) {
+    if (switchNetworkDirection) {
       return await this.switchNetworkAndVerify();
     }
 
@@ -416,7 +561,7 @@ class NeuraBridgePage extends BasePage {
    * 4. Depending on the approvalStepOnly flag:
    *    - If true: only approves token transfer (first step of the bridging process)
    *    - If false: completes the full bridging process (approves token transfer AND bridges tokens)
-   * 
+   *
    * @param {Object} context - The browser context
    * @param {string} amount - The amount to bridge
    * @param {boolean} approvalStepOnly - Controls whether to perform only token approval (true) or complete the full bridging process (false)
@@ -424,7 +569,7 @@ class NeuraBridgePage extends BasePage {
    */
   async performHoleskyToNeuraOperation(context, amount, approvalStepOnly = false) {
     await this.fillAmount(amount);
-    const previewTransactionLayout = await this.clickBridgeButton(true);
+    const previewTransactionLayout = await this.clickBridgeButton(context, true);
     assertionHelpers.assertPreviewTransactionLabels(previewTransactionLayout);
     if (approvalStepOnly) {
       await this.approveTokenTransfer(context);
@@ -444,7 +589,7 @@ class NeuraBridgePage extends BasePage {
    * 3. Verifies preview transaction screen
    * 4. Approves bridging tokens
    * 5. Claims tokens
-   * 
+   *
    * @param {Object} context - The browser context
    * @param {string} amount - The amount to bridge
    * @returns {Promise<void>}
@@ -459,7 +604,7 @@ class NeuraBridgePage extends BasePage {
 
   /**
    * Records and compares balances before and after a bridge operation
-   * 
+   *
    * @param {Function} operation - The bridge operation to perform
    * @returns {Promise<Object>} - The balance differences
    */

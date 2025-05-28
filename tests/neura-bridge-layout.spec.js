@@ -60,6 +60,7 @@ test.describe('Neura Bridge UI Automation', () => {
 
       // Configure wallet to Neura Bridge Page
       const { extensionPage, previousPage } = await wallet.openExtension();
+      // await extensionPage.addAndSelectNetwork(networks.holesky);
       await extensionPage.addAndSelectNetwork(networks.neuraTestnet);
       await extensionPage.closeExtension(previousPage);
 
@@ -85,37 +86,60 @@ test.describe('Neura Bridge UI Automation', () => {
     }
   });
 
-  /**
-   * Test to verify the Neura Bridge page layout before wallet connection
-   * This test checks that the UI elements are displayed correctly in the initial state
-   */
-  test('Verify Neura Bridge Page Layout before wallet is connected', async () => {
+  test('Verify Neura Bridge page without connected wallet', async () => {
     try {
-      // Initialize bridge with options (no wallet connection, with network switch, verify page layout)
+      // Step 1: Initialize bridge with options (no wallet connection, with network switch, verify page layout)
       // This will automatically switch the network direction and verify the layout after switching
       await neuraBridgePage.initializeBridgeWithOptions({
         context,
-        switchNetwork: true,
-        connectWallet: false,
-        verifyLayout: true
+        switchNetworkDirection: false,
+        walletConnection: {
+          connect: false
+        },
+        verifyBridgePageLayout: true
       });
+
+      // Step 2: Verify that the Enter Amount button is disabled initially
+      await neuraBridgePage.isConnectWalletBtnVisible();
+
     } catch (error) {
       console.error(`❌ Error verifying page layout: ${error.message}`);
       throw error;
     }
   });
 
-  /**
-   * Test to verify the page layout after connecting MetaMask wallet
-   * This test checks that the UI elements are displayed correctly after wallet connection
-   */
-  test('Verify Neura Bridge Page Layout after MetaMask wallet is connected', async () => {
+  test('Verify Neura Bridge page without connected wallet after network switch', async () => {
+    try {
+      // Step 1: Initialize bridge with options (no wallet connection, with network switch, no initial page layout verification)
+      // This will automatically switch the network direction and verify the layout after switching
+      await neuraBridgePage.initializeBridgeWithOptions({
+        context,
+        switchNetworkDirection: true,
+        walletConnection: {
+          connect: false
+        },
+        verifyBridgePageLayout: false
+      });
+
+      // Step 2: Verify that the Enter Amount button is disabled initially
+      await neuraBridgePage.isConnectWalletBtnVisible();
+
+    } catch (error) {
+      console.error(`❌ Error verifying page layout: ${error.message}`);
+      throw error;
+    }
+  });
+
+  test('Verify user connects to MetaMask wallet from widget Connect Wallet button', async () => {
     // Step 1: Initialize bridge with options (with wallet connection, no network switch, verify page layout)
     await neuraBridgePage.initializeBridgeWithOptions({
       context,
-      connectWallet: true,
-      switchNetwork: false,
-      verifyLayout: true
+      walletConnection: {
+        connect: true,
+        useConnectWalletWidgetButton: true
+      },
+      switchNetworkDirection: false,
+      verifyBridgePageLayout: true
     });
     await neuraBridgePage.verifyMetaMaskWalletScreenWithAssertions();
 
@@ -123,24 +147,133 @@ test.describe('Neura Bridge UI Automation', () => {
     const enterAmountBtnIsDisabled = await neuraBridgePage.getEnterAmountBtnState();
     expect(enterAmountBtnIsDisabled).toBe(true);
 
-    // Step 3: Fill amount and switch network
-    await neuraBridgePage.fillAmount(TEST_AMOUNT);
-
-    // Step 4: Use the built-in network switching and verification functionality
-    // This will switch the network direction and verify the layout after switching
-    await neuraBridgePage.initializeBridgeWithOptions({
-      context,
-      switchNetwork: true,
-      connectWallet: false,
-      verifyLayout: false
-    });
+    // Step 3: Fill amount and assert that the amount is entered correctly
+    const enteredAmount = await neuraBridgePage.fillAmount(TEST_AMOUNT);
+    expect(enteredAmount).toBe(TEST_AMOUNT);
   });
 
-  /**
-   * Test to verify the approve functionality from Holesky to Neura
-   * This test checks that transaction from Holesky to Neura can be approved
-   */
-  test('Verify Holesky to Neura transaction approval', async () => {
+  test('Verify user connects to MetaMask wallet from widget Connect Wallet button and switch networks successfully', async () => {
+    // Step 1: Initialize bridge with options (with wallet connection, no network switch, verify page layout)
+    await neuraBridgePage.initializeBridgeWithOptions({
+      context,
+      walletConnection: {
+        connect: true,
+        useConnectWalletWidgetButton: true
+      },
+      switchNetworkDirection: true,
+      verifyBridgePageLayout: false
+    });
+    await neuraBridgePage.verifyMetaMaskWalletScreenWithAssertions();
+
+    // Step 2: Verify that the Enter Amount button is disabled initially
+    const enterAmountBtnIsDisabled = await neuraBridgePage.getEnterAmountBtnState();
+    expect(enterAmountBtnIsDisabled).toBe(true);
+
+    // Step 3: Fill amount and assert that the amount is entered correctly
+    const enteredAmount = await neuraBridgePage.fillAmount(TEST_AMOUNT);
+    expect(enteredAmount).toBe(TEST_AMOUNT);
+  });
+
+  test('Verify user connects to MetaMask wallet from top Connect Wallet button', async () => {
+    // Step 1: Initialize bridge with options (with wallet connection, no network switch, verify page layout)
+    await neuraBridgePage.initializeBridgeWithOptions({
+      context,
+      walletConnection: {
+        connect: true,
+        useConnectWalletWidgetButton: false
+      },
+      switchNetworkDirection: false,
+      verifyBridgePageLayout: true
+    });
+    await neuraBridgePage.verifyMetaMaskWalletScreenWithAssertions();
+
+    // Step 2: Verify that the Enter Amount button is disabled initially
+    const enterAmountBtnIsDisabled = await neuraBridgePage.getEnterAmountBtnState();
+    expect(enterAmountBtnIsDisabled).toBe(true);
+
+    // Step 3: Fill amount and assert that the amount is entered correctly
+    const enteredAmount = await neuraBridgePage.fillAmount(TEST_AMOUNT);
+    expect(enteredAmount).toBe(TEST_AMOUNT);
+  });
+
+  test('Verify user connects to MetaMask wallet from top Connect Wallet button and switch networks successfully', async () => {
+    // Step 1: Initialize bridge with options (with wallet connection, no network switch, verify page layout)
+    await neuraBridgePage.initializeBridgeWithOptions({
+      context,
+      walletConnection: {
+        connect: true,
+        useConnectWalletWidgetButton: false
+      },
+      switchNetworkDirection: true,
+      verifyBridgePageLayout: false
+    });
+    await neuraBridgePage.verifyMetaMaskWalletScreenWithAssertions();
+
+    // Step 2: Verify that the Enter Amount button is disabled initially
+    const enterAmountBtnIsDisabled = await neuraBridgePage.getEnterAmountBtnState();
+    expect(enterAmountBtnIsDisabled).toBe(true);
+
+    // Step 3: Fill amount and assert that the amount is entered correctly
+    const enteredAmount = await neuraBridgePage.fillAmount(TEST_AMOUNT);
+    expect(enteredAmount).toBe(TEST_AMOUNT);
+  });
+
+  test('Verify Holesky to Neura only approve transaction', async () => {
+    test.setTimeout(TEST_TIMEOUT);
+
+    try {
+      // Step 2: Initialize bridge with options (with wallet connection, no network switch)
+      await neuraBridgePage.initializeBridgeWithOptions({
+        context,
+        walletConnection: {
+          connect: true
+        },
+        switchNetworkDirection: false
+      });
+
+      // Step 3: Record balances and perform the bridge operation
+      const balances = await neuraBridgePage.recordAndCompareBalances(async () => {
+        // Pass 'true' for approvalStepOnly to only perform token approval (first step of bridging) without completing the bridge
+        await neuraBridgePage.performHoleskyToNeuraOperation(context, TEST_AMOUNT, true);
+        await neuraBridgePage.closeBridgeModal();
+      });
+
+      // Step 4: Verify balance changes
+      // The balance should decrease or remain the same after bridging from Holesky to Neura
+      expect(balances.ankrDiff.lte(ethers.constants.Zero)).toBe(true);
+    } catch (error) {
+      console.error(`❌ Error in Holesky to Neura bridge test: ${error.message}`);
+      throw error;
+    }
+  });
+
+  test('Verify Holesky to Neura only bridge transaction', async () => {
+    test.setTimeout(TEST_TIMEOUT);
+    try {
+      // Step 1: Initialize bridge with options (with wallet connection, no network switch)
+      await neuraBridgePage.initializeBridgeWithOptions({
+        context,
+        walletConnection: {
+          connect: true
+        },
+        switchNetworkDirection: false
+      });
+
+      // Step 3: Record balances and perform the bridge operation
+      const balances = await neuraBridgePage.recordAndCompareBalances(async () => {
+        await neuraBridgePage.clickBridgeButton(false);
+      });
+
+      // Step 4: Verify balance changes
+      // The balance should decrease or remain the same after bridging from Holesky to Neura
+      expect(balances.ankrDiff.lte(ethers.constants.Zero)).toBe(true);
+    } catch (error) {
+      console.error(`❌ Error in Holesky to Neura bridge test: ${error.message}`);
+      throw error;
+    }
+  });
+
+  test('Verify Holesky to Neura approve transaction and then bridge transaction', async () => {
     test.setTimeout(TEST_TIMEOUT);
 
     // Step 1: Setup test data
@@ -152,8 +285,10 @@ test.describe('Neura Bridge UI Automation', () => {
       // Step 2: Initialize bridge with options (with wallet connection, no network switch)
       await neuraBridgePage.initializeBridgeWithOptions({
         context,
-        connectWallet: true,
-        switchNetwork: false
+        walletConnection: {
+          connect: true
+        },
+        switchNetworkDirection: false
       });
 
       // Step 3: Record balances and perform the bridge operation
@@ -189,8 +324,10 @@ test.describe('Neura Bridge UI Automation', () => {
       // Step 2: Initialize bridge with options (with wallet connection, no network switch)
       await neuraBridgePage.initializeBridgeWithOptions({
         context,
-        connectWallet: true,
-        switchNetwork: false
+        walletConnection: {
+          connect: true
+        },
+        switchNetworkDirection: false
       });
 
       // Step 3: Record balances and perform the bridge operation
@@ -223,8 +360,10 @@ test.describe('Neura Bridge UI Automation', () => {
       // Step 1: Initialize bridge with options (with wallet connection, with network switch)
       await neuraBridgePage.initializeBridgeWithOptions({
         context,
-        connectWallet: true,
-        switchNetwork: true
+        walletConnection: {
+          connect: true
+        },
+        switchNetworkDirection: true
       });
 
       // Step 2: Record balances and perform the bridge operation

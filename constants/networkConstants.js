@@ -2,7 +2,7 @@
  * Network configuration constants for common blockchain networks
  */
 const networks = {
-  neuraTestnet: {
+  neuraDevnet: {
     networkName: 'Neura Devnet',
     rpcUrl: process.env.NEURA_DEVNET_RPC_URL,
     chainId: '268',

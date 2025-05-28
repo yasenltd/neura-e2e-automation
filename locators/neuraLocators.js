@@ -12,10 +12,17 @@ module.exports = {
     cellDivParagraphCss: 'div > p',
   },
   connection: {
-    connectWalletButton: '.flex.items-center.gap-2 > div > button',
+    connectWalletButton: {
+      role: 'button',
+      name: 'Connect Wallet'
+    },
+    avatarButton: {
+      alt: 'Account Avatar',
+    },
     selectMetaMaskWallet: 'rk-wallet-option-io.metamask',
     connectWalletBridgeWidgetButton: ':nth-child(6) > button',
     connectMetaWalletButton: '[data-testid="confirm-btn"]',
+    signMessage: '[data-testid="rk-auth-message-button"]',
   },
   walletScreen: {
     activityLabel: { css: '.flex-col.flex-1 > span' },
@@ -37,6 +44,7 @@ module.exports = {
     closeBridgeModal: { css: '#radix-«r12» > button' },
     switchBridgeBtn: { css: '.relative.h-0.mt-6 > button' },
     amountLabel: { css: '.justify-between.items-center > div > p' },
+    connectWallet: { css: 'button[data-slot="button"]:has-text("Connect Wallet")' },
     bridgeBtn: { css: 'button[data-slot="button"]:has-text("Bridge")' },
     bridgeTokensBtn: { css: 'button[data-slot="button"]:has-text("Bridge Tokens")' },
     claimTokensBtn: { css: 'button[data-slot="button"]:has-text("Claim Tokens")' },

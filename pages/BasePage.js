@@ -654,6 +654,7 @@ class BasePage {
     if (descriptor.title)       return this.window.getByTitle(descriptor.title);
     if (descriptor.text)        return this.window.getByText(descriptor.text, descriptor.options);
     if (descriptor.testId)      return this.window.getByTestId(descriptor.testId);
+    if (descriptor.className)   return this.window.locator(`.${descriptor.className.split(' ').join('.')}`);
     if (descriptor.css)         return this.window.locator(descriptor.css); // last resort
     throw new Error(`Unrecognised locator descriptor: ${JSON.stringify(descriptor)}`);
   }

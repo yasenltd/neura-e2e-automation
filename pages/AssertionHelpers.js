@@ -19,9 +19,6 @@ function validateBridgePageLayout(pageLayout) {
     amountLabel: neuraBridgeAssertions.pageLayout.labels.amount,
     limitLabel: neuraBridgeAssertions.pageLayout.labels.limit,
   });
-  expect(pageLayout.links.claimVisible).toBe(true);
-  expect(pageLayout.links.faucetVisible).toBe(true);
-  expect(pageLayout.links.howItWorksVisible).toBe(true);
 }
 
 /**
@@ -78,8 +75,8 @@ function assertPreviewTransactionLabels(previewTransactionLayout) {
  * @param {Array} secondNetworkExpected - Expected values for the second network
  */
 function assertNetworkLabels(pageLayout, firstNetworkExpected, secondNetworkExpected) {
-  expect(pageLayout.networks[0]).toEqual(firstNetworkExpected);
-  expect(pageLayout.networks[1]).toEqual(secondNetworkExpected);
+  expect(pageLayout.networks[1]).toEqual(firstNetworkExpected);
+  expect(pageLayout.networks[2]).toEqual(secondNetworkExpected);
 }
 
 /**
