@@ -51,7 +51,7 @@ npm test
 
 Run a specific test:
 ```bash
-npx playwright test tests/neura-bridge.spec.js
+npx playwright test tests/neura-bridge-layout.spec.js
 ```
 
 Run tests with UI mode:
@@ -91,3 +91,46 @@ The framework includes tests for:
 3. **Wallet Connection** - Verifies MetaMask wallet connection
 4. **Token Bridging** - Tests the complete flow of bridging tokens between networks
 5. **Claim Tokens** - Verifies the token claiming functionality
+
+## Test Details
+
+### neura-bridge-layout.spec.js
+This file contains comprehensive tests for the Neura Bridge UI, including:
+
+- Verifying the bridge page layout without a connected wallet
+- Verifying the bridge page after network switching without a wallet
+- Testing wallet connection using the widget Connect Wallet button
+- Testing wallet connection using the top Connect Wallet button
+- Testing network switching with wallet connection
+- Testing the Holesky to Neura bridge operation (approve transaction only)
+- Testing the Holesky to Neura bridge operation (bridge transaction only)
+- Testing the complete Holesky to Neura bridge operation (approve and bridge)
+- Testing the Neura to Holesky bridge operation
+
+Run with:
+```bash
+npx playwright test tests/neura-bridge-layout.spec.js
+```
+
+### holesky-to-neura-bridge.js
+This file focuses on testing the bridge functionality from Holesky to Neura:
+
+- Testing the approval transaction only (without bridging)
+- Testing the bridge transaction only (assuming approval is already done)
+- Testing approval and then bridging in sequence
+- Testing the complete bridging process (approve and bridge)
+
+Run with:
+```bash
+npx playwright test tests/holesky-to-neura-bridge.js
+```
+
+### neura-to-holesky-bridge.js
+This file focuses on testing the bridge functionality from Neura to Holesky:
+
+- Testing the complete bridging process from Neura to Holesky
+
+Run with:
+```bash
+npx playwright test tests/neura-to-holesky-bridge.js
+```
