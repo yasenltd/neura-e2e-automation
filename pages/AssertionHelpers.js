@@ -2,8 +2,8 @@
  * AssertionHelpers.js
  * Contains extracted assertion methods from NeuraBridgePage.js
  */
-const { expect } = require('@playwright/test');
-const { neuraBridgeAssertions, metaMaskIntegrationAssertions } = require('../constants/assertionConstants');
+const {expect} = require('@playwright/test');
+const {neuraBridgeAssertions, metaMaskIntegrationAssertions} = require('../constants/assertionConstants');
 const ethersUtil = require('../utils/ethersUtil');
 const BridgeDepositWatcher = require('../scripts/BridgeDepositWatcher');
 
@@ -12,13 +12,13 @@ const BridgeDepositWatcher = require('../scripts/BridgeDepositWatcher');
  * @param {Object} pageLayout - The page layout object to verify
  */
 function validateBridgePageLayout(pageLayout) {
-  expect(pageLayout.title).toEqual(neuraBridgeAssertions.pageLayout.title);
-  expect(pageLayout.labels).toEqual({
-    toLabel: neuraBridgeAssertions.pageLayout.labels.to,
-    fromLabel: neuraBridgeAssertions.pageLayout.labels.from,
-    amountLabel: neuraBridgeAssertions.pageLayout.labels.amount,
-    limitLabel: neuraBridgeAssertions.pageLayout.labels.limit,
-  });
+    expect(pageLayout.title).toEqual(neuraBridgeAssertions.pageLayout.title);
+    expect(pageLayout.labels).toEqual({
+        toLabel: neuraBridgeAssertions.pageLayout.labels.to,
+        fromLabel: neuraBridgeAssertions.pageLayout.labels.from,
+        amountLabel: neuraBridgeAssertions.pageLayout.labels.amount,
+        limitLabel: neuraBridgeAssertions.pageLayout.labels.limit,
+    });
 }
 
 /**
@@ -27,25 +27,25 @@ function validateBridgePageLayout(pageLayout) {
  * @returns {Promise<void>}
  */
 async function assertMetaMaskWalletScreen(metaMaskScreenLayout) {
-  expect(metaMaskScreenLayout.neuraWalletLabels).toEqual(metaMaskIntegrationAssertions.neuraWalletLabels);
-  expect(metaMaskScreenLayout.networkLabels[0]).toEqual(metaMaskIntegrationAssertions.networkLabels.bscTestnet);
-  expect(metaMaskScreenLayout.networkLabels[2]).toEqual(metaMaskIntegrationAssertions.networkLabels.holesky);
+    expect(metaMaskScreenLayout.neuraWalletLabels).toEqual(metaMaskIntegrationAssertions.neuraWalletLabels);
+    expect(metaMaskScreenLayout.networkLabels[0]).toEqual(metaMaskIntegrationAssertions.networkLabels.bscTestnet);
+    expect(metaMaskScreenLayout.networkLabels[2]).toEqual(metaMaskIntegrationAssertions.networkLabels.holesky);
 
-  const watcher = new BridgeDepositWatcher();
+    const watcher = new BridgeDepositWatcher();
 
-  // BSC Testnet balance assertions
-  const ethBnbOnChain = '0';
-  const ankrBnbOnChain = '0';
-  const bscBalanceInMetaMask = ['tBNB', ethBnbOnChain, metaMaskIntegrationAssertions.neuraWalletLabels[0], ankrBnbOnChain];
-  expect(metaMaskScreenLayout.networkLabels[1]).toEqual(bscBalanceInMetaMask);
+    // BSC Testnet balance assertions
+    const ethBnbOnChain = '0';
+    const ankrBnbOnChain = '0';
+    const bscBalanceInMetaMask = ['tBNB', ethBnbOnChain, metaMaskIntegrationAssertions.neuraWalletLabels[0], ankrBnbOnChain];
+    expect(metaMaskScreenLayout.networkLabels[1]).toEqual(bscBalanceInMetaMask);
 
-  // Holesky balance assertions
-  const ethOnChain = ethersUtil.formatBalance(await watcher.getEthBalance());
-  const ankrOnChain = ethersUtil.formatBalance(await watcher.getAnkrBalance());
-  const holeskyBalanceInMetaMask = ['ETH', ethOnChain, metaMaskIntegrationAssertions.neuraWalletLabels[0], ankrOnChain];
-  expect(metaMaskScreenLayout.networkLabels[3]).toEqual(holeskyBalanceInMetaMask);
+    // Holesky balance assertions
+    const ethOnChain = ethersUtil.formatBalance(await watcher.getEthBalance());
+    const ankrOnChain = ethersUtil.formatBalance(await watcher.getAnkrBalance());
+    const holeskyBalanceInMetaMask = ['ETH', ethOnChain, metaMaskIntegrationAssertions.neuraWalletLabels[0], ankrOnChain];
+    expect(metaMaskScreenLayout.networkLabels[3]).toEqual(holeskyBalanceInMetaMask);
 
-  expect(metaMaskScreenLayout.activityLabel).toEqual(metaMaskIntegrationAssertions.activityLabel);
+    expect(metaMaskScreenLayout.activityLabel).toEqual(metaMaskIntegrationAssertions.activityLabel);
 }
 
 /**
@@ -53,19 +53,19 @@ async function assertMetaMaskWalletScreen(metaMaskScreenLayout) {
  * @param {Object} previewTransactionLayout - The preview transaction layout to verify
  */
 function assertPreviewTransactionLabels(previewTransactionLayout) {
-  const expectedLabels = neuraBridgeAssertions.previewTransactionLayout;
-  expect(previewTransactionLayout.title).toEqual(expectedLabels.title);
-  const [fromChainLabel, toChainLabel, amountLabel] = previewTransactionLayout.previewLabels;
-  expect(fromChainLabel).toEqual(expectedLabels.previewLabels.fromChain);
-  expect(toChainLabel).toEqual(expectedLabels.previewLabels.toChain);
-  expect(amountLabel).toEqual(expectedLabels.previewLabels.amount);
+    const expectedLabels = neuraBridgeAssertions.previewTransactionLayout;
+    expect(previewTransactionLayout.title).toEqual(expectedLabels.title);
+    const [fromChainLabel, toChainLabel, amountLabel] = previewTransactionLayout.previewLabels;
+    expect(fromChainLabel).toEqual(expectedLabels.previewLabels.fromChain);
+    expect(toChainLabel).toEqual(expectedLabels.previewLabels.toChain);
+    expect(amountLabel).toEqual(expectedLabels.previewLabels.amount);
 
-  // Validate the operation button based on which button is present
-  if (previewTransactionLayout.operationButton === expectedLabels.approveTokenTransferButton) {
-    expect(previewTransactionLayout.operationButton).toEqual(expectedLabels.approveTokenTransferButton);
-  } else {
-    expect(previewTransactionLayout.operationButton).toEqual(expectedLabels.bridgeTokenButton);
-  }
+    // Validate the operation button based on which button is present
+    if (previewTransactionLayout.operationButton === expectedLabels.approveTokenTransferButton) {
+        expect(previewTransactionLayout.operationButton).toEqual(expectedLabels.approveTokenTransferButton);
+    } else {
+        expect(previewTransactionLayout.operationButton).toEqual(expectedLabels.bridgeTokenButton);
+    }
 }
 
 /**
@@ -75,8 +75,8 @@ function assertPreviewTransactionLabels(previewTransactionLayout) {
  * @param {Array} secondNetworkExpected - Expected values for the second network
  */
 function assertNetworkLabels(pageLayout, firstNetworkExpected, secondNetworkExpected) {
-  expect(pageLayout.networks[1]).toEqual(firstNetworkExpected);
-  expect(pageLayout.networks[2]).toEqual(secondNetworkExpected);
+    expect(pageLayout.networks[1]).toEqual(firstNetworkExpected);
+    expect(pageLayout.networks[2]).toEqual(secondNetworkExpected);
 }
 
 /**
@@ -84,7 +84,7 @@ function assertNetworkLabels(pageLayout, firstNetworkExpected, secondNetworkExpe
  * @param {boolean} isVisible - Whether the button is visible
  */
 function assertEnterAmountButtonNotVisible(isVisible) {
-  expect(isVisible).toBe(false);
+    expect(isVisible).toBe(false);
 }
 
 /**
@@ -93,9 +93,9 @@ function assertEnterAmountButtonNotVisible(isVisible) {
  * @param {Object} expectedValues - The expected values for the claim token page layout
  */
 function assertClaimTokenPageLayout(claimTokenPageLayout, expectedValues) {
-  expect(claimTokenPageLayout.title).toEqual(expectedValues.title);
-  expect(claimTokenPageLayout.subTitle).toEqual(expectedValues.subTitle);
-  expect(claimTokenPageLayout.tableLabels).toEqual(expectedValues.tableLabels);
+    expect(claimTokenPageLayout.title).toEqual(expectedValues.title);
+    expect(claimTokenPageLayout.subTitle).toEqual(expectedValues.subTitle);
+    expect(claimTokenPageLayout.tableLabels).toEqual(expectedValues.tableLabels);
 }
 
 /**
@@ -104,17 +104,38 @@ function assertClaimTokenPageLayout(claimTokenPageLayout, expectedValues) {
  * @param {Object} expectedValues - The expected values for the preview transaction layout
  */
 function assertPreviewTransactionLayout(previewTransactionLayout, expectedValues) {
-  expect(previewTransactionLayout.title).toEqual(expectedValues.title);
-  expect(previewTransactionLayout.previewLabels).toEqual(expectedValues.previewLabels);
-  expect(previewTransactionLayout.previewValues).toEqual(expectedValues.previewValues);
+    expect(previewTransactionLayout.title).toEqual(expectedValues.title);
+    expect(previewTransactionLayout.previewLabels).toEqual(expectedValues.previewLabels);
+    expect(previewTransactionLayout.previewValues).toEqual(expectedValues.previewValues);
+}
+
+/**
+ * Asserts source chain modal labels match expected values
+ * @param {Array<string>} labels - The array of chain labels to verify
+ */
+function assertSourceChainModalLayout(labels) {
+    expect(labels[0]).toEqual(neuraBridgeAssertions.pageLayout.networks.bscTestnet.at(0));
+    expect(labels[1]).toEqual(neuraBridgeAssertions.pageLayout.networks.neuraTestnet.at(0));
+    expect(labels[2]).toEqual(neuraBridgeAssertions.pageLayout.networks.holesky.at(0));
+}
+
+/**
+ * Asserts that the selected chain contains the expected active chain text
+ * @param {import('@playwright/test').Locator} activeSelectedChain - The Playwright locator for selected chain element
+ * @param {string} activeChain - The expected chain name
+ */
+function assertSelectedChain(activeSelectedChain, activeChain) {
+    expect(activeSelectedChain).toContainText(activeChain).then(r => "Selected chain is: " + r);
 }
 
 module.exports = {
-  validateBridgePageLayout,
-  assertMetaMaskWalletScreen,
-  assertPreviewTransactionLabels,
-  assertNetworkLabels,
-  assertEnterAmountButtonNotVisible,
-  assertClaimTokenPageLayout,
-  assertPreviewTransactionLayout
+    validateBridgePageLayout,
+    assertMetaMaskWalletScreen,
+    assertPreviewTransactionLabels,
+    assertNetworkLabels,
+    assertEnterAmountButtonNotVisible,
+    assertSelectedChain,
+    assertSourceChainModalLayout,
+    assertClaimTokenPageLayout,
+    assertPreviewTransactionLayout
 };

@@ -668,6 +668,17 @@ class BasePage {
       : loc.nth(nth);
   }
 
+  async getAllElementsWithDescLoc(descriptor) {
+    const locator = this.#buildLocator(descriptor);
+    const count = await locator.count();
+
+    const elements = [];
+    for (let i = 0; i < count; i++) {
+      elements.push(locator.nth(i));
+    }
+    return elements;
+  }
+
   getNestedElementWithDescriptorLoc(parentDesc, childDesc, pNth = 0, cNth = 0) {
     return this.getElement(parentDesc, pNth)
       .locator(this.#buildLocator(childDesc))

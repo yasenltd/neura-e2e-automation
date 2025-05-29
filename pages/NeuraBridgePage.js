@@ -1,4 +1,5 @@
 import BridgeDepositWatcher from '../scripts/BridgeDepositWatcher';
+import {expect} from "playwright/test";
 
 const BasePage = require('./BasePage');
 const selectors = require('../locators/neuraLocators');
@@ -33,6 +34,40 @@ class NeuraBridgePage extends BasePage {
     await bridgePage.closeUnnecessaryPages(context);
 
     return bridgePage;
+  }
+
+  async disconnectWallet() {
+    await this.click(this.selectors.connection.settingsButton);
+    await this.click(this.selectors.connection.disconnectWallet);
+  }
+
+  async claimLatestTransaction(context) {
+    await this.openBurgerMenu();
+    await this.selectClaimFromBurgerMenu();
+    // await this.assertClaimTokenPageLayout();
+    await this.claimTransaction(context);
+  }
+
+  async openBurgerMenu() {
+    await this.clickDescLoc(this.selectors.bridgeDescriptors.burgerMenuButton);
+  }
+
+  async selectBridgeFromBurgerMenu() {
+    await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeButtonInBurgerMenu);
+  }
+
+  async selectClaimFromBurgerMenu() {
+    await this.clickDescLoc(this.selectors.bridgeDescriptors.claimButtonInBurgerMenu);
+  }
+
+  async selectFaucetFromBurgerMenu() {
+    await this.clickDescLoc(this.selectors.bridgeDescriptors.faucetButtonInBurgerMenu);
+  }
+
+  async verifySourceChainModal(activeChain) {
+    await this.clickDescLoc(this.selectors.sourceChainModal.openNetworkSourceMenu);
+    await this.assertSourceChainModalLayout(activeChain);
+    await this.clickDescLoc(this.selectors.sourceChainModal.closeChainModal);
   }
 
   /**
@@ -129,7 +164,8 @@ class NeuraBridgePage extends BasePage {
     }
 
     const popupWallet = new this.wallet.constructor(extensionPopup);
-    await popupWallet.confirmTransaction();
+    await popupWallet.approveCustomNetwork();
+    await new Promise(r => setTimeout(r, 1500));
   }
 
   /**
@@ -158,7 +194,7 @@ class NeuraBridgePage extends BasePage {
     await tab.bringToFront();
     await tab.waitForLoadState('domcontentloaded');
     const popupWallet = new this.wallet.constructor(tab);
-    await popupWallet.sendSubmission();
+    await popupWallet.approveCustomNetwork();
   }
 
   async detectMetaMaskTabWithFallback(timeout = 2000) {
@@ -258,6 +294,15 @@ class NeuraBridgePage extends BasePage {
       labels: { toLabel, fromLabel, amountLabel, limitLabel },
       links:  { claimVisible, faucetVisible, howItWorksVisible },
     };
+  }
+
+  async assertSourceChainModalLayout(activeChain) {
+    const title = await this.getElementWithDescLoc(this.selectors.sourceChainModal.selectSourceChainTitle).isVisible();
+    expect(title).toBe(true);
+    const labels = await this.getAllTextsInit(this.selectors.sourceChainModal.networkLabels);
+    assertionHelpers.assertSourceChainModalLayout(labels);
+    const activeSelectedChain = this.getElementWithDescLoc(this.selectors.sourceChainModal.activeChain);
+    assertionHelpers.assertSelectedChain(activeSelectedChain, activeChain);
   }
 
   /**
@@ -367,14 +412,25 @@ class NeuraBridgePage extends BasePage {
 
   /**
    * Clicks the bridge button and asserts the preview transaction layout
+   * @param {Object} context - The browser context
    * @param {boolean} checkApproveButton - Whether to check for the approve token transfer button
    * @returns {Promise<Object>} - The preview transaction layout
    */
-  async clickBridgeButton(context, checkApproveButton = false) {
+  async clickBridgeButtonApprovingCustomChain(context, checkApproveButton = false) {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn);
-    await new Promise(r => setTimeout(r, 3000));
-    // await this.approveCustomChainNetworkTransaction();
+    await new Promise(r => setTimeout(r, 1500));
     await this.confirmTransactionWithExplicitPageSearch(context);
+    return await this.assertPreviewTransactionLayout(checkApproveButton);
+  }
+
+  /**
+   * Clicks the bridge button and asserts the preview transaction layout without confirming transaction
+   * @param {boolean} checkApproveButton - Whether to check for the approve token transfer button
+   * @returns {Promise<Object>} - The preview transaction layout
+   */
+  async clickBridgeButton(checkApproveButton = false) {
+    await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn);
+    await new Promise(r => setTimeout(r, 500));
     return await this.assertPreviewTransactionLayout(checkApproveButton);
   }
 
@@ -390,7 +446,7 @@ class NeuraBridgePage extends BasePage {
   }
 
   async claimTokens() {
-    await new Promise(r => setTimeout(r, 30000));
+    await new Promise(r => setTimeout(r, 3000));
     await this.clickDescLoc(this.selectors.bridgeDescriptors.claimTokensBtn);
   }
 
@@ -398,7 +454,8 @@ class NeuraBridgePage extends BasePage {
     await new Promise(r => setTimeout(r, 5000));
     await this.clickDescLoc(this.selectors.bridgeDescriptors.claimTransactionButton);
     await this.confirmTransaction(context);
-    await this.waitForDescLocElementToDisappear({ text: 'Claiming 0.1 ANKR. Please don\'t close the page\n' }, { timeout: 30000, longTimeout: 30000 });
+    await this.waitForDescLocElementToDisappear({ text: 'Claiming 0.000001 ANKR on Holesky, please don\'t close the page'},
+        { timeout: 30000, longTimeout: 30000 });
   }
 
   async navigateToFaucetPage() {
@@ -485,13 +542,12 @@ class NeuraBridgePage extends BasePage {
     return metaMaskScreenLayout;
   }
 
-
   /**
    * Switch the network direction and verify the new layout
    *
    * @returns {Promise<Object>} - The new page layout after switching
    */
-  async switchNetworkAndVerify() {
+  async switchNetworkDirection() {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.switchBridgeBtn);
     const newPageLayout = await this.retrieveBridgeLayoutData();
     assertionHelpers.validateBridgePageLayout(newPageLayout);
@@ -501,6 +557,10 @@ class NeuraBridgePage extends BasePage {
       neuraBridgeAssertions.pageLayout.networks.holesky
     );
     return newPageLayout;
+  }
+
+  async closeBridgeModal() {
+    await this.clickDescLoc(this.selectors.bridgeDescriptors.closeBridgeModalButton);
   }
 
   /**
@@ -547,7 +607,7 @@ class NeuraBridgePage extends BasePage {
 
     // Switch network direction if requested
     if (switchNetworkDirection) {
-      return await this.switchNetworkAndVerify();
+      return await this.switchNetworkDirection();
     }
 
     return pageLayout;
@@ -569,7 +629,7 @@ class NeuraBridgePage extends BasePage {
    */
   async performHoleskyToNeuraOperation(context, amount, approvalStepOnly = false) {
     await this.fillAmount(amount);
-    const previewTransactionLayout = await this.clickBridgeButton(context, true);
+    const previewTransactionLayout = await this.clickBridgeButton(approvalStepOnly);
     assertionHelpers.assertPreviewTransactionLabels(previewTransactionLayout);
     if (approvalStepOnly) {
       await this.approveTokenTransfer(context);
@@ -578,8 +638,47 @@ class NeuraBridgePage extends BasePage {
     }
   }
 
-  async closeBridgeModal() {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.closeBridgeModal);
+  /**
+   * Performs the Holesky to Neura operation:
+   * 1. Fills amount
+   * 2. Initiates bridge transaction
+   * 3. Verifies preview transaction screen
+   * 4. Depending on the approvalStepOnly flag:
+   *    - If true: only approves token transfer (first step of the bridging process)
+   *    - If false: completes the full bridging process (approves token transfer AND bridges tokens)
+   *
+   * @param {Object} context - The browser context
+   * @param {string} amount - The amount to bridge
+   * @param {boolean} approvalStepOnly - Controls whether to perform only token approval (true) or complete the full bridging process (false)
+   * @returns {Promise<void>}
+   */
+  async performHoleskyToNeuraOperationWithApprovalOfCustomChain(context, amount, approvalStepOnly = false) {
+    await this.fillAmount(amount);
+    const previewTransactionLayout = await this.clickBridgeButtonApprovingCustomChain(context, true);
+    assertionHelpers.assertPreviewTransactionLabels(previewTransactionLayout);
+    if (approvalStepOnly) {
+      await this.approveTokenTransfer(context);
+    } else {
+      await this.bridgeTokensFromChainToNeura(context);
+    }
+  }
+
+  /**
+   * Performs the Neura to Holesky bridge operation without confirming transaction:
+   * 1. Fills amount
+   * 2. Initiates bridge transaction
+   * 3. Verifies preview transaction screen
+   *
+   * This version doesn't require context as it doesn't call confirmTransactionWithExplicitPageSearch
+   *
+   * @param {string} amount - The amount to bridge
+   * @returns {Promise<Object>} - The preview transaction layout
+   */
+  async performNeuraToHoleskyBridge(context, amount) {
+    await this.fillAmount(amount);
+    const previewTransactionLayout = await this.clickBridgeButton(false);
+    assertionHelpers.assertPreviewTransactionLabels(previewTransactionLayout);
+    await this.bridgeTokensFromNeuraToChain(context);
   }
 
   /**
@@ -594,12 +693,11 @@ class NeuraBridgePage extends BasePage {
    * @param {string} amount - The amount to bridge
    * @returns {Promise<void>}
    */
-  async performNeuraToHoleskyBridge(context, amount) {
+  async performNeuraToHoleskyBridgeWithApprovalOfCustomChain(context, amount) {
     await this.fillAmount(amount);
-    const previewTransactionLayout = await this.clickBridgeButton(false);
+    const previewTransactionLayout = await this.clickBridgeButtonApprovingCustomChain(context, false);
     assertionHelpers.assertPreviewTransactionLabels(previewTransactionLayout);
     await this.bridgeTokensFromNeuraToChain(context);
-    await this.claimTokens();
   }
 
   /**

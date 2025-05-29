@@ -20,6 +20,7 @@ const neuraBridgeAssertions = {
     networks: {
       holesky: ['Holesky', 'testnet'],
       neuraTestnet: ['Neura Testnet', 'testnet'],
+      bscTestnet: ['BSC Testnet', 'testnet'],
     },
     labels: {
       to: 'To',

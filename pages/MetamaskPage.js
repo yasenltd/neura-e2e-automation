@@ -223,7 +223,7 @@ class MetamaskPage extends WalletPage {
    * Confirms a transaction in MetaMask
    * @returns {Promise<void>} - Returns a promise that resolves after the submission is confirmed
    */
-  async sendSubmission() {
+  async approveCustomNetwork() {
     await this.waitForElementToBeVisible(this.selectors.transaction.submit);
     await this.click(this.selectors.transaction.submit);
   }

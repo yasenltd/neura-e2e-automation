@@ -112,7 +112,7 @@ Run with:
 npx playwright test tests/neura-bridge-layout.spec.js
 ```
 
-### holesky-to-neura-bridge.js
+### holesky-to-neura-bridge.spec.js
 This file focuses on testing the bridge functionality from Holesky to Neura:
 
 - Testing the approval transaction only (without bridging)
@@ -122,15 +122,15 @@ This file focuses on testing the bridge functionality from Holesky to Neura:
 
 Run with:
 ```bash
-npx playwright test tests/holesky-to-neura-bridge.js
+npx playwright test tests/holesky-to-neura-bridge.spec.js
 ```
 
-### neura-to-holesky-bridge.js
+### neura-to-holesky-bridge.spec.js
 This file focuses on testing the bridge functionality from Neura to Holesky:
 
 - Testing the complete bridging process from Neura to Holesky
 
 Run with:
 ```bash
-npx playwright test tests/neura-to-holesky-bridge.js
+npx playwright test tests/neura-to-holesky-bridge.spec.js
 ```
