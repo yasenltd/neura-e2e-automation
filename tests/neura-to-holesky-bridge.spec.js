@@ -1,17 +1,11 @@
 const { expect } = require('@playwright/test');
 const { testWithNeuraAndHolesky: test } = require('../test-utils/testFixtures');
+const { TEST_AMOUNT, TEST_TIMEOUT } = require('../constants/testConstants');
 
 require('dotenv').config();
 
 test.describe('Neura to Holesky Bridge UI Automation', () => {
-  // Test constants
-  const TEST_AMOUNT = '0.000001'; // Amount used for bridge tests
-  const TEST_TIMEOUT = 180_000; // Timeout for bridge operations in case of network delays
 
-  /**
-   * Test to verify the bridge functionality from Neura to Holesky
-   * This test checks that tokens can be successfully bridged from Neura to Holesky
-   */
   test('Verify Neura to Holesky Bridge', async ({ neuraBridgePage, context }) => {
     test.setTimeout(TEST_TIMEOUT);
 

@@ -815,16 +815,19 @@ class BasePage {
   }
 
   async waitForDescLocElementToDisappear(descriptor, options = {}) {
-    const timeout = options.timeout ?? this.DEFAULT_TIMEOUT;
-    const longTimeout = options.longTimeout ?? this.LONG_TIMEOUT;
-
-    console.log(`🔍 Waiting for element [${JSON.stringify(descriptor)}] to disappear...`);
+    const appearTimeout = options.timeout ?? this.DEFAULT_TIMEOUT;
+    const disappearTimeout = options.longTimeout ?? this.LONG_TIMEOUT;
+    const checkIfAttached = options.ensureAppears ?? true;
 
     const locator = this.getElementWithDescLoc(descriptor, options.nth);
+    console.log(`🔍 Waiting for element [${JSON.stringify(descriptor)}] to disappear...`);
 
     try {
-      await locator.waitFor({ state: 'attached', timeout });
-      await locator.waitFor({ state: 'detached', timeout: longTimeout });
+      if (checkIfAttached) {
+        await locator.waitFor({ state: 'attached', timeout: appearTimeout });
+      }
+      await locator.waitFor({ state: 'detached', timeout: disappearTimeout });
+
       console.log(`✅ Element disappeared: ${JSON.stringify(descriptor)}`);
     } catch (error) {
       console.error(`❌ Element did not disappear: ${JSON.stringify(descriptor)}`);

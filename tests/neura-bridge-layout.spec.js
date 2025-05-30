@@ -1,11 +1,11 @@
 const { expect } = require('@playwright/test');
 const { testWithNeuraAndHolesky: test } = require('../test-utils/testFixtures');
 const {neuraBridgeAssertions} = require("../constants/assertionConstants");
+const { TEST_AMOUNT } = require('../constants/testConstants');
 
 require('dotenv').config();
 
 test.describe('Neura Bridge page validation', () => {
-  const TEST_AMOUNT = '0.000001'; // Amount used for bridge tests
 
   test('Verify Neura Bridge page without connected wallet', async ({ neuraBridgePage, context }) => {
     try {

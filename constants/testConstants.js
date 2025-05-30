@@ -1,6 +1,10 @@
 /**
- * Constants related to bridge operations
+ * Constants used in tests and bridge operations
  */
+
+// Test constants
+const TEST_AMOUNT = '0.000001'; // Amount used for bridge tests
+const TEST_TIMEOUT = 180_000; // Timeout for bridge operations in case of network delays
 
 // Enum for bridge operation types
 const BridgeOperationType = {
@@ -16,6 +20,8 @@ const TransactionAction = {
 };
 
 module.exports = {
+  TEST_AMOUNT,
+  TEST_TIMEOUT,
   BridgeOperationType,
   TransactionAction
 };

@@ -119,13 +119,12 @@ async function verifyTokenTransfer(address, tokenAddress, networkName, expectedB
 /**
  * Verifies if a bridge transaction was successful by checking the balance on the destination chain
  * @param {string} address - The address to check
- * @param {string} sourceNetwork - The name of the source network (e.g., 'neuraTestnet', 'holesky')
  * @param {string} destinationNetwork - The name of the destination network (e.g., 'neuraTestnet', 'holesky')
  * @param {ethers.BigNumber} amount - The amount that was bridged
  * @param {number} timeoutMs - The timeout in milliseconds (default: 60000 - 1 minute)
  * @returns {Promise<boolean>} - True if the bridge was successful, false otherwise
  */
-async function verifyBridgeTransaction(address, sourceNetwork, destinationNetwork, amount, timeoutMs = 60000) {
+async function verifyBridgeTransaction(address, destinationNetwork, amount, timeoutMs = 60000) {
   const startTime = Date.now();
   const initialBalance = await getBalance(address, destinationNetwork);
 

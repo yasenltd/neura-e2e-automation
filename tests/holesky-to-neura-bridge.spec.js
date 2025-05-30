@@ -3,13 +3,11 @@ import {ethers} from 'ethers';
 const {expect} = require('@playwright/test');
 const {testWithNeuraAndHolesky: test} = require('../test-utils/testFixtures');
 const {waitForAnyDepositInSubgraph} = require('../utils/subgraphQueryUtil');
-const {BridgeOperationType} = require('../constants/bridgeConstants');
+const {BridgeOperationType, TEST_AMOUNT, TEST_TIMEOUT} = require('../constants/testConstants');
 
 require('dotenv').config();
 
 test.describe('Holesky to Neura Bridge UI Automation', () => {
-    const TEST_AMOUNT = '0.000001'; // Amount used for bridge tests
-    const TEST_TIMEOUT = 180_000; // Timeout for bridge operations in case of network delays
 
     test('Verify Holesky to Neura only approve transaction', async ({neuraBridgePage, context}) => {
         test.setTimeout(TEST_TIMEOUT);

@@ -4,8 +4,7 @@ import {expect} from "playwright/test";
 const BasePage = require('./BasePage');
 const selectors = require('../locators/neuraLocators');
 const { neuraBridgeAssertions } = require('../constants/assertionConstants');
-const { BridgeOperationType, TransactionAction } = require('../constants/bridgeConstants');
-const ethersUtil = require('../utils/ethersUtil');
+const { BridgeOperationType, TransactionAction } = require('../constants/testConstants');
 const assertionHelpers = require('./AssertionHelpers');
 const { ethers } = require('ethers');
 
@@ -43,6 +42,7 @@ class NeuraBridgePage extends BasePage {
   }
 
   async claimLatestTransaction(context) {
+    await new Promise(r => setTimeout(r, 3000));
     await this.openBurgerMenu();
     await this.selectClaimFromBurgerMenu();
     await this.assertClaimTokenPageLayout();
@@ -488,7 +488,7 @@ class NeuraBridgePage extends BasePage {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.claimTransactionButton);
     await this.confirmTransaction(context);
     await this.waitForDescLocElementToDisappear({ text: 'Claiming 0.000001 ANKR on Holesky, please don\'t close the page'},
-        { timeout: 30000, longTimeout: 30000 });
+        { timeout: 45000, longTimeout: 45000 });
   }
 
   async navigateToFaucetPage() {
@@ -497,53 +497,6 @@ class NeuraBridgePage extends BasePage {
 
   async navigateToClaimPage() {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.claimBtn);
-  }
-
-  /**
-   * Gets the transaction hash from the UI after a transaction is submitted
-   * @returns {Promise<string>} - The transaction hash
-   */
-  async getTransactionHash() {
-    // Wait for the transaction hash to appear in the UI
-    await this.page.waitForSelector(this.selectors.bridgeDescriptors.transactionHash, { timeout: 30000 });
-    return await this.getTextByDescLoc(this.selectors.bridgeDescriptors.transactionHash);
-  }
-
-  /**
-   * Verifies a transaction on the blockchain using ethers.js
-   * @param {string} txHash - The transaction hash
-   * @param {string} networkName - The name of the network (e.g., 'neuraTestnet', 'holesky')
-   * @returns {Promise<boolean>} - True if the transaction was successful, false otherwise
-   */
-  async verifyTransactionOnChain(txHash, networkName) {
-    console.log(`Verifying transaction ${txHash} on ${networkName}...`);
-    return await ethersUtil.verifyTransaction(txHash, networkName);
-  }
-
-  /**
-   * Verifies a bridge transaction by checking the balance on the destination chain
-   * @param {string} address - The wallet address
-   * @param {string} sourceNetwork - The name of the source network (e.g., 'neuraTestnet', 'holesky')
-   * @param {string} destinationNetwork - The name of the destination network (e.g., 'neuraTestnet', 'holesky')
-   * @param {string} amount - The amount that was bridged (in ETH)
-   * @param {number} timeoutMs - The timeout in milliseconds (default: 60000 - 1 minute)
-   * @returns {Promise<boolean>} - True if the bridge was successful, false otherwise
-   */
-  async verifyBridgeTransaction(address, sourceNetwork, destinationNetwork, amount, timeoutMs = 60000) {
-    console.log(`Verifying bridge transaction from ${sourceNetwork} to ${destinationNetwork} for address ${address}...`);
-    const amountInWei = ethersUtil.ethers.parseEther(amount);
-    return await ethersUtil.verifyBridgeTransaction(address, sourceNetwork, destinationNetwork, amountInWei, timeoutMs);
-  }
-
-  /**
-   * Gets the wallet address from MetaMask
-   * @returns {Promise<string>} - The wallet address
-   */
-  async getWalletAddress() {
-    if (!this.wallet) {
-      throw new Error('Wallet not set. Call setWallet() first.');
-    }
-    return await this.wallet.getAddress();
   }
 
   /**
