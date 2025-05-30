@@ -47,5 +47,6 @@ module.exports = {
   transaction: {
     confirm: '[data-testid="confirm-footer-button"]',
     submit: '[data-testid="confirmation-submit-button"]',
+    cancel: '[data-testid="confirm-footer-cancel-button"]',
   },
 };

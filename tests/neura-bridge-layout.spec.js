@@ -75,6 +75,30 @@ test.describe('Neura Bridge page validation', () => {
     }
   });
 
+  test('Verify Neura Claim page layout', async ({ neuraBridgePage, context }) => {
+    try {
+      // Step 1: Initialize bridge with options (no wallet connection, with network switch, no initial page layout verification)
+      // This will automatically switch the network direction and verify the layout after switching
+      await neuraBridgePage.initializeBridgeWithOptions({
+        context,
+        switchNetworkDirection: false,
+        walletConnection: {
+          connect: false
+        },
+        verifyBridgePageLayout: false
+      });
+
+      // Step 2: Verify that Neura Claim page layout
+      await neuraBridgePage.openBurgerMenu();
+      await neuraBridgePage.selectClaimFromBurgerMenu();
+      await neuraBridgePage.assertClaimTokenPageLayout();
+
+    } catch (error) {
+      console.error(`❌ Error verifying Claim Page layout: ${error.message}`);
+      throw error;
+    }
+  });
+
   test('Verify user connects to MetaMask wallet from widget Connect Wallet button', async ({ neuraBridgePage, context }) => {
     // Step 1: Initialize bridge with options (with wallet connection, no network switch, verify page layout)
     await neuraBridgePage.initializeBridgeWithOptions({

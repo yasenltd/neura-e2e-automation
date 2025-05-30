@@ -46,6 +46,15 @@ module.exports = {
         networkLabels: {css: '.justify-between.items-center > div > span.text-md.font-normal.leading-5.text-gray-900'},
         activeChain: {css: '.selector-item-active'},
     },
+    claimPageDescriptors: {
+        title: {
+            role: 'heading',
+            name: 'Bridged Tokens'
+        },
+        subTitle: {
+            text: 'Claim your bridged tokens'
+        }
+    },
     bridgeDescriptors: {
         burgerMenuButton: {
             alt: 'Menu'
@@ -99,8 +108,6 @@ module.exports = {
         claimTokensButton: {css: '.flex.flex-col.gap-4 > div.w-full.space-y-4 > div:nth-child(2) > button'},
     },
     claimTokensDescriptors: {
-        title: {css: '.flex.flex-col.items-center.mb-2 > h1'},
-        subTitle: {css: '.flex-col.items-center.gap-1.text-center.mb-3 > p'},
         tableLabel: {css: '.bg-white.rounded-lg.px-8.py-3.grid.grid-cols-5'},
         filterButton: {css: 'button[data-slot="button"]:has-text("All")'},
         claimButton: {css: 'button[data-slot="button"]:has-text("Claim")'},

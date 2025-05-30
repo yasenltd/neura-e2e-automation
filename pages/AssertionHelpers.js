@@ -88,17 +88,6 @@ function assertEnterAmountButtonNotVisible(isVisible) {
 }
 
 /**
- * Asserts claim token page layout against expected values
- * @param {Object} claimTokenPageLayout - The claim token page layout to verify
- * @param {Object} expectedValues - The expected values for the claim token page layout
- */
-function assertClaimTokenPageLayout(claimTokenPageLayout, expectedValues) {
-    expect(claimTokenPageLayout.title).toEqual(expectedValues.title);
-    expect(claimTokenPageLayout.subTitle).toEqual(expectedValues.subTitle);
-    expect(claimTokenPageLayout.tableLabels).toEqual(expectedValues.tableLabels);
-}
-
-/**
  * Asserts preview transaction layout against expected values
  * @param {Object} previewTransactionLayout - The preview transaction layout to verify
  * @param {Object} expectedValues - The expected values for the preview transaction layout
@@ -136,6 +125,5 @@ module.exports = {
     assertEnterAmountButtonNotVisible,
     assertSelectedChain,
     assertSourceChainModalLayout,
-    assertClaimTokenPageLayout,
     assertPreviewTransactionLayout
 };

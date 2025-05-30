@@ -8,6 +8,13 @@ const ethersUtil = require('../utils/ethersUtil');
 const assertionHelpers = require('./AssertionHelpers');
 const { ethers } = require('ethers');
 
+// Enum for bridge operation types
+const BridgeOperationType = {
+  APPROVE_ONLY: 'approveOnly',
+  BRIDGE_ONLY: 'bridgeOnly',
+  APPROVE_AND_BRIDGE: 'approveAndBridge'
+};
+
 class NeuraBridgePage extends BasePage {
   constructor(page) {
     super(page);
@@ -44,7 +51,7 @@ class NeuraBridgePage extends BasePage {
   async claimLatestTransaction(context) {
     await this.openBurgerMenu();
     await this.selectClaimFromBurgerMenu();
-    // await this.assertClaimTokenPageLayout();
+    await this.assertClaimTokenPageLayout();
     await this.claimTransaction(context);
   }
 
@@ -139,6 +146,18 @@ class NeuraBridgePage extends BasePage {
 
     const popupWallet = new this.wallet.constructor(extensionPopup);
     await popupWallet.confirmTransaction();
+  }
+
+  async cancelTransaction(context) {
+
+    // Wait for the extension prompt modal to open
+    const [extensionPopup] = await Promise.all([context.waitForEvent('page')]);
+
+    // Bring the extension prompt modal to the front
+    await extensionPopup.bringToFront();
+
+    const popupWallet = new this.wallet.constructor(extensionPopup);
+    await popupWallet.cancelTransaction();
   }
 
   /**
@@ -329,8 +348,10 @@ class NeuraBridgePage extends BasePage {
   }
 
   async assertClaimTokenPageLayout() {
-    const title = await this.getTextByDescLoc(this.selectors.claimTokensDescriptors.title);
-    const subTitle = await this.getTextByDescLoc(this.selectors.claimTokensDescriptors.subTitle);
+    const title = await this.getElementWithDescLoc(this.selectors.claimPageDescriptors.title);
+    await expect(title).toBeVisible();
+    const subTitle = await this.getElementWithDescLoc(this.selectors.claimPageDescriptors.subTitle);
+    await expect(subTitle).toBeVisible();
     const tableLabels = await this.getAllRowTexts(this.selectors.claimTokensDescriptors.tableLabel, this.selectors.general.cellCss);
 
     return {
@@ -430,7 +451,7 @@ class NeuraBridgePage extends BasePage {
    */
   async clickBridgeButton(checkApproveButton = false) {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn);
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 1000));
     return await this.assertPreviewTransactionLayout(checkApproveButton);
   }
 
@@ -615,51 +636,81 @@ class NeuraBridgePage extends BasePage {
 
   /**
    * Performs the Holesky to Neura operation:
-   * 1. Fills amount
-   * 2. Initiates bridge transaction
-   * 3. Verifies preview transaction screen
-   * 4. Depending on the approvalStepOnly flag:
-   *    - If true: only approves token transfer (first step of the bridging process)
-   *    - If false: completes the full bridging process (approves token transfer AND bridges tokens)
+   * 1. Initiates bridge transaction
+   * 2. Verifies preview transaction screen
+   * 3. Performs the specified operation based on the operation parameter
    *
    * @param {Object} context - The browser context
-   * @param {string} amount - The amount to bridge
-   * @param {boolean} approvalStepOnly - Controls whether to perform only token approval (true) or complete the full bridging process (false)
+   * @param {BridgeOperationType} operation - Controls which operation to perform:
+   *                                    - BridgeOperationType.APPROVE_ONLY: only approve token transfer
+   *                                    - BridgeOperationType.APPROVE_AND_BRIDGE: approve and bridge tokens
+   *                                    - BridgeOperationType.BRIDGE_ONLY: only bridge tokens (skip approval)
    * @returns {Promise<void>}
    */
-  async performHoleskyToNeuraOperation(context, amount, approvalStepOnly = false) {
-    await this.fillAmount(amount);
-    const previewTransactionLayout = await this.clickBridgeButton(approvalStepOnly);
+  async performHoleskyToNeuraOperation(context, operation = BridgeOperationType.APPROVE_AND_BRIDGE) {
+
+    // Determine if we need to show the approve button in the preview
+    const showApproveButton = operation !== BridgeOperationType.BRIDGE_ONLY;
+
+    // Click bridge button and get preview transaction layout
+    const previewTransactionLayout = await this.clickBridgeButton(showApproveButton);
+
+    // Always assert preview transaction labels
     assertionHelpers.assertPreviewTransactionLabels(previewTransactionLayout);
-    if (approvalStepOnly) {
-      await this.approveTokenTransfer(context);
-    } else {
-      await this.bridgeTokensFromChainToNeura(context);
+
+    // Perform the requested operation
+    switch (operation) {
+      case BridgeOperationType.APPROVE_ONLY:
+        await this.approveTokenTransfer(context);
+        break;
+      case BridgeOperationType.BRIDGE_ONLY:
+        await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeTokensBtn);
+        await this.approveBridgingTokens(context);
+        break;
+      case BridgeOperationType.APPROVE_AND_BRIDGE:
+      default:
+        await this.bridgeTokensFromChainToNeura(context);
+        break;
     }
   }
 
   /**
-   * Performs the Holesky to Neura operation:
+   * Performs the Holesky to Neura operation with custom chain approval:
    * 1. Fills amount
    * 2. Initiates bridge transaction
    * 3. Verifies preview transaction screen
-   * 4. Depending on the approvalStepOnly flag:
-   *    - If true: only approves token transfer (first step of the bridging process)
-   *    - If false: completes the full bridging process (approves token transfer AND bridges tokens)
+   * 4. Performs the specified operation based on the operation parameter
    *
    * @param {Object} context - The browser context
    * @param {string} amount - The amount to bridge
-   * @param {boolean} approvalStepOnly - Controls whether to perform only token approval (true) or complete the full bridging process (false)
+   * @param {BridgeOperationType} operation - Controls which operation to perform:
+   *                                    - BridgeOperationType.APPROVE_ONLY: only approve token transfer
+   *                                    - BridgeOperationType.APPROVE_AND_BRIDGE: approve and bridge tokens
+   *                                    - BridgeOperationType.BRIDGE_ONLY: only bridge tokens (skip approval)
    * @returns {Promise<void>}
    */
-  async performHoleskyToNeuraOperationWithApprovalOfCustomChain(context, amount, approvalStepOnly = false) {
+  async performHoleskyToNeuraOperationWithApprovalOfCustomChain(context, amount, operation = BridgeOperationType.APPROVE_AND_BRIDGE) {
+
     await this.fillAmount(amount);
+
+    // Always show approve button for custom chain approval
     const previewTransactionLayout = await this.clickBridgeButtonApprovingCustomChain(context, true);
+
+    // Always assert preview transaction labels
     assertionHelpers.assertPreviewTransactionLabels(previewTransactionLayout);
-    if (approvalStepOnly) {
-      await this.approveTokenTransfer(context);
-    } else {
-      await this.bridgeTokensFromChainToNeura(context);
+
+    // Perform the requested operation
+    switch (operation) {
+      case BridgeOperationType.APPROVE_ONLY:
+        await this.approveTokenTransfer(context);
+        break;
+      case BridgeOperationType.BRIDGE_ONLY:
+        await this.approveBridgingTokens(context);
+        break;
+      case BridgeOperationType.APPROVE_AND_BRIDGE:
+      default:
+        await this.bridgeTokensFromChainToNeura(context);
+        break;
     }
   }
 
@@ -749,3 +800,4 @@ class NeuraBridgePage extends BasePage {
 }
 
 module.exports = NeuraBridgePage;
+module.exports.BridgeOperationType = BridgeOperationType;

@@ -227,6 +227,11 @@ class MetamaskPage extends WalletPage {
     await this.waitForElementToBeVisible(this.selectors.transaction.submit);
     await this.click(this.selectors.transaction.submit);
   }
+
+  async cancelTransaction() {
+    await this.waitForElementToBeVisible(this.selectors.transaction.cancel);
+    await this.click(this.selectors.transaction.cancel);
+  }
 }
 
 module.exports = MetamaskPage;
