@@ -4,16 +4,10 @@ import {expect} from "playwright/test";
 const BasePage = require('./BasePage');
 const selectors = require('../locators/neuraLocators');
 const { neuraBridgeAssertions } = require('../constants/assertionConstants');
+const { BridgeOperationType, TransactionAction } = require('../constants/bridgeConstants');
 const ethersUtil = require('../utils/ethersUtil');
 const assertionHelpers = require('./AssertionHelpers');
 const { ethers } = require('ethers');
-
-// Enum for bridge operation types
-const BridgeOperationType = {
-  APPROVE_ONLY: 'approveOnly',
-  BRIDGE_ONLY: 'bridgeOnly',
-  APPROVE_AND_BRIDGE: 'approveAndBridge'
-};
 
 class NeuraBridgePage extends BasePage {
   constructor(page) {
@@ -136,8 +130,13 @@ class NeuraBridgePage extends BasePage {
     await this.page.bringToFront();
   }
 
-  async confirmTransaction(context) {
-
+  /**
+   * Handle transaction popup for both confirm and cancel operations
+   * @param {BrowserContext} context - Playwright browser context
+   * @param {TransactionAction} action - Action to perform (TransactionAction.CONFIRM or TransactionAction.CANCEL)
+   * @returns {Promise<void>}
+   */
+  async handleTransactionPopup(context, action) {
     // Wait for the extension prompt modal to open
     const [extensionPopup] = await Promise.all([context.waitForEvent('page')]);
 
@@ -145,19 +144,32 @@ class NeuraBridgePage extends BasePage {
     await extensionPopup.bringToFront();
 
     const popupWallet = new this.wallet.constructor(extensionPopup);
-    await popupWallet.confirmTransaction();
+
+    if (action === TransactionAction.CONFIRM) {
+      await popupWallet.confirmTransaction();
+    } else if (action === TransactionAction.CANCEL) {
+      await popupWallet.cancelTransaction();
+    } else {
+      throw new Error(`Invalid transaction action: ${action}`);
+    }
   }
 
+  /**
+   * Confirm a transaction in the extension popup
+   * @param {BrowserContext} context - Playwright browser context
+   * @returns {Promise<void>}
+   */
+  async confirmTransaction(context) {
+    await this.handleTransactionPopup(context, TransactionAction.CONFIRM);
+  }
+
+  /**
+   * Cancel a transaction in the extension popup
+   * @param {BrowserContext} context - Playwright browser context
+   * @returns {Promise<void>}
+   */
   async cancelTransaction(context) {
-
-    // Wait for the extension prompt modal to open
-    const [extensionPopup] = await Promise.all([context.waitForEvent('page')]);
-
-    // Bring the extension prompt modal to the front
-    await extensionPopup.bringToFront();
-
-    const popupWallet = new this.wallet.constructor(extensionPopup);
-    await popupWallet.cancelTransaction();
+    await this.handleTransactionPopup(context, TransactionAction.CANCEL);
   }
 
   /**
@@ -800,4 +812,3 @@ class NeuraBridgePage extends BasePage {
 }
 
 module.exports = NeuraBridgePage;
-module.exports.BridgeOperationType = BridgeOperationType;

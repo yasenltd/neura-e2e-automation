@@ -3,8 +3,7 @@ import {ethers} from 'ethers';
 const {expect} = require('@playwright/test');
 const {testWithNeuraAndHolesky: test} = require('../test-utils/testFixtures');
 const {waitForAnyDepositInSubgraph} = require('../utils/subgraphQueryUtil');
-const NeuraBridgePage = require('../pages/NeuraBridgePage');
-const {BridgeOperationType} = NeuraBridgePage;
+const {BridgeOperationType} = require('../constants/bridgeConstants');
 
 require('dotenv').config();
 
