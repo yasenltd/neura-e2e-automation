@@ -790,7 +790,7 @@ class BasePage {
    *
    * @returns {Promise<boolean>}    true if the target element becomes visible within `timeout`
    */
-  async isRoleVisible(
+  async isElementHidden(
     role,
     name   = null,
     opts   = {},
@@ -807,7 +807,7 @@ class BasePage {
 
     try {
       const element = this.getElementWithDescLoc(descriptor, index);
-      await element.waitFor({ state: 'visible', timeout });
+      await element.waitFor({ state: 'hidden', timeout });
       return await element.isVisible();
     } catch {
       return false;

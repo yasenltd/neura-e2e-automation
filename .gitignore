@@ -38,4 +38,4 @@ screenshots
 dapp-example/backend/database.db
 
 # Project specific files
-Junie.md
+.junie/guidelines.md

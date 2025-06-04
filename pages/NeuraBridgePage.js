@@ -37,7 +37,7 @@ class NeuraBridgePage extends BasePage {
   }
 
   async disconnectWallet() {
-    await this.click(this.selectors.connection.settingsButton);
+    await this.clickDescLoc(this.selectors.connection.settingsButton);
     await this.click(this.selectors.connection.disconnectWallet);
   }
 
@@ -308,22 +308,14 @@ class NeuraBridgePage extends BasePage {
   async retrieveBridgeLayoutData() {
     const bridgeTitle = await this.getTextByDescLoc(this.selectors.bridgeDescriptors.neuraBridgeTitleLabel);
     const networks = await this.getAllRowTexts(this.selectors.bridgeDescriptors.bridgeLabels, this.selectors.general.cellCss);
-
     const toLabel      = await this.getTextByDescLoc(this.selectors.bridgeDescriptors.toLabel);
     const fromLabel    = await this.getTextByDescLoc(this.selectors.bridgeDescriptors.fromLabel);
     const amountLabel  = await this.getTextByDescLoc(this.selectors.bridgeDescriptors.amountLabel);
     const limitLabel  = await this.getTextByDescLoc(this.selectors.bridgeDescriptors.limitLabel);
-
-    // links – leverage the new role-aware visibility check
-    const claimVisible      = await this.isRoleVisible(this.selectors.roles.link, this.selectors.bridgeDescriptors.claimLink.link);
-    const faucetVisible     = await this.isRoleVisible(this.selectors.roles.link, this.selectors.bridgeDescriptors.faucetLink.link);
-    const howItWorksVisible = await this.isRoleVisible(this.selectors.roles.link, this.selectors.bridgeDescriptors.howItWorks.link);
-
     return {
       title:  bridgeTitle,
       networks: networks,
       labels: { toLabel, fromLabel, amountLabel, limitLabel },
-      links:  { claimVisible, faucetVisible, howItWorksVisible },
     };
   }
 
@@ -356,7 +348,7 @@ class NeuraBridgePage extends BasePage {
   }
 
   async isConnectWalletBtnVisible() {
-    return await this.isRoleVisible(this.selectors.connection.connectWalletButton);
+    return await this.isElementHidden(this.selectors.connection.connectWalletButton);
   }
 
   async assertClaimTokenPageLayout() {
@@ -405,7 +397,7 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<void>} - Resolves when the connection is complete
    */
   async connectMetaMaskWallet(context, useConnectWalletWidgetButton = false) {
-    const enterAmountBtnIsHidden = await this.isRoleVisible(this.selectors.roles.text, this.selectors.bridgeDescriptors.enterAmountBtnLabel.text);
+    const enterAmountBtnIsHidden = await this.isElementHidden(this.selectors.roles.text, this.selectors.bridgeDescriptors.enterAmountBtnLabel.text);
     assertionHelpers.assertEnterAmountButtonNotVisible(enterAmountBtnIsHidden);
     await this.wireMetaMask(context, useConnectWalletWidgetButton);
   }
@@ -647,16 +639,13 @@ class NeuraBridgePage extends BasePage {
    * 4. Performs the specified operation based on the operation parameter
    *
    * @param {Object} context - The browser context
-   * @param {string} amount - The amount to bridge
    * @param {BridgeOperationType} operation - Controls which operation to perform:
    *                                    - BridgeOperationType.APPROVE_ONLY: only approve token transfer
    *                                    - BridgeOperationType.APPROVE_AND_BRIDGE: approve and bridge tokens
    *                                    - BridgeOperationType.BRIDGE_ONLY: only bridge tokens (skip approval)
    * @returns {Promise<void>}
    */
-  async performHoleskyToNeuraOperationWithApprovalOfCustomChain(context, amount, operation = BridgeOperationType.APPROVE_AND_BRIDGE) {
-
-    await this.fillAmount(amount);
+  async performHoleskyToNeuraOperationWithApprovalOfCustomChain(context, operation = BridgeOperationType.APPROVE_AND_BRIDGE) {
 
     // Always show approve button for custom chain approval
     const previewTransactionLayout = await this.clickBridgeButtonApprovingCustomChain(context, true);
@@ -687,6 +676,7 @@ class NeuraBridgePage extends BasePage {
    *
    * This version doesn't require context as it doesn't call confirmTransactionWithExplicitPageSearch
    *
+   * @param {Object} context - The browser context
    * @param {string} amount - The amount to bridge
    * @returns {Promise<Object>} - The preview transaction layout
    */

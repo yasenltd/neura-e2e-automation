@@ -20,8 +20,10 @@ module.exports = {
             alt: 'Account Avatar',
         },
         selectMetaMaskWallet: 'rk-wallet-option-io.metamask',
-        connectWalletBridgeWidgetButton: ':nth-child(6) > button',
-        settingsButton: '.flex.items-center.gap-1 > button:nth-child(1)',
+        connectWalletBridgeWidgetButton: { text: 'Connect Wallet' },
+        settingsButton: {
+            text: 'Settings'
+        },
         connectMetaWalletButton: '[data-testid="confirm-btn"]',
         signMessage: '[data-testid="rk-auth-message-button"]',
         disconnectWallet: '[data-testid="rk-disconnect-button"]',
@@ -85,9 +87,6 @@ module.exports = {
         claimTokensBtn: {css: 'button[data-slot="button"]:has-text("Claim Tokens")'},
         claimTransactionButton: {css: 'button[data-slot="button"]:has-text("Claim")'},
         approveTokenTransferButton: {css: 'button[data-slot="button"]:has-text("Approve Token Transfer")'},
-        claimLink: {link: 'Claim'},
-        faucetLink: {link: 'Faucet'},
-        howItWorks: {link: 'How it works'},
         bridgeTabBtn: {css: 'a[href="/"]'},
         howItWorksBtn: {css: 'a[href="#"]'},
         claimBtn: {css: 'a[href="/claim"]'},
