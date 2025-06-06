@@ -24,7 +24,15 @@ const networks = {
     chainId: '17000',
     currencySymbol: 'ETH',
     name: 'Holesky',
-    explorer: 'https://holesky.etherscan.io'
+    explorer: process.env.HOLESKY_SCANNER
+  },
+  sepolia: {
+    networkName: 'Sepolia',
+    rpcUrl: process.env.HOLESKY_RPC_URL,
+    chainId: '11155111',
+    currencySymbol: 'SepoliaETH',
+    name: 'Holesky',
+    explorer: process.env.SEPOLION_EXPLORER
   }
 };
 

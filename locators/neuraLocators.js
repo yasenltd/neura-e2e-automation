@@ -20,7 +20,6 @@ module.exports = {
             alt: 'Account Avatar',
         },
         selectMetaMaskWallet: 'rk-wallet-option-io.metamask',
-        connectWalletBridgeWidgetButton: { text: 'Connect Wallet' },
         settingsButton: {
             text: 'Settings'
         },
@@ -73,15 +72,22 @@ module.exports = {
             role: 'button',
             name: 'faucet'
         },
-        toLabel: {text: 'To'},
+        bridgeLabel: {
+            role:    'heading',
+            name:    'Bridge',   // accessible name (usually the visible text)
+            options: { level: 2 } // because it’s an <h2>
+        },
         fromLabel: {text: 'From'},
-        limitLabel: {text: 'Max'},
-        bridgeLabel: {text: 'Bridge'},
+        toLabel: {text: 'To'},
+        amountLabel: {text: 'Amount'},
+        limitLabel: {
+            role: 'button',
+            name: 'Max'
+        },
+        connectWalletButtonInWidget: {css: 'button[data-slot="button"]:has-text("Connect Wallet")'},
         enterAmountBtnLabel: {text: 'Enter Amount'},
         closeBridgeModalButton: {css: '#radix-«R13qhdbH1» > button'},
         switchBridgeBtn: {css: '.relative.h-0.mt-6 > button'},
-        amountLabel: {css: '.justify-between.items-center > div > p'},
-        connectWallet: {css: 'button[data-slot="button"]:has-text("Connect Wallet")'},
         bridgeBtn: {css: 'button[data-slot="button"]:has-text("Bridge")'},
         bridgeTokensBtn: {css: 'button[data-slot="button"]:has-text("Bridge Tokens")'},
         claimTokensBtn: {css: 'button[data-slot="button"]:has-text("Claim Tokens")'},
@@ -93,18 +99,11 @@ module.exports = {
         faucetBtn: {css: 'a[href="/faucet"]'},
         bridgeLabels: {css: '.flex.justify-between.items-center'},
         neuraLogo: {css: '.flex.items-center.gap-4.md\\:gap-6 > img'},
-        neuraBridgeTitleLabel: {css: '.relative.flex.items-center.justify-center > h2'},
         previewDataTableLabels: '.space-y-6.py-4 > div.space-y-4 > div > div > p',
         previewDataTableValues: '.space-y-6.py-4 > div.space-y-4 > div > div > div > p',
         bridgeTokenLabel: {css: 'h2[data-slot="dialog-title"]:has-text("Bridge Tokens")'},
         previewTransactionLabel: {css: 'h2[data-slot="dialog-title"]:has-text("Preview Transaction")'},
         transactionHash: {css: '.space-y-6.py-4 > div.space-y-4 > div > div > div > a'},
-    },
-    faucetDescriptors: {
-        neuraFaucetTitleLabel: {css: '.flex.flex-col.items-center.mb-2 > h1'},
-        neuraFaucetLabel: {css: '.relative.z-10.flex.flex-col.flex-1 p'},
-        connectWalletButton: {css: '.flex.flex-col.gap-4 > div:nth-child(1) > div > button'},
-        claimTokensButton: {css: '.flex.flex-col.gap-4 > div.w-full.space-y-4 > div:nth-child(2) > button'},
     },
     claimTokensDescriptors: {
         tableLabel: {css: '.bg-white.rounded-lg.px-8.py-3.grid.grid-cols-5'},

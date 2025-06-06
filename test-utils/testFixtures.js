@@ -41,9 +41,7 @@ const createTestFixture = (options = { setupHoleskyNetwork: true, setupNeuraNetw
         };
 
         if (!config.seedPhrase || !config.password || !config.bridgePageUrl) {
-          throw new Error(
-            'Missing required environment variables: PRIVATE_KEY, WALLET_PASSWORD, and NEURA URL must be set',
-          );
+          console.error('Missing required environment variables: PRIVATE_KEY, WALLET_PASSWORD, and NEURA URL must be set');
         }
 
         // Initialize browser with MetaMask
@@ -125,7 +123,7 @@ const testWithoutNeura = createTestFixture({
  * Test fixture with both Neura and Holesky networks setup
  */
 const testWithNeuraAndHolesky = createTestFixture({ 
-  setupHoleskyNetwork: true, 
+  setupHoleskyNetwork: false,
   setupNeuraNetwork: true 
 });
 

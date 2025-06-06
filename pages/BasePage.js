@@ -697,7 +697,28 @@ class BasePage {
     await el.fill(value);
   }
 
-  /** Return the textContent of one element, waiting for it to appear first. */
+  /**
+   * Return true if the element’s textContent equals the `text`
+   * (or `name`) field from its own descriptor.
+   *
+   * @param {object|string} desc          Descriptor object or test-id string
+   * @param {number|null}   [nth=null]    Index when the locator matches many
+   * @param {number}        [timeout=this.DEFAULT_TIMEOUT]
+   * @returns {Promise<boolean>}
+   */
+  async doesTextMatchDescriptor(desc, nth = null, timeout = this.DEFAULT_TIMEOUT) {
+    const el = this.getElementWithDescLoc(desc, nth ?? 0);
+    try {
+      await el.waitFor({ state: 'visible', timeout });
+    } catch (e) {
+      return false;
+    }
+    const actual   = (await el.textContent())?.trim() || '';
+    const expected = (desc && (desc.text || desc.name)) || '';
+    return actual === expected;
+  }
+
+/** Return the textContent of one element, waiting for it to appear first. */
   async getTextByDescLoc(desc, nth = null, timeout = this.DEFAULT_TIMEOUT) {
     const el = await this.waitForElement(desc, nth, 'visible', timeout);
     return el.textContent();
@@ -811,6 +832,31 @@ class BasePage {
       return await element.isVisible();
     } catch {
       return false;
+    }
+  }
+
+  /**
+   * Is *the* element you care about visible?
+   *
+   * @param {object|string} desc          – locator descriptor / test-id
+   * @param {number|null}   [index=null]  – 0 = first match, 1 = second …
+   *                                       null  ⇒  first()   (safer than whole set)
+   * @param {number}        [timeout=this.DEFAULT_TIMEOUT]
+   * @returns Promise<boolean>
+   */
+  async isElementVisibleDesc(desc, index = null, timeout = this.DEFAULT_TIMEOUT) {
+    // Build the locator collection
+    let loc = this.getElementWithDescLoc(desc, null);   // never pass index yet
+
+    // Narrow to one node
+    loc = index === null ? loc.first() : loc.nth(index);
+
+    // Wait until *that* node is visible (timeout 0 = just a quick check)
+    try {
+      await loc.waitFor({ state: 'visible', timeout });
+      return loc.isVisible();
+    } catch {
+      return false;      // not found or never became visible
     }
   }
 

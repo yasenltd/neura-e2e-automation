@@ -302,21 +302,15 @@ class NeuraBridgePage extends BasePage {
   }
 
   /**
-   * Retrieves the bridge layout data from the UI
-   * @returns {Promise<Object>} - Returns an object containing the bridge layout data
+   * Asserts that all bridge widget labels are visible
+   * @returns {Promise<void>}
    */
-  async retrieveBridgeLayoutData() {
-    const bridgeTitle = await this.getTextByDescLoc(this.selectors.bridgeDescriptors.neuraBridgeTitleLabel);
-    const networks = await this.getAllRowTexts(this.selectors.bridgeDescriptors.bridgeLabels, this.selectors.general.cellCss);
-    const toLabel      = await this.getTextByDescLoc(this.selectors.bridgeDescriptors.toLabel);
-    const fromLabel    = await this.getTextByDescLoc(this.selectors.bridgeDescriptors.fromLabel);
-    const amountLabel  = await this.getTextByDescLoc(this.selectors.bridgeDescriptors.amountLabel);
-    const limitLabel  = await this.getTextByDescLoc(this.selectors.bridgeDescriptors.limitLabel);
-    return {
-      title:  bridgeTitle,
-      networks: networks,
-      labels: { toLabel, fromLabel, amountLabel, limitLabel },
-    };
+  async assertBridgeWidgetLabels() {
+    await expect(this.isElementVisibleDesc(this.selectors.bridgeDescriptors.bridgeLabel)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.bridgeDescriptors.toLabel)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.bridgeDescriptors.fromLabel)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.bridgeDescriptors.amountLabel)).resolves.toBe(true);
+    await expect(this.isElementVisibleDesc(this.selectors.bridgeDescriptors.limitLabel)).resolves.toBe(true);
   }
 
   async assertSourceChainModalLayout(activeChain) {
@@ -330,17 +324,16 @@ class NeuraBridgePage extends BasePage {
 
   /**
    * Assert page layout and verify it against expected values
-   * @returns {Promise<Object>} - Returns the page layout object after verification
+   * @returns {Promise<void>}
    */
   async assertBridgeWidgetLayout() {
-    const pageLayout = await this.retrieveBridgeLayoutData();
-    assertionHelpers.validateBridgePageLayout(pageLayout);
+    await this.assertBridgeWidgetLabels();
+    const networks = await this.getAllRowTexts(this.selectors.bridgeDescriptors.bridgeLabels, this.selectors.general.cellCss);
     assertionHelpers.assertNetworkLabels(
-        pageLayout,
+        networks,
         neuraBridgeAssertions.pageLayout.networks.holesky,
         neuraBridgeAssertions.pageLayout.networks.neuraTestnet
     );
-    return pageLayout;
   }
 
   async getEnterAmountBtnState() {
@@ -416,7 +409,7 @@ class NeuraBridgePage extends BasePage {
    */
   async wireMetaMask(context, useConnectWalletWidgetButton = false) {
     if (useConnectWalletWidgetButton) {
-      await this.clickDescLoc(this.selectors.bridgeDescriptors.connectWallet);
+      await this.clickDescLoc(this.selectors.bridgeDescriptors.connectWalletButtonInWidget);
     } else {
       await this.clickDescLoc(this.selectors.connection.connectWalletButton);
     }
@@ -523,18 +516,17 @@ class NeuraBridgePage extends BasePage {
   /**
    * Switch the network direction and verify the new layout
    *
-   * @returns {Promise<Object>} - The new page layout after switching
+   * @returns {Promise<void>}
    */
   async switchNetworkDirection() {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.switchBridgeBtn);
-    const newPageLayout = await this.retrieveBridgeLayoutData();
-    assertionHelpers.validateBridgePageLayout(newPageLayout);
+    await this.assertBridgeWidgetLabels();
+    const networks = await this.getAllRowTexts(this.selectors.bridgeDescriptors.bridgeLabels, this.selectors.general.cellCss);
     assertionHelpers.assertNetworkLabels(
-      newPageLayout,
+        networks,
       neuraBridgeAssertions.pageLayout.networks.neuraTestnet,
       neuraBridgeAssertions.pageLayout.networks.holesky
     );
-    return newPageLayout;
   }
 
   async closeBridgeModal() {
@@ -551,7 +543,7 @@ class NeuraBridgePage extends BasePage {
    * @param {boolean} [options.walletConnection.useConnectWalletWidgetButton=false] - Whether to use the widget button (true) or standard button (false)
    * @param {boolean} [options.switchNetworkDirection=false] - Whether to switch the network direction
    * @param {boolean} [options.verifyBridgePageLayout=false] - Whether to verify the page layout
-   * @returns {Promise<Object>} - The page layout after setup
+   * @returns {Promise<void>}
    */
   async initializeBridgeWithOptions(options) {
     const {
@@ -571,8 +563,6 @@ class NeuraBridgePage extends BasePage {
       throw new Error('Context is required for bridge initialization');
     }
 
-    let pageLayout;
-
     // Connect wallet if requested
     if (connectWallet) {
       await this.connectMetaMaskWallet(context, useConnectWalletWidgetButton);
@@ -580,15 +570,13 @@ class NeuraBridgePage extends BasePage {
 
     // Verify the initial layout if requested
     if (verifyBridgePageLayout) {
-      pageLayout = await this.assertBridgeWidgetLayout();
+      await this.assertBridgeWidgetLayout();
     }
 
     // Switch network direction if requested
     if (switchNetworkDirection) {
-      return await this.switchNetworkDirection();
+      await this.switchNetworkDirection();
     }
-
-    return pageLayout;
   }
 
   /**

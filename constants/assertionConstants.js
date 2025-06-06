@@ -22,13 +22,6 @@ const neuraBridgeAssertions = {
       neuraTestnet: ['Neura Testnet', 'testnet'],
       bscTestnet: ['BSC Testnet', 'testnet'],
     },
-    labels: {
-      to: 'To',
-      from: 'From',
-      amount: 'Amount',
-      enterAmount: 'Enter Amount',
-      limit: 'Max'
-    },
   },
   // Preview Transaction Layout assertions
   previewTransactionLayout: {

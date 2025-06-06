@@ -8,20 +8,6 @@ const ethersUtil = require('../utils/ethersUtil');
 const BridgeDepositWatcher = require('../scripts/BridgeDepositWatcher');
 
 /**
- * Validates bridge page layout against expected values
- * @param {Object} pageLayout - The page layout object to verify
- */
-function validateBridgePageLayout(pageLayout) {
-    expect(pageLayout.title).toEqual(neuraBridgeAssertions.pageLayout.title);
-    expect(pageLayout.labels).toEqual({
-        toLabel: neuraBridgeAssertions.pageLayout.labels.to,
-        fromLabel: neuraBridgeAssertions.pageLayout.labels.from,
-        amountLabel: neuraBridgeAssertions.pageLayout.labels.amount,
-        limitLabel: neuraBridgeAssertions.pageLayout.labels.limit,
-    });
-}
-
-/**
  * Asserts MetaMask wallet screen against expected values
  * @param {Object} metaMaskScreenLayout - The MetaMask screen layout to verify
  * @returns {Promise<void>}
@@ -70,13 +56,13 @@ function assertPreviewTransactionLabels(previewTransactionLayout) {
 
 /**
  * Asserts network labels against expected values
- * @param {Object} pageLayout - The page layout containing networks
+ * @param {Object} networks - The networks
  * @param {Array} firstNetworkExpected - Expected values for the first network
  * @param {Array} secondNetworkExpected - Expected values for the second network
  */
-function assertNetworkLabels(pageLayout, firstNetworkExpected, secondNetworkExpected) {
-    expect(pageLayout.networks[1]).toEqual(firstNetworkExpected);
-    expect(pageLayout.networks[2]).toEqual(secondNetworkExpected);
+function assertNetworkLabels(networks, firstNetworkExpected, secondNetworkExpected) {
+    expect(networks[1]).toEqual(firstNetworkExpected);
+    expect(networks[2]).toEqual(secondNetworkExpected);
 }
 
 /**
@@ -118,7 +104,6 @@ function assertSelectedChain(activeSelectedChain, activeChain) {
 }
 
 module.exports = {
-    validateBridgePageLayout,
     assertMetaMaskWalletScreen,
     assertPreviewTransactionLabels,
     assertNetworkLabels,
