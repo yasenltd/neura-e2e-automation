@@ -19,7 +19,7 @@ module.exports = {
         avatarButton: {
             alt: 'Account Avatar',
         },
-        selectMetaMaskWallet: 'rk-wallet-option-io.metamask',
+        selectMetaMaskWallet: {text: 'MetaMask', options: { exact: true }},
         settingsButton: {
             text: 'Settings'
         },
@@ -42,7 +42,7 @@ module.exports = {
         selectSourceChainTitle: {
           css: 'h2[data-slot="dialog-title"]:has-text("Select Source Chain")'
         },
-        closeChainModal: {css: '#radix-«R1jqhdbH1» > button'},
+        closeChainModal: {css: '#radix-«R12fa6dbH1» > button'},
         openNetworkSourceMenu: {css: '.animate-ease-in-out'},
         networkLabels: {css: '.justify-between.items-center > div > span.text-md.font-normal.leading-5.text-gray-900'},
         activeChain: {css: '.selector-item-active'},
@@ -78,7 +78,7 @@ module.exports = {
             options: { level: 2 } // because it’s an <h2>
         },
         fromLabel: {text: 'From'},
-        toLabel: {text: 'To'},
+        toLabel: {text: 'To', options: { exact: true }},
         amountLabel: {text: 'Amount'},
         limitLabel: {
             role: 'button',
@@ -101,7 +101,6 @@ module.exports = {
         neuraLogo: {css: '.flex.items-center.gap-4.md\\:gap-6 > img'},
         previewDataTableLabels: '.space-y-6.py-4 > div.space-y-4 > div > div > p',
         previewDataTableValues: '.space-y-6.py-4 > div.space-y-4 > div > div > div > p',
-        bridgeTokenLabel: {css: 'h2[data-slot="dialog-title"]:has-text("Bridge Tokens")'},
         previewTransactionLabel: {css: 'h2[data-slot="dialog-title"]:has-text("Preview Transaction")'},
         transactionHash: {css: '.space-y-6.py-4 > div.space-y-4 > div > div > div > a'},
     },

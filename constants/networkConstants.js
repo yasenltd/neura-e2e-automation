@@ -18,14 +18,6 @@ const networks = {
     name: 'Neura Testnet',
     explorer: 'https://testnet-explorer.neura.network'
   },
-  holesky: {
-    networkName: 'Holesky',
-    rpcUrl: process.env.HOLESKY_RPC_URL,
-    chainId: '17000',
-    currencySymbol: 'ETH',
-    name: 'Holesky',
-    explorer: process.env.HOLESKY_SCANNER
-  },
   sepolia: {
     networkName: 'Sepolia',
     rpcUrl: process.env.HOLESKY_RPC_URL,

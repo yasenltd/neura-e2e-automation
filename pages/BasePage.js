@@ -1,9 +1,10 @@
-class BasePage {
-  DEFAULT_TIMEOUT = 1000;
-  LONG_TIMEOUT = 5500;
+const { DEFAULT_TIMEOUT, LONG_TIMEOUT } = require('../constants/timeoutConstants');
 
+class BasePage {
   constructor(window) {
     this.window = window;
+    this.DEFAULT_TIMEOUT = DEFAULT_TIMEOUT;
+    this.LONG_TIMEOUT = LONG_TIMEOUT;
   }
 
   // --------------------------
@@ -639,33 +640,37 @@ class BasePage {
    *  - {label|placeholder|alt|title|text|testId|css} ➜ matching helper
    */
   #buildLocator(descriptor) {
+    // Simple string → treat as test-id
     if (typeof descriptor === 'string') {
-      return this.window.getByTestId(descriptor);          // "[data-testid=...]"
+      return this.window.getByTestId(descriptor);
     }
+
+    // Helpers that accept an options object
+    const opts = descriptor.options ?? {};      // default = {}
+
     if (descriptor.role) {
       return this.window.getByRole(descriptor.role, {
         name: descriptor.name,
-        ...descriptor.options      // e.g. exact, includeHidden
+        ...opts,                                // exact, includeHidden, …
       });
     }
-    if (descriptor.label)       return this.window.getByLabel(descriptor.label);
-    if (descriptor.placeholder) return this.window.getByPlaceholder(descriptor.placeholder);
-    if (descriptor.alt)         return this.window.getByAltText(descriptor.alt);
-    if (descriptor.title)       return this.window.getByTitle(descriptor.title);
-    if (descriptor.text)        return this.window.getByText(descriptor.text, descriptor.options);
-    if (descriptor.testId)      return this.window.getByTestId(descriptor.testId);
+    if (descriptor.text)        return this.window.getByText(descriptor.text, opts);
+    if (descriptor.label)       return this.window.getByLabel(descriptor.label, opts);
+    if (descriptor.placeholder) return this.window.getByPlaceholder(descriptor.placeholder, opts);
+    if (descriptor.alt)         return this.window.getByAltText(descriptor.alt, opts);
+    if (descriptor.title)       return this.window.getByTitle(descriptor.title, opts);
+    if (descriptor.testId)      return this.window.getByTestId(descriptor.testId);   // no opts arg
     if (descriptor.className)   return this.window.locator(`.${descriptor.className.split(' ').join('.')}`);
-    if (descriptor.css)         return this.window.locator(descriptor.css); // last resort
+    if (descriptor.css)         return this.window.locator(descriptor.css);          // last-resort
     throw new Error(`Unrecognised locator descriptor: ${JSON.stringify(descriptor)}`);
   }
 
   /* -----------------------  Public helpers  ------------------------- */
 
+  // Return a Locator, or .nth(index) when you ask for one*/
   getElementWithDescLoc(descriptor, nth = null) {
     const loc = this.#buildLocator(descriptor);
-    return (nth === null || nth === undefined)   // ◀─ add the guard
-      ? loc
-      : loc.nth(nth);
+    return (nth === null || nth === undefined) ? loc : loc.nth(nth);
   }
 
   async getAllElementsWithDescLoc(descriptor) {
@@ -698,23 +703,32 @@ class BasePage {
   }
 
   /**
-   * Return true if the element’s textContent equals the `text`
-   * (or `name`) field from its own descriptor.
+   * Return true when the element’s current textContent equals the reference
+   * string embedded in the descriptor (`text` or `name`).
    *
-   * @param {object|string} desc          Descriptor object or test-id string
-   * @param {number|null}   [nth=null]    Index when the locator matches many
+   * @param {object|string} desc          – descriptor / test-id string
+   * @param {number|null}   [nth=null]    – which match to test (null ⇒ first)
    * @param {number}        [timeout=this.DEFAULT_TIMEOUT]
    * @returns {Promise<boolean>}
    */
   async doesTextMatchDescriptor(desc, nth = null, timeout = this.DEFAULT_TIMEOUT) {
-    const el = this.getElementWithDescLoc(desc, nth ?? 0);
+    // Build the locator (all options already handled in #buildLocator)
+    const loc = this.getElementWithDescLoc(desc, nth);
+
+    // Pick the node we’ll test
+    const node = (nth === null || nth === undefined) ? loc.first() : loc;
+
+    // Wait (fast-fail if never visible)
     try {
-      await el.waitFor({ state: 'visible', timeout });
-    } catch (e) {
+      await node.waitFor({ state: 'visible', timeout });
+    } catch {
       return false;
     }
-    const actual   = (await el.textContent())?.trim() || '';
+
+    // Compare actual vs. expected
+    const actual   = (await node.textContent())?.trim() || '';
     const expected = (desc && (desc.text || desc.name)) || '';
+
     return actual === expected;
   }
 

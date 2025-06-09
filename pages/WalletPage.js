@@ -150,7 +150,7 @@ class WalletPage extends BasePage {
 
   /**
    * Opens the wallet extension in a new tab
-   * @returns {Promise<{extensionPage: WalletPage, previousPage: Page}>} Extension page and previous page references
+   * @returns {Promise<{extensionPage: MetamaskPage, previousPage: Page}>} Extension page and previous page references
    */
   async openExtension() {
     // Store reference to current page

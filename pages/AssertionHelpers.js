@@ -15,7 +15,7 @@ const BridgeDepositWatcher = require('../scripts/BridgeDepositWatcher');
 async function assertMetaMaskWalletScreen(metaMaskScreenLayout) {
     expect(metaMaskScreenLayout.neuraWalletLabels).toEqual(metaMaskIntegrationAssertions.neuraWalletLabels);
     expect(metaMaskScreenLayout.networkLabels[0]).toEqual(metaMaskIntegrationAssertions.networkLabels.bscTestnet);
-    expect(metaMaskScreenLayout.networkLabels[2]).toEqual(metaMaskIntegrationAssertions.networkLabels.holesky);
+    expect(metaMaskScreenLayout.networkLabels[2]).toEqual(metaMaskIntegrationAssertions.networkLabels.sepolia);
 
     const watcher = new BridgeDepositWatcher();
 
@@ -25,12 +25,11 @@ async function assertMetaMaskWalletScreen(metaMaskScreenLayout) {
     const bscBalanceInMetaMask = ['tBNB', ethBnbOnChain, metaMaskIntegrationAssertions.neuraWalletLabels[0], ankrBnbOnChain];
     expect(metaMaskScreenLayout.networkLabels[1]).toEqual(bscBalanceInMetaMask);
 
-    // Holesky balance assertions
+    // Sepolia balance assertions
     const ethOnChain = ethersUtil.formatBalance(await watcher.getEthBalance());
     const ankrOnChain = ethersUtil.formatBalance(await watcher.getAnkrBalance());
-    const holeskyBalanceInMetaMask = ['ETH', ethOnChain, metaMaskIntegrationAssertions.neuraWalletLabels[0], ankrOnChain];
-    expect(metaMaskScreenLayout.networkLabels[3]).toEqual(holeskyBalanceInMetaMask);
-
+    const sepoliaBalanceInMetaMask = ['ETH', ethOnChain, metaMaskIntegrationAssertions.neuraWalletLabels[0], ankrOnChain];
+    expect(metaMaskScreenLayout.networkLabels[3]).toEqual(sepoliaBalanceInMetaMask);
     expect(metaMaskScreenLayout.activityLabel).toEqual(metaMaskIntegrationAssertions.activityLabel);
 }
 
@@ -91,7 +90,7 @@ function assertPreviewTransactionLayout(previewTransactionLayout, expectedValues
 function assertSourceChainModalLayout(labels) {
     expect(labels[0]).toEqual(neuraBridgeAssertions.pageLayout.networks.bscTestnet.at(0));
     expect(labels[1]).toEqual(neuraBridgeAssertions.pageLayout.networks.neuraTestnet.at(0));
-    expect(labels[2]).toEqual(neuraBridgeAssertions.pageLayout.networks.holesky.at(0));
+    expect(labels[2]).toEqual(neuraBridgeAssertions.pageLayout.networks.sepolia.at(0));
 }
 
 /**

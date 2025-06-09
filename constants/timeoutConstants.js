@@ -1,0 +1,29 @@
+/**
+ * Timeout constants for the Neura E2E Automation project
+ * Centralizes all timeout values to ensure consistency and maintainability
+ */
+
+// Standard timeouts
+const DEFAULT_TIMEOUT = 1000;
+const LONG_TIMEOUT = 5500;
+
+// Operation-specific timeouts
+const TRANSACTION_APPROVAL_TIMEOUT = 3000;
+const NETWORK_OPERATION_TIMEOUT = 1500;
+const WALLET_OPERATION_TIMEOUT = 5000;
+const BRIDGE_OPERATION_TIMEOUT = 45000;
+const TOKEN_TRANSFER_TIMEOUT = 60000;
+const METAMASK_POPUP_TIMEOUT = 2000;
+const AMOUNT_FILL_TIMEOUT = 3000;
+
+module.exports = {
+  DEFAULT_TIMEOUT,
+  LONG_TIMEOUT,
+  TRANSACTION_APPROVAL_TIMEOUT,
+  NETWORK_OPERATION_TIMEOUT,
+  WALLET_OPERATION_TIMEOUT,
+  BRIDGE_OPERATION_TIMEOUT,
+  TOKEN_TRANSFER_TIMEOUT,
+  METAMASK_POPUP_TIMEOUT,
+  AMOUNT_FILL_TIMEOUT
+};

@@ -9,8 +9,8 @@ const erc20Abi = ['function balanceOf(address) view returns (uint256)'];
 class BridgeDepositWatcher {
   constructor() {
     this.myAddress = process.env.MY_ADDRESS?.toLowerCase();
-    this.rpcUrl = process.env.HOLESKY_RPC_URL;
-    this.contractAddress = process.env.HOLESKY_BRIDGE_ADDRESS;
+    this.rpcUrl = process.env.SEPOLIA_RPC_URL;
+    this.contractAddress = process.env.SEPOLIA_BRIDGE_ADDRESS;
     this.ankrAddress = process.env.ANKR_TOKEN_ADDRESS;
 
     if (!this.myAddress || !this.rpcUrl || !this.contractAddress || !this.ankrAddress) {

@@ -1,5 +1,5 @@
 const { expect } = require('@playwright/test');
-const { testWithNeuraAndHolesky: test } = require('../test-utils/testFixtures');
+const { testWithNeuraAndSepolia: test } = require('../test-utils/testFixtures');
 const {neuraBridgeAssertions} = require("../constants/assertionConstants");
 const { TEST_AMOUNT } = require('../constants/testConstants');
 
@@ -65,7 +65,7 @@ test.describe('Neura Bridge page validation', () => {
       });
 
       // Step 2: Verify that the Enter Amount button is disabled initially
-      await neuraBridgePage.verifySourceChainModal(neuraBridgeAssertions.pageLayout.networks.holesky.at(0));
+      await neuraBridgePage.verifySourceChainModal(neuraBridgeAssertions.pageLayout.networks.sepolia.at(0));
       await neuraBridgePage.switchNetworkDirection();
       await neuraBridgePage.verifySourceChainModal(neuraBridgeAssertions.pageLayout.networks.neuraTestnet.at(0));
 
@@ -89,8 +89,6 @@ test.describe('Neura Bridge page validation', () => {
       });
 
       // Step 2: Verify that Neura Claim page layout
-      await neuraBridgePage.openBurgerMenu();
-      await neuraBridgePage.selectClaimFromBurgerMenu();
       await neuraBridgePage.assertClaimTokenPageLayout();
 
     } catch (error) {

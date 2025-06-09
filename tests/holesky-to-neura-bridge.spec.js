@@ -1,7 +1,7 @@
 import {ethers} from 'ethers';
 
 const {expect} = require('@playwright/test');
-const {testWithNeuraAndHolesky: test} = require('../test-utils/testFixtures');
+const {testWithNeuraAndSepolia: test} = require('../test-utils/testFixtures');
 const {waitForAnyDepositInSubgraph} = require('../utils/subgraphQueryUtil');
 const {BridgeOperationType, TEST_AMOUNT, TEST_TIMEOUT} = require('../constants/testConstants');
 

@@ -12,11 +12,11 @@ require('dotenv').config();
 /**
  * Creates a test fixture with common setup and teardown logic
  * @param {Object} options - Configuration options for the test fixture
- * @param {boolean} options.setupHoleskyNetwork - Whether to set up the Holesky network (default: true)
+ * @param {boolean} options.setupSepoliaNetwork - Whether to set up the Sepolia network (default: true)
  * @param {boolean} options.setupNeuraNetwork - Whether to set up the Neura network (default: true)
  * @returns {Object} - The configured test object with fixtures
  */
-const createTestFixture = (options = { setupHoleskyNetwork: true, setupNeuraNetwork: true }) => {
+const createTestFixture = (options = { setupSepoliaNetwork: true, setupNeuraNetwork: true }) => {
   // Create a test object with slow() called to increase timeouts
   const slowTest = baseTest.extend({});
   slowTest.slow();
@@ -63,8 +63,8 @@ const createTestFixture = (options = { setupHoleskyNetwork: true, setupNeuraNetw
         const { extensionPage, previousPage } = await wallet.openExtension();
 
         // Setup networks based on options
-        if (options.setupHoleskyNetwork) {
-          await extensionPage.addAndSelectNetwork(networks.holesky);
+        if (options.setupSepoliaNetwork) {
+          await extensionPage.addAndSelectNetwork(networks.sepolia);
         }
         if (options.setupNeuraNetwork) {
           await extensionPage.addAndSelectNetwork(networks.neuraTestnet);
@@ -104,41 +104,41 @@ const createTestFixture = (options = { setupHoleskyNetwork: true, setupNeuraNetw
 };
 
 /**
- * Test fixture without Holesky network setup (only Neura)
+ * Test fixture without Sepolia network setup (only Neura)
  */
-const testWithoutHolesky = createTestFixture({ 
-  setupHoleskyNetwork: false, 
+const testWithoutSepolia = createTestFixture({ 
+  setupSepoliaNetwork: false, 
   setupNeuraNetwork: true 
 });
 
 /**
- * Test fixture without Neura network setup (only Holesky)
+ * Test fixture without Neura network setup (only Sepolia)
  */
 const testWithoutNeura = createTestFixture({ 
-  setupHoleskyNetwork: true, 
+  setupSepoliaNetwork: true, 
   setupNeuraNetwork: false 
 });
 
 /**
- * Test fixture with both Neura and Holesky networks setup
+ * Test fixture with both Neura and Sepolia networks setup
  */
-const testWithNeuraAndHolesky = createTestFixture({ 
-  setupHoleskyNetwork: false,
+const testWithNeuraAndSepolia = createTestFixture({ 
+  setupSepoliaNetwork: false,
   setupNeuraNetwork: true 
 });
 
 /**
- * Test fixture without both Neura and Holesky networks setup
+ * Test fixture without both Neura and Sepolia networks setup
  */
-const testWithoutNeuraAndHolesky = createTestFixture({ 
-  setupHoleskyNetwork: false, 
+const testWithoutNeuraAndSepolia = createTestFixture({ 
+  setupSepoliaNetwork: false, 
   setupNeuraNetwork: false 
 });
 
 module.exports = {
   createTestFixture,
-  testWithoutHolesky,
+  testWithoutSepolia,
   testWithoutNeura,
-  testWithNeuraAndHolesky,
-  testWithoutNeuraAndHolesky
+  testWithNeuraAndSepolia,
+  testWithoutNeuraAndSepolia
 };

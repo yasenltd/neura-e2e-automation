@@ -42,7 +42,7 @@ function getWallet(privateKey, networkName) {
   return new ethers.Wallet(privateKey, provider);
 }
 
-function formatBalance(raw, decimals = 1) {
+function formatBalance(raw, decimals = 4) {
   return parseFloat(raw).toFixed(decimals).replace(/\.?0+$/, ''); // clean trailing zeros
 }
 

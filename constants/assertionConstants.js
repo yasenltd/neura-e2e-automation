@@ -8,7 +8,7 @@ const metaMaskIntegrationAssertions = {
   neuraWalletLabels: ['ANKR', 'Neura Chain'],
   networkLabels: {
     bscTestnet: ['BSC Testnet'],
-    holesky: ['Holesky'],
+    sepolia: ['Sepolia'],
   },
   activityLabel: ['Activity'],
 };
@@ -18,7 +18,7 @@ const neuraBridgeAssertions = {
   pageLayout: {
     title: 'Bridge',
     networks: {
-      holesky: ['Holesky', 'testnet'],
+      sepolia: ['Sepolia', 'testnet'],
       neuraTestnet: ['Neura Testnet', 'testnet'],
       bscTestnet: ['BSC Testnet', 'testnet'],
     },

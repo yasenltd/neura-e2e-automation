@@ -5,6 +5,16 @@ const BasePage = require('./BasePage');
 const selectors = require('../locators/neuraLocators');
 const { neuraBridgeAssertions } = require('../constants/assertionConstants');
 const { BridgeOperationType, TransactionAction } = require('../constants/testConstants');
+const { 
+  DEFAULT_TIMEOUT,
+  TRANSACTION_APPROVAL_TIMEOUT, 
+  NETWORK_OPERATION_TIMEOUT, 
+  WALLET_OPERATION_TIMEOUT,
+  BRIDGE_OPERATION_TIMEOUT,
+  TOKEN_TRANSFER_TIMEOUT,
+  METAMASK_POPUP_TIMEOUT,
+  AMOUNT_FILL_TIMEOUT
+} = require('../constants/timeoutConstants');
 const assertionHelpers = require('./AssertionHelpers');
 const { ethers } = require('ethers');
 
@@ -42,7 +52,7 @@ class NeuraBridgePage extends BasePage {
   }
 
   async claimLatestTransaction(context) {
-    await new Promise(r => setTimeout(r, 3000));
+    await new Promise(r => setTimeout(r, TRANSACTION_APPROVAL_TIMEOUT));
     await this.openBurgerMenu();
     await this.selectClaimFromBurgerMenu();
     await this.assertClaimTokenPageLayout();
@@ -55,10 +65,6 @@ class NeuraBridgePage extends BasePage {
 
   async selectBridgeFromBurgerMenu() {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeButtonInBurgerMenu);
-  }
-
-  async selectClaimFromBurgerMenu() {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.claimButtonInBurgerMenu);
   }
 
   async selectFaucetFromBurgerMenu() {
@@ -123,7 +129,7 @@ class NeuraBridgePage extends BasePage {
     await popupWallet.connectWallet();
 
     // Signing user message for authentication
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, TRANSACTION_APPROVAL_TIMEOUT / 3)); // Reduced timeout for signing
     await this.click(this.selectors.connection.signMessage);
     await this.confirmTransaction(context);
     // Return to the dapp page
@@ -182,21 +188,29 @@ class NeuraBridgePage extends BasePage {
 
     try {
       [extensionPopup] = await Promise.all([
-        context.waitForEvent('page', {timeout: 1000}),
-        this.page.waitForTimeout(200),
+        context.waitForEvent('page', {timeout: DEFAULT_TIMEOUT}),
+        this.page.waitForTimeout(DEFAULT_TIMEOUT / 5), // Short timeout for waiting
       ]);
       console.log('✅ MetaMask popup opened as new tab');
-    } catch {
+    } catch (error) {
       console.log('🔍 Looking for MetaMask popup opened as new tab');
       extensionPopup = await this.findAndFocusMatchingPage(context, urlMatchers);
 
-      if (!extensionPopup) throw new Error('❌ Could not detect MetaMask popup');
+      if (!extensionPopup) {
+        console.error('Failed to find MetaMask popup:', error.message);
+        throw new Error('❌ Could not detect MetaMask popup');
+      }
       console.log('✅ Found already open MetaMask tab');
     }
 
-    const popupWallet = new this.wallet.constructor(extensionPopup);
-    await popupWallet.approveCustomNetwork();
-    await new Promise(r => setTimeout(r, 1500));
+    try {
+      const popupWallet = new this.wallet.constructor(extensionPopup);
+      await popupWallet.approveCustomNetwork();
+      await new Promise(r => setTimeout(r, NETWORK_OPERATION_TIMEOUT));
+    } catch (error) {
+      console.error('Error approving custom network:', error.message);
+      throw error;
+    }
   }
 
   /**
@@ -206,29 +220,84 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<Page|null>} - The matching page or null if not found
    */
   async findAndFocusMatchingPage(context, urlMatchers = []) {
-    const matchingPage = context.pages().find(p => {
-      try {
-        const url = p.url();
-        return urlMatchers.some(matcher => url.includes(matcher));
-      } catch {
-        return false;
+    try {
+      if (!context) {
+        console.error('No context provided to findAndFocusMatchingPage');
+        return null;
       }
-    });
 
-    if (!matchingPage) return null;
+      if (!urlMatchers || urlMatchers.length === 0) {
+        console.warn('No URL matchers provided to findAndFocusMatchingPage');
+        return null;
+      }
 
-    await matchingPage.bringToFront();
-    return matchingPage;
+      const pages = context.pages();
+      if (!pages || pages.length === 0) {
+        console.warn('No pages found in context');
+        return null;
+      }
+
+      console.log(`Searching for page matching [${urlMatchers.join(', ')}] among ${pages.length} pages`);
+
+      const matchingPage = pages.find(p => {
+        try {
+          const url = p.url();
+          const matches = urlMatchers.some(matcher => url.includes(matcher));
+          if (matches) {
+            console.log(`Found matching page with URL: ${url}`);
+          }
+          return matches;
+        } catch (error) {
+          console.warn(`Error accessing URL for page:`, error.message);
+          return false;
+        }
+      });
+
+      if (!matchingPage) {
+        console.warn(`No page found matching any of: [${urlMatchers.join(', ')}]`);
+        return null;
+      }
+
+      console.log('Bringing matching page to front');
+      await matchingPage.bringToFront();
+      return matchingPage;
+    } catch (error) {
+      console.error('Error in findAndFocusMatchingPage:', error.message);
+      return null;
+    }
   }
 
+  /**
+   * Handle MetaMask tab for network approval
+   * @param {Page} tab - The MetaMask tab to handle
+   * @returns {Promise<void>}
+   * @throws {Error} If tab cannot be handled properly
+   */
   async handleMetaMaskTab(tab) {
-    await tab.bringToFront();
-    await tab.waitForLoadState('domcontentloaded');
-    const popupWallet = new this.wallet.constructor(tab);
-    await popupWallet.approveCustomNetwork();
+    try {
+      if (!tab) {
+        throw new Error('Invalid tab provided to handleMetaMaskTab');
+      }
+
+      console.log('Bringing MetaMask tab to front');
+      await tab.bringToFront();
+
+      console.log('Waiting for MetaMask tab to load');
+      await tab.waitForLoadState('domcontentloaded');
+
+      console.log('Creating wallet instance for MetaMask tab');
+      const popupWallet = new this.wallet.constructor(tab);
+
+      console.log('Approving custom network in MetaMask');
+      await popupWallet.approveCustomNetwork();
+      console.log('Successfully approved custom network');
+    } catch (error) {
+      console.error('Error handling MetaMask tab:', error.message);
+      throw new Error(`Failed to handle MetaMask tab: ${error.message}`);
+    }
   }
 
-  async detectMetaMaskTabWithFallback(timeout = 2000) {
+  async detectMetaMaskTabWithFallback(timeout = METAMASK_POPUP_TIMEOUT) {
     return (
         (await this.waitForMetaMaskTab(timeout)) ||
         (await this.findExistingMetaMaskTab()) ||
@@ -238,45 +307,62 @@ class NeuraBridgePage extends BasePage {
     );
   }
 
+  /**
+   * Find an existing MetaMask tab among all open pages
+   * @returns {Promise<Page|null>} - The MetaMask page if found, null otherwise
+   */
   async findExistingMetaMaskTab() {
-    const context = this.page.context();
-    const pages = context.pages();
+    try {
+      const context = this.page.context();
+      const pages = context.pages();
 
-    // Process all pages in parallel using Promise.all
-    const pageChecks = await Promise.all(
-      pages.map(async (page) => {
-        try {
-          const url = page.url();
-          // Use a single regex check instead of multiple includes
-          if (/notification\.html|metamask/i.test(url)) {
-            return { found: true, page, url };
+      if (!pages || pages.length === 0) {
+        console.warn('No pages found in context');
+        return null;
+      }
+
+      console.log(`Searching for MetaMask tab among ${pages.length} open pages`);
+
+      // Process all pages in parallel using Promise.all
+      const pageChecks = await Promise.all(
+        pages.map(async (page, index) => {
+          try {
+            const url = page.url();
+            // Use a single regex check instead of multiple includes
+            if (/notification\.html|metamask/i.test(url)) {
+              console.log(`Found MetaMask tab at index ${index} with URL: ${url}`);
+              return { found: true, page, url };
+            }
+          } catch (error) {
+            console.warn(`Error accessing URL for page at index ${index}:`, error.message);
           }
-        } catch (_) {
-          // Silently ignore errors accessing page URLs
-        }
-        return { found: false };
-      })
-    );
+          return { found: false };
+        })
+      );
 
-    // Find the first matching page
-    const foundPage = pageChecks.find(result => result.found);
+      // Find the first matching page
+      const foundPage = pageChecks.find(result => result.found);
 
-    if (foundPage?.page) {
-      console.log('✅ Found existing MetaMask tab:', foundPage.url);
-      return foundPage.page;
+      if (foundPage?.page) {
+        console.log('✅ Found existing MetaMask tab:', foundPage.url);
+        return foundPage.page;
+      }
+
+      console.warn('❌ No MetaMask tab found among existing pages');
+    } catch (error) {
+      console.error('Error finding MetaMask tab:', error.message);
     }
 
-    console.warn('❌ No MetaMask tab found among existing pages');
     return null;
   }
 
-  async waitForMetaMaskTab(timeout = 2000) {
+  async waitForMetaMaskTab(timeout = METAMASK_POPUP_TIMEOUT) {
     const context = this.page.context();
 
     try {
       const [newPage] = await Promise.all([
         context.waitForEvent('page', { timeout }),
-        this.page.waitForTimeout(500), // or your click that triggers MetaMask
+        this.page.waitForTimeout(DEFAULT_TIMEOUT / 2), // or your click that triggers MetaMask
       ]);
 
       await newPage.waitForLoadState('domcontentloaded');
@@ -295,10 +381,28 @@ class NeuraBridgePage extends BasePage {
     return null; // fall back if needed
   }
 
+  /**
+   * Approves a custom chain network transaction by finding and handling the MetaMask tab
+   * @returns {Promise<void>}
+   * @throws {Error} If MetaMask tab cannot be found or handled
+   */
   async approveCustomChainNetworkTransaction() {
-    const metamaskTab = await this.findExistingMetaMaskTab();
-    if (!metamaskTab) throw new Error('MetaMask tab not found');
-    await this.handleMetaMaskTab(metamaskTab);
+    try {
+      console.log('Looking for MetaMask tab to approve custom chain network transaction');
+      const metamaskTab = await this.findExistingMetaMaskTab();
+
+      if (!metamaskTab) {
+        console.error('Failed to find MetaMask tab for custom chain approval');
+        throw new Error('MetaMask tab not found for custom chain approval');
+      }
+
+      console.log('Found MetaMask tab, handling approval process');
+      await this.handleMetaMaskTab(metamaskTab);
+      console.log('Successfully approved custom chain network transaction');
+    } catch (error) {
+      console.error('Error approving custom chain network transaction:', error.message);
+      throw error;
+    }
   }
 
   /**
@@ -307,8 +411,8 @@ class NeuraBridgePage extends BasePage {
    */
   async assertBridgeWidgetLabels() {
     await expect(this.isElementVisibleDesc(this.selectors.bridgeDescriptors.bridgeLabel)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.bridgeDescriptors.toLabel)).resolves.toBe(true);
     await expect(this.doesTextMatchDescriptor(this.selectors.bridgeDescriptors.fromLabel)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.bridgeDescriptors.toLabel)).resolves.toBe(true);
     await expect(this.doesTextMatchDescriptor(this.selectors.bridgeDescriptors.amountLabel)).resolves.toBe(true);
     await expect(this.isElementVisibleDesc(this.selectors.bridgeDescriptors.limitLabel)).resolves.toBe(true);
   }
@@ -331,7 +435,7 @@ class NeuraBridgePage extends BasePage {
     const networks = await this.getAllRowTexts(this.selectors.bridgeDescriptors.bridgeLabels, this.selectors.general.cellCss);
     assertionHelpers.assertNetworkLabels(
         networks,
-        neuraBridgeAssertions.pageLayout.networks.holesky,
+        neuraBridgeAssertions.pageLayout.networks.sepolia,
         neuraBridgeAssertions.pageLayout.networks.neuraTestnet
     );
   }
@@ -396,7 +500,7 @@ class NeuraBridgePage extends BasePage {
   }
 
   async fillAmount(amount) {
-    await new Promise(r => setTimeout(r, 3000));
+    await new Promise(r => setTimeout(r, AMOUNT_FILL_TIMEOUT));
     await this.fillDescLoc(this.selectors.walletScreen.amountField, amount);
     return await this.getElementWithDescLoc(this.selectors.walletScreen.amountField).inputValue();
   }
@@ -413,9 +517,9 @@ class NeuraBridgePage extends BasePage {
     } else {
       await this.clickDescLoc(this.selectors.connection.connectWalletButton);
     }
-    await this.click(this.selectors.connection.selectMetaMaskWallet);
+    await this.clickDescLoc(this.selectors.connection.selectMetaMaskWallet);
     await this.attachWallet(context);
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise(r => setTimeout(r, NETWORK_OPERATION_TIMEOUT));
   }
 
   async bridgeTokensFromChainToNeura(context) {
@@ -436,7 +540,7 @@ class NeuraBridgePage extends BasePage {
    */
   async clickBridgeButtonApprovingCustomChain(context, checkApproveButton = false) {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn);
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise(r => setTimeout(r, NETWORK_OPERATION_TIMEOUT));
     await this.confirmTransactionWithExplicitPageSearch(context);
     return await this.assertPreviewTransactionLayout(checkApproveButton);
   }
@@ -448,32 +552,32 @@ class NeuraBridgePage extends BasePage {
    */
   async clickBridgeButton(checkApproveButton = false) {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn);
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, DEFAULT_TIMEOUT));
     return await this.assertPreviewTransactionLayout(checkApproveButton);
   }
 
   async approveTokenTransfer(context) {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.approveTokenTransferButton);
     await this.confirmTransaction(context);
-    await this.waitForDescLocElementToDisappear({ text: 'Approving token transfer...' }, { timeout: 60000, longTimeout: 60000 });
+    await this.waitForDescLocElementToDisappear({ text: 'Approving token transfer...' }, { timeout: TOKEN_TRANSFER_TIMEOUT, longTimeout: TOKEN_TRANSFER_TIMEOUT });
   }
 
   async approveBridgingTokens(context) {
     await this.confirmTransaction(context);
-    await this.waitForDescLocElementToDisappear({ text: 'Bridging tokens...' }, { timeout: 45000, longTimeout: 45000 });
+    await this.waitForDescLocElementToDisappear({ text: 'Bridging tokens...' }, { timeout: BRIDGE_OPERATION_TIMEOUT, longTimeout: BRIDGE_OPERATION_TIMEOUT });
   }
 
   async claimTokens() {
-    await new Promise(r => setTimeout(r, 3000));
+    await new Promise(r => setTimeout(r, TRANSACTION_APPROVAL_TIMEOUT));
     await this.clickDescLoc(this.selectors.bridgeDescriptors.claimTokensBtn);
   }
 
   async claimTransaction(context) {
-    await new Promise(r => setTimeout(r, 5000));
+    await new Promise(r => setTimeout(r, WALLET_OPERATION_TIMEOUT));
     await this.clickDescLoc(this.selectors.bridgeDescriptors.claimTransactionButton);
     await this.confirmTransaction(context);
     await this.waitForDescLocElementToDisappear({ text: 'Claiming 0.000001 ANKR on Holesky, please don\'t close the page'},
-        { timeout: 45000, longTimeout: 45000 });
+        { timeout: BRIDGE_OPERATION_TIMEOUT, longTimeout: BRIDGE_OPERATION_TIMEOUT });
   }
 
   async navigateToFaucetPage() {
@@ -490,7 +594,7 @@ class NeuraBridgePage extends BasePage {
    */
   async verifyMetaMaskWalletScreen() {
     await this.clickDescLoc(this.selectors.connection.avatarButton);
-    await new Promise(r => setTimeout(r, 5000));
+    await new Promise(r => setTimeout(r, WALLET_OPERATION_TIMEOUT));
     const neuraWalletLabels = await this.getAllTextsInit(this.selectors.walletScreen.neuraLabels);
     const testNetLabels = await this.getAllRowTexts(this.selectors.walletScreen.testNetLabels, this.selectors.general.cellCss);
     const activityLabel = await this.getAllTextsInit(this.selectors.walletScreen.activityLabel);
@@ -509,7 +613,7 @@ class NeuraBridgePage extends BasePage {
     const metaMaskScreenLayout = await this.verifyMetaMaskWalletScreen();
     await assertionHelpers.assertMetaMaskWalletScreen(metaMaskScreenLayout);
     await this.clickDescLoc(this.selectors.walletScreen.expandWallet);
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise(r => setTimeout(r, NETWORK_OPERATION_TIMEOUT));
     return metaMaskScreenLayout;
   }
 
@@ -525,7 +629,7 @@ class NeuraBridgePage extends BasePage {
     assertionHelpers.assertNetworkLabels(
         networks,
       neuraBridgeAssertions.pageLayout.networks.neuraTestnet,
-      neuraBridgeAssertions.pageLayout.networks.holesky
+      neuraBridgeAssertions.pageLayout.networks.sepolia
     );
   }
 
