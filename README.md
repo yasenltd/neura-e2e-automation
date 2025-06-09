@@ -6,7 +6,7 @@ This repository contains an automated end-to-end testing framework for the Neura
 
 - End-to-end UI testing for Neura Bridge application
 - MetaMask wallet integration
-- Network switching between Holesky and Neura Testnet
+- Network switching between Sepolia and Neura Testnet
 - Token bridging verification
 - Page layout validation
 - Transaction verification on blockchain
@@ -38,7 +38,7 @@ This repository contains an automated end-to-end testing framework for the Neura
    PRIVATE_KEY=your_wallet_seed_phrase
    WALLET_PASSWORD=your_wallet_password
    NEURA_NET_URL=https://url-to-neura-bridge-app
-   HOLESKY_RPC_URL=https://holesky-rpc-url
+   SEPOLIA_RPC_URL=https://sepolia-rpc-url
    NEURA_RPC_URL=https://neura-testnet-rpc-url
    ```
 
@@ -87,7 +87,7 @@ npm run format
 The framework includes tests for:
 
 1. **Neura Bridge Page Layout** - Verifies the UI elements and layout of the bridge page
-2. **Network Switching** - Tests the functionality to switch between Holesky and Neura Testnet
+2. **Network Switching** - Tests the functionality to switch between Sepolia and Neura Testnet
 3. **Wallet Connection** - Verifies MetaMask wallet connection
 4. **Token Bridging** - Tests the complete flow of bridging tokens between networks
 5. **Claim Tokens** - Verifies the token claiming functionality
@@ -102,18 +102,18 @@ This file contains comprehensive tests for the Neura Bridge UI, including:
 - Testing wallet connection using the widget Connect Wallet button
 - Testing wallet connection using the top Connect Wallet button
 - Testing network switching with wallet connection
-- Testing the Holesky to Neura bridge operation (approve transaction only)
-- Testing the Holesky to Neura bridge operation (bridge transaction only)
-- Testing the complete Holesky to Neura bridge operation (approve and bridge)
-- Testing the Neura to Holesky bridge operation
+- Testing the Sepolia to Neura bridge operation (approve transaction only)
+- Testing the Sepolia to Neura bridge operation (bridge transaction only)
+- Testing the complete Sepolia to Neura bridge operation (approve and bridge)
+- Testing the Neura to Sepolia bridge operation
 
 Run with:
 ```bash
 npx playwright test tests/neura-bridge-layout.spec.js
 ```
 
-### holesky-to-neura-bridge.spec.js
-This file focuses on testing the bridge functionality from Holesky to Neura:
+### sepolia-to-neura-bridge.spec.js
+This file focuses on testing the bridge functionality from Sepolia to Neura:
 
 - Testing the approval transaction only (without bridging)
 - Testing the bridge transaction only (assuming approval is already done)
@@ -122,15 +122,15 @@ This file focuses on testing the bridge functionality from Holesky to Neura:
 
 Run with:
 ```bash
-npx playwright test tests/holesky-to-neura-bridge.spec.js
+npx playwright test tests/sepolia-to-neura-bridge.spec.js
 ```
 
-### neura-to-holesky-bridge.spec.js
-This file focuses on testing the bridge functionality from Neura to Holesky:
+### neura-to-sepolia-bridge.spec.js
+This file focuses on testing the bridge functionality from Neura to Sepolia:
 
-- Testing the complete bridging process from Neura to Holesky
+- Testing the complete bridging process from Neura to Sepolia
 
 Run with:
 ```bash
-npx playwright test tests/neura-to-holesky-bridge.spec.js
+npx playwright test tests/neura-to-sepolia-bridge.spec.js
 ```

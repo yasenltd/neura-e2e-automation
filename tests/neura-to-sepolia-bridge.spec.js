@@ -4,29 +4,29 @@ const { TEST_AMOUNT, TEST_TIMEOUT } = require('../constants/testConstants');
 
 require('dotenv').config();
 
-let performNeuraToHoleskyBridgeTest;
+let performNeuraToSepoliaBridgeTest;
 
-test.describe('Neura to Holesky Bridge UI Automation', () => {
+test.describe('Neura to Sepolia Bridge UI Automation', () => {
 
-  test('Verify Neura to Holesky Bridge', async ({ neuraBridgePage, context }) => {
-    await performNeuraToHoleskyBridgeTest(neuraBridgePage, context);
+  test('Verify Neura to Sepolia Bridge', async ({ neuraBridgePage, context }) => {
+    await performNeuraToSepoliaBridgeTest(neuraBridgePage, context);
   });
 
   test('Verify claim transaction', async ({ neuraBridgePage, context }) => {
-    await performNeuraToHoleskyBridgeTest(neuraBridgePage, context, async (page, ctx) => {
+    await performNeuraToSepoliaBridgeTest(neuraBridgePage, context, async (page, ctx) => {
       await page.claimLatestTransaction(ctx);
     });
   });
 });
 
 /**
- * Helper function to perform common Neura to Holesky bridge operations
+ * Helper function to perform common Neura to Sepolia bridge operations
  * @param {Object} neuraBridgePage - The Neura bridge page object
  * @param {Object} context - The test context
  * @param {Function} [additionalOperations] - Optional function to perform additional operations after bridge
  * @returns {Promise<void>}
  */
-performNeuraToHoleskyBridgeTest = async function(neuraBridgePage, context, additionalOperations = null) {
+performNeuraToSepoliaBridgeTest = async function(neuraBridgePage, context, additionalOperations = null) {
   test.setTimeout(TEST_TIMEOUT);
 
   try {
@@ -41,7 +41,7 @@ performNeuraToHoleskyBridgeTest = async function(neuraBridgePage, context, addit
 
     // Step 2: Record balances and perform the bridge operation
     const balances = await neuraBridgePage.recordAndCompareBalances(async () => {
-      await neuraBridgePage.performNeuraToHoleskyBridge(context, TEST_AMOUNT);
+      await neuraBridgePage.performNeuraToSepoliaBridge(context, TEST_AMOUNT);
       await neuraBridgePage.closeBridgeModal();
     });
 
@@ -54,7 +54,7 @@ performNeuraToHoleskyBridgeTest = async function(neuraBridgePage, context, addit
       await additionalOperations(neuraBridgePage, context);
     }
   } catch (error) {
-    console.error(`❌ Error in Neura to Holesky bridge test: ${error.message}`);
+    console.error(`❌ Error in Neura to Sepolia bridge test: ${error.message}`);
     throw error;
   }
 };

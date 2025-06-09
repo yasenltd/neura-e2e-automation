@@ -20,10 +20,10 @@ const networks = {
   },
   sepolia: {
     networkName: 'Sepolia',
-    rpcUrl: process.env.HOLESKY_RPC_URL,
+    rpcUrl: process.env.SEPOLIA_RPC_URL,
     chainId: '11155111',
     currencySymbol: 'SepoliaETH',
-    name: 'Holesky',
+    name: 'Sepolia',
     explorer: process.env.SEPOLION_EXPLORER
   }
 };

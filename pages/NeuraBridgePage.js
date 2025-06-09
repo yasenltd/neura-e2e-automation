@@ -576,7 +576,7 @@ class NeuraBridgePage extends BasePage {
     await new Promise(r => setTimeout(r, WALLET_OPERATION_TIMEOUT));
     await this.clickDescLoc(this.selectors.bridgeDescriptors.claimTransactionButton);
     await this.confirmTransaction(context);
-    await this.waitForDescLocElementToDisappear({ text: 'Claiming 0.000001 ANKR on Holesky, please don\'t close the page'},
+    await this.waitForDescLocElementToDisappear({ text: 'Claiming 0.000001 ANKR on Sepolia, please don\'t close the page'},
         { timeout: BRIDGE_OPERATION_TIMEOUT, longTimeout: BRIDGE_OPERATION_TIMEOUT });
   }
 
@@ -684,7 +684,7 @@ class NeuraBridgePage extends BasePage {
   }
 
   /**
-   * Performs the Holesky to Neura operation:
+   * Performs the Sepolia to Neura operation:
    * 1. Initiates bridge transaction
    * 2. Verifies preview transaction screen
    * 3. Performs the specified operation based on the operation parameter
@@ -696,7 +696,7 @@ class NeuraBridgePage extends BasePage {
    *                                    - BridgeOperationType.BRIDGE_ONLY: only bridge tokens (skip approval)
    * @returns {Promise<void>}
    */
-  async performHoleskyToNeuraOperation(context, operation = BridgeOperationType.APPROVE_AND_BRIDGE) {
+  async performSepoliaToNeuraOperation(context, operation = BridgeOperationType.APPROVE_AND_BRIDGE) {
 
     // Determine if we need to show the approve button in the preview
     const showApproveButton = operation !== BridgeOperationType.BRIDGE_ONLY;
@@ -724,7 +724,7 @@ class NeuraBridgePage extends BasePage {
   }
 
   /**
-   * Performs the Holesky to Neura operation with custom chain approval:
+   * Performs the Sepolia to Neura operation with custom chain approval:
    * 1. Fills amount
    * 2. Initiates bridge transaction
    * 3. Verifies preview transaction screen
@@ -737,7 +737,7 @@ class NeuraBridgePage extends BasePage {
    *                                    - BridgeOperationType.BRIDGE_ONLY: only bridge tokens (skip approval)
    * @returns {Promise<void>}
    */
-  async performHoleskyToNeuraOperationWithApprovalOfCustomChain(context, operation = BridgeOperationType.APPROVE_AND_BRIDGE) {
+  async performSepoliaToNeuraOperationWithApprovalOfCustomChain(context, operation = BridgeOperationType.APPROVE_AND_BRIDGE) {
 
     // Always show approve button for custom chain approval
     const previewTransactionLayout = await this.clickBridgeButtonApprovingCustomChain(context, true);
@@ -761,7 +761,7 @@ class NeuraBridgePage extends BasePage {
   }
 
   /**
-   * Performs the Neura to Holesky bridge operation without confirming transaction:
+   * Performs the Neura to Sepolia bridge operation without confirming transaction:
    * 1. Fills amount
    * 2. Initiates bridge transaction
    * 3. Verifies preview transaction screen
@@ -772,7 +772,7 @@ class NeuraBridgePage extends BasePage {
    * @param {string} amount - The amount to bridge
    * @returns {Promise<Object>} - The preview transaction layout
    */
-  async performNeuraToHoleskyBridge(context, amount) {
+  async performNeuraToSepoliaBridge(context, amount) {
     await this.fillAmount(amount);
     const previewTransactionLayout = await this.clickBridgeButton(false);
     assertionHelpers.assertPreviewTransactionLabels(previewTransactionLayout);
@@ -780,7 +780,7 @@ class NeuraBridgePage extends BasePage {
   }
 
   /**
-   * Performs the complete Neura to Holesky bridge operation:
+   * Performs the complete Neura to Sepolia bridge operation:
    * 1. Fills amount
    * 2. Initiates bridge transaction
    * 3. Verifies preview transaction screen
@@ -791,7 +791,7 @@ class NeuraBridgePage extends BasePage {
    * @param {string} amount - The amount to bridge
    * @returns {Promise<void>}
    */
-  async performNeuraToHoleskyBridgeWithApprovalOfCustomChain(context, amount) {
+  async performNeuraToSepoliaBridgeWithApprovalOfCustomChain(context, amount) {
     await this.fillAmount(amount);
     const previewTransactionLayout = await this.clickBridgeButtonApprovingCustomChain(context, false);
     assertionHelpers.assertPreviewTransactionLabels(previewTransactionLayout);

@@ -34,7 +34,7 @@ const neuraBridgeAssertions = {
       amount: 'Amount:',
     },
     previewValues: {
-      fromChain: 'Holesky',
+      fromChain: 'Sepolia',
       toChain: 'Neura Testnet',
       amount: '0 ANKR',
     },

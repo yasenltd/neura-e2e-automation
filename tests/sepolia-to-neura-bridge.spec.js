@@ -7,9 +7,9 @@ const {BridgeOperationType, TEST_AMOUNT, TEST_TIMEOUT} = require('../constants/t
 
 require('dotenv').config();
 
-test.describe('Holesky to Neura Bridge UI Automation', () => {
+test.describe('Sepolia to Neura Bridge UI Automation', () => {
 
-    test('Verify Holesky to Neura only approve transaction', async ({neuraBridgePage, context}) => {
+    test('Verify Sepolia to Neura only approve transaction', async ({neuraBridgePage, context}) => {
         test.setTimeout(TEST_TIMEOUT);
 
         try {
@@ -25,21 +25,21 @@ test.describe('Holesky to Neura Bridge UI Automation', () => {
             // Step 3: Record balances and perform the bridge operation
             const balances = await neuraBridgePage.recordAndCompareBalances(async () => {
                 await neuraBridgePage.fillAmount(TEST_AMOUNT);
-                await neuraBridgePage.performHoleskyToNeuraOperation(context, BridgeOperationType.APPROVE_ONLY);
+                await neuraBridgePage.performSepoliaToNeuraOperation(context, BridgeOperationType.APPROVE_ONLY);
                 await neuraBridgePage.cancelTransaction(context);
                 await neuraBridgePage.closeBridgeModal();
             });
 
             // Step 4: Verify balance changes
-            // The balance should decrease or remain the same after bridging from Holesky to Neura
+            // The balance should decrease or remain the same after bridging from Sepolia to Neura
             expect(balances.ankrDiff.lte(ethers.constants.Zero)).toBe(true);
         } catch (error) {
-            console.error(`❌ Error in Holesky to Neura bridge test: ${error.message}`);
+            console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
             throw error;
         }
     });
 
-    test('Verify Holesky to Neura only bridge transaction', async ({neuraBridgePage, context}) => {
+    test('Verify Sepolia to Neura only bridge transaction', async ({neuraBridgePage, context}) => {
         test.setTimeout(TEST_TIMEOUT);
         try {
             // Step 1: Initialize bridge with options (with wallet connection, no network switch)
@@ -54,19 +54,19 @@ test.describe('Holesky to Neura Bridge UI Automation', () => {
             // Step 3: Record balances and perform the bridge operation
             const balances = await neuraBridgePage.recordAndCompareBalances(async () => {
                 await neuraBridgePage.fillAmount(TEST_AMOUNT);
-                await neuraBridgePage.performHoleskyToNeuraOperation(context, BridgeOperationType.BRIDGE_ONLY);
+                await neuraBridgePage.performSepoliaToNeuraOperation(context, BridgeOperationType.BRIDGE_ONLY);
             });
 
             // Step 4: Verify balance changes
-            // The balance should decrease or remain the same after bridging from Holesky to Neura
+            // The balance should decrease or remain the same after bridging from Sepolia to Neura
             expect(balances.ankrDiff.lte(ethers.constants.Zero)).toBe(true);
         } catch (error) {
-            console.error(`❌ Error in Holesky to Neura bridge test: ${error.message}`);
+            console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
             throw error;
         }
     });
 
-    test('Verify Holesky to Neura Bridge', async ({neuraBridgePage, context}) => {
+    test('Verify Sepolia to Neura Bridge', async ({neuraBridgePage, context}) => {
         test.setTimeout(TEST_TIMEOUT);
 
         // Step 1: Setup test data
@@ -87,21 +87,21 @@ test.describe('Holesky to Neura Bridge UI Automation', () => {
             // Step 3: Record balances and perform the bridge operation
             const balances = await neuraBridgePage.recordAndCompareBalances(async () => {
                 await neuraBridgePage.fillAmount(TEST_AMOUNT);
-                await neuraBridgePage.performHoleskyToNeuraOperation(context, BridgeOperationType.APPROVE_AND_BRIDGE);
+                await neuraBridgePage.performSepoliaToNeuraOperation(context, BridgeOperationType.APPROVE_AND_BRIDGE);
                 const deposit = await waitForAnyDepositInSubgraph(from, amount);
                 expect(deposit).toBeTruthy();
             });
 
             // Step 4: Verify balance changes
-            // The balance should decrease or remain the same after bridging from Holesky to Neura
+            // The balance should decrease or remain the same after bridging from Sepolia to Neura
             expect(balances.ankrDiff.lte(ethers.constants.Zero)).toBe(true);
         } catch (error) {
-            console.error(`❌ Error in Holesky to Neura bridge test: ${error.message}`);
+            console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
             throw error;
         }
     });
 
-    test('Verify Holesky to Neura approve and then bridge transaction', async ({neuraBridgePage, context}) => {
+    test('Verify Sepolia to Neura approve and then bridge transaction', async ({neuraBridgePage, context}) => {
         test.setTimeout(TEST_TIMEOUT);
 
         // Step 1: Setup test data
@@ -122,20 +122,20 @@ test.describe('Holesky to Neura Bridge UI Automation', () => {
             // Step 3: Record balances and perform the bridge operation
             const balances = await neuraBridgePage.recordAndCompareBalances(async () => {
                 await neuraBridgePage.fillAmount(TEST_AMOUNT);
-                await neuraBridgePage.performHoleskyToNeuraOperation(context, BridgeOperationType.APPROVE_ONLY);
+                await neuraBridgePage.performSepoliaToNeuraOperation(context, BridgeOperationType.APPROVE_ONLY);
                 await neuraBridgePage.cancelTransaction(context);
                 await neuraBridgePage.closeBridgeModal();
                 await neuraBridgePage.fillAmount(TEST_AMOUNT);
-                await neuraBridgePage.performHoleskyToNeuraOperation(context, BridgeOperationType.BRIDGE_ONLY);
+                await neuraBridgePage.performSepoliaToNeuraOperation(context, BridgeOperationType.BRIDGE_ONLY);
                 const deposit = await waitForAnyDepositInSubgraph(from, amount);
                 expect(deposit).toBeTruthy();
             });
 
             // Step 4: Verify balance changes
-            // The balance should decrease or remain the same after bridging from Holesky to Neura
+            // The balance should decrease or remain the same after bridging from Sepolia to Neura
             expect(balances.ankrDiff.lte(ethers.constants.Zero)).toBe(true);
         } catch (error) {
-            console.error(`❌ Error in Holesky to Neura bridge test: ${error.message}`);
+            console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
             throw error;
         }
     });
