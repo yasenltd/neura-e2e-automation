@@ -46,16 +46,14 @@ async function waitForAnyDeposit(recipient, expectedAmount, retries = 6, delay =
         d.amount === expectedAmount
     );
 
-    if (allMatches?.length >= 2) {
+    if (allMatches?.length >= 1) {
       const sorted = allMatches
         .sort((a, b) => Number(b.nonce) - Number(a.nonce)) // sort by nonce desc
-        .slice(0, 2); // only keep top 2
-
-      console.log(`✅ Subgraph confirmed 2 latest deposit events:`);
+        .slice(0, 1);
+      console.log(`✅ Subgraph confirmed latest deposit events:`);
       sorted.forEach((m, idx) => {
         console.log(`  #${idx + 1} nonce=${m.nonce}, tx=${m.transactionHash}`);
       });
-
       return sorted;
     }
 
@@ -80,8 +78,5 @@ async function waitForAnyDepositInSubgraph(recipient, expectedAmount, retries = 
 }
 
 module.exports = {
-  executeQuery,
-  getTokensDeposited,
-  waitForAnyDeposit,
   waitForAnyDepositInSubgraph
 };

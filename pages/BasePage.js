@@ -703,36 +703,82 @@ class BasePage {
   }
 
   /**
-   * Return true when the element’s current textContent equals the reference
-   * string embedded in the descriptor (`text` or `name`).
+   * True ⇢ the chosen element’s text matches the descriptor
+   * False ⇢ no element or text mismatch
    *
-   * @param {object|string} desc          – descriptor / test-id string
-   * @param {number|null}   [nth=null]    – which match to test (null ⇒ first)
+   * @param {object|string} desc          descriptor / test-id
+   * @param {number|null}   [nth=null]    which match (null ⇒ first)
    * @param {number}        [timeout=this.DEFAULT_TIMEOUT]
    * @returns {Promise<boolean>}
    */
-  async doesTextMatchDescriptor(desc, nth = null, timeout = this.DEFAULT_TIMEOUT) {
-    // Build the locator (all options already handled in #buildLocator)
-    const loc = this.getElementWithDescLoc(desc, nth);
+  async doesTextMatchDescriptor(
+      desc,
+      nth = null,
+      timeout = this.DEFAULT_TIMEOUT
+  ) {
+    const all = this.getElementWithDescLoc(desc, null);
+    const node = (nth === null || nth === undefined) ? all.first() : all.nth(nth);
 
-    // Pick the node we’ll test
-    const node = (nth === null || nth === undefined) ? loc.first() : loc;
-
-    // Wait (fast-fail if never visible)
     try {
       await node.waitFor({ state: 'visible', timeout });
     } catch {
+      console.log('[doesTextMatchDescriptor] element never became visible');
       return false;
     }
 
-    // Compare actual vs. expected
-    const actual   = (await node.textContent())?.trim() || '';
-    const expected = (desc && (desc.text || desc.name)) || '';
+    const actual = (await node.textContent())?.trim() || '';
 
-    return actual === expected;
+    const expected = desc && (desc.text || desc.name);
+    if (!expected) {
+      console.log('[doesTextMatchDescriptor] descriptor has no expected text');
+      return false;
+    }
+
+    const result = expected instanceof RegExp
+        ? expected.test(actual)
+        : actual === expected;
+
+    console.log(
+        `[doesTextMatchDescriptor] "${actual}" ${
+            result ? 'matches' : 'does NOT match'
+        } ${expected instanceof RegExp ? expected : `"${expected}"`}`
+    );
+
+    return result;
   }
 
-/** Return the textContent of one element, waiting for it to appear first. */
+  /**
+   * Pull a floating-point number out of an element’s text.
+   *
+   * The descriptor’s `text` (or `name`) should contain a RegExp
+   * with a capturing group that surrounds the number you want:
+   *     { text: /ANKR\s*([0-9.]+)/ }   // group 1 = “0.03”
+   *
+   * @param {object|string} desc          locator descriptor / test-id string
+   * @param {number}        [groupIdx=1]  which capture group holds the number
+   * @param {number|null}   [nth=null]    choose a specific match (null ⇒ first)
+   * @param {number}        [timeout=this.DEFAULT_TIMEOUT]
+   * @returns {Promise<number>}           parsed float, or NaN if no match
+   */
+  async getNumericMatch(
+      desc,
+      groupIdx = 1,
+      nth = null,
+      timeout = this.DEFAULT_TIMEOUT
+  ) {
+    const loc = this.getElementWithDescLoc(desc, null);
+    const matchLoc = (nth === null || nth === undefined) ? loc.first() : loc.nth(nth);
+    await matchLoc.waitFor({ state: 'visible', timeout });
+
+    const locatorText = (await matchLoc.textContent())?.trim() || '';
+    const pattern = (desc && (desc.text || desc.name));
+    if (!(pattern instanceof RegExp)) return NaN;
+
+    const match = pattern.exec(locatorText);
+    return match && match[groupIdx] ? parseFloat(match[groupIdx]) : NaN;
+  }
+
+  /** Return the textContent of one element, waiting for it to appear first. */
   async getTextByDescLoc(desc, nth = null, timeout = this.DEFAULT_TIMEOUT) {
     const el = await this.waitForElement(desc, nth, 'visible', timeout);
     return el.textContent();

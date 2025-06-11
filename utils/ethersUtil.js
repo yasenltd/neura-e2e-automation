@@ -21,25 +21,13 @@ const ERC20_ABI = [
 /**
  * Creates a provider for the specified network
  * @param {string} networkName - The name of the network (e.g., 'neuraTestnet', 'holesky')
- * @returns {ethers.JsonRpcProvider} - The provider for the specified network
  */
 function getProvider(networkName) {
   const network = networks[networkName];
   if (!network) {
     throw new Error(`Network ${networkName} not supported`);
   }
-  return new ethers.JsonRpcProvider(network.rpcUrl);
-}
-
-/**
- * Creates a wallet instance connected to the specified network
- * @param {string} privateKey - The private key for the wallet
- * @param {string} networkName - The name of the network (e.g., 'neuraTestnet', 'holesky')
- * @returns {ethers.Wallet} - The wallet instance
- */
-function getWallet(privateKey, networkName) {
-  const provider = getProvider(networkName);
-  return new ethers.Wallet(privateKey, provider);
+  return new ethers.providers.JsonRpcProvider(network.rpcUrl);
 }
 
 function formatBalance(raw, decimals = 4) {
@@ -50,7 +38,6 @@ function formatBalance(raw, decimals = 4) {
  * Gets the balance of an address on the specified network
  * @param {string} address - The address to check
  * @param {string} networkName - The name of the network (e.g., 'neuraTestnet', 'holesky')
- * @returns {Promise<ethers.BigNumber>} - The balance in wei
  */
 async function getBalance(address, networkName) {
   const provider = getProvider(networkName);
@@ -148,7 +135,6 @@ async function verifyBridgeTransaction(address, destinationNetwork, amount, time
 module.exports = {
   formatBalance,
   getProvider,
-  getWallet,
   getBalance,
   getTokenBalance,
   waitForTransaction,

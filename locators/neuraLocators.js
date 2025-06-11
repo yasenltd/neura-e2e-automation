@@ -42,9 +42,11 @@ module.exports = {
         selectSourceChainTitle: {
           css: 'h2[data-slot="dialog-title"]:has-text("Select Source Chain")'
         },
-        closeChainModal: {css: '#radix-«R12fa6dbH1» > button'},
+        closeChainModal: {css: '#radix-«R8jqhdbH1» > button'},
         openNetworkSourceMenu: {css: '.animate-ease-in-out'},
-        networkLabels: {css: '.justify-between.items-center > div > span.text-md.font-normal.leading-5.text-gray-900'},
+        neuraLabel : {text: 'Neura Testnet', options: { exact: true }},
+        sepoliaLabel : {text: 'Sepolia', options: { exact: true }},
+        bscTestnet : {text: 'BSC Testnet', options: { exact: true }},
         activeChain: {css: '.selector-item-active'},
     },
     claimPageDescriptors: {
@@ -86,7 +88,7 @@ module.exports = {
         },
         connectWalletButtonInWidget: {css: 'button[data-slot="button"]:has-text("Connect Wallet")'},
         enterAmountBtnLabel: {text: 'Enter Amount'},
-        closeBridgeModalButton: {css: '#radix-«R13qhdbH1» > button'},
+        closeBridgeModalButton: {css: '#radix-«R6jqhdbH1» > button'},
         switchBridgeBtn: {css: '.relative.h-0.mt-6 > button'},
         bridgeBtn: {css: 'button[data-slot="button"]:has-text("Bridge")'},
         bridgeTokensBtn: {css: 'button[data-slot="button"]:has-text("Bridge Tokens")'},
@@ -99,9 +101,17 @@ module.exports = {
         faucetBtn: {css: 'a[href="/faucet"]'},
         bridgeLabels: {css: '.flex.justify-between.items-center'},
         neuraLogo: {css: '.flex.items-center.gap-4.md\\:gap-6 > img'},
-        previewDataTableLabels: '.space-y-6.py-4 > div.space-y-4 > div > div > p',
-        previewDataTableValues: '.space-y-6.py-4 > div.space-y-4 > div > div > div > p',
-        previewTransactionLabel: {css: 'h2[data-slot="dialog-title"]:has-text("Preview Transaction")'},
+    },
+    previewTransactionDescriptors: {
+        titleLabel: {text: 'Preview Transaction', options: { exact: true }},
+        fromChainLabel: {text: 'From Chain:', options: { exact: true }},
+        toChainLabel: {text: 'To Chain:', options: { exact: true }},
+        amountLabel: {text: 'Amount:', options: { exact: true }},
+        neuraLabel: {text: 'Neura Testnet', options: { exact: true }},
+        sepoliaLabel: {text: 'Sepolia', options: { exact: true }},
+        ankrBalance: { text: /([0-9.]+)\s*ANKR/ },
+        approveButton: { text: 'Approve Token Transfer', options: { exact: true} },
+        bridgeButton: { text: 'Bridge Tokens', options: { exact: true} },
         transactionHash: {css: '.space-y-6.py-4 > div.space-y-4 > div > div > div > a'},
     },
     claimTokensDescriptors: {

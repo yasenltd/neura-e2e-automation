@@ -85,8 +85,26 @@ function updateSelectorsWithIndex(selectorsObj, replacements) {
   return updated;
 }
 
+/**
+ * Round any numeric input to two decimals, then remove trailing zeros.
+ * "0.000001"  -> 0
+ *  0.105      -> 0.11
+ *  "5.10"     -> 5.1
+ *
+ * @param {number|string} numLike
+ * @returns {number}  NaN if input isn’t a finite number
+ */
+function roundNumberToTwoDecimals(numLike) {
+  const num = Number(numLike);           // ⬅️ force conversion to Number
+  if (!Number.isFinite(num)) return NaN; // guard against non-numerics
+
+  const rounded = +num.toFixed(2);       // unary + turns "0.00" into 0
+  return rounded === 0 ? 0 : rounded;    // avoid negative zero edge-case
+}
+
 module.exports = {
   clearUserDataDir,
+  roundNumberToTwoDecimals,
   createNewUserDataDirForParallelExecution,
   updateSelectorsWithIndex,
   normalizeAndSortText

@@ -1,5 +1,6 @@
 import BridgeDepositWatcher from '../scripts/BridgeDepositWatcher';
 import {expect} from "playwright/test";
+import {roundNumberToTwoDecimals} from "../utils/util";
 
 const BasePage = require('./BasePage');
 const selectors = require('../locators/neuraLocators');
@@ -53,8 +54,6 @@ class NeuraBridgePage extends BasePage {
 
   async claimLatestTransaction(context) {
     await new Promise(r => setTimeout(r, TRANSACTION_APPROVAL_TIMEOUT));
-    await this.openBurgerMenu();
-    await this.selectClaimFromBurgerMenu();
     await this.assertClaimTokenPageLayout();
     await this.claimTransaction(context);
   }
@@ -155,7 +154,10 @@ class NeuraBridgePage extends BasePage {
       await popupWallet.confirmTransaction();
     } else if (action === TransactionAction.CANCEL) {
       await popupWallet.cancelTransaction();
-    } else {
+    } else if (action === TransactionAction.CONFIRM_CHAIN) {
+      await popupWallet.approveSepoliaChainRequest();
+    }
+    else {
       throw new Error(`Invalid transaction action: ${action}`);
     }
   }
@@ -205,7 +207,7 @@ class NeuraBridgePage extends BasePage {
 
     try {
       const popupWallet = new this.wallet.constructor(extensionPopup);
-      await popupWallet.approveCustomNetwork();
+      await popupWallet.approveSepoliaChainRequest();
       await new Promise(r => setTimeout(r, NETWORK_OPERATION_TIMEOUT));
     } catch (error) {
       console.error('Error approving custom network:', error.message);
@@ -420,8 +422,13 @@ class NeuraBridgePage extends BasePage {
   async assertSourceChainModalLayout(activeChain) {
     const title = await this.getElementWithDescLoc(this.selectors.sourceChainModal.selectSourceChainTitle).isVisible();
     expect(title).toBe(true);
-    const labels = await this.getAllTextsInit(this.selectors.sourceChainModal.networkLabels);
-    assertionHelpers.assertSourceChainModalLayout(labels);
+    // const labels = await this.getAllTextsInit(this.selectors.sourceChainModal.networkLabels);
+    // assertionHelpers.assertSourceChainModalLayout(labels);
+
+    await expect(this.doesTextMatchDescriptor(this.selectors.sourceChainModal.bscTestnet)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.sourceChainModal.neuraLabel)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.sourceChainModal.sepoliaLabel)).resolves.toBe(true);
+
     const activeSelectedChain = this.getElementWithDescLoc(this.selectors.sourceChainModal.activeChain);
     assertionHelpers.assertSelectedChain(activeSelectedChain, activeChain);
   }
@@ -465,26 +472,24 @@ class NeuraBridgePage extends BasePage {
   /**
    * Asserts the preview transaction layout and optionally checks for the approve token transfer button
    * @param {boolean} checkApproveButton - Whether to check for the approve token transfer button
+   * @param amount
    * @returns {Promise<Object>} - The preview transaction layout
    */
-  async assertPreviewTransactionLayout(checkApproveButton = false) {
-    const title = await this.getTextByDescLoc(this.selectors.bridgeDescriptors.previewTransactionLabel);
-    const previewLabels = await this.getText(this.selectors.bridgeDescriptors.previewDataTableLabels);
-    const previewValues = await this.getText(this.selectors.bridgeDescriptors.previewDataTableValues);
-
-    const layout = {
-      title: title,
-      previewLabels: previewLabels,
-      previewValues: previewValues
-    };
-
+  async assertPreviewTransactionLayout(checkApproveButton = false, amount) {
+    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.titleLabel)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.fromChainLabel)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.toChainLabel)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.amountLabel)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.neuraLabel)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.sepoliaLabel)).resolves.toBe(true);
+    const previewAnkrBalance = await this.getNumericMatch(this.selectors.previewTransactionDescriptors.ankrBalance, 1 , 1);
+    const expectedValue = roundNumberToTwoDecimals(amount);
+    await expect(previewAnkrBalance).toBe(expectedValue);
     if (checkApproveButton) {
-      layout.operationButton = await this.getTextByDescLoc(this.selectors.bridgeDescriptors.approveTokenTransferButton);
+      await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.approveButton)).resolves.toBe(true);
     } else {
-      layout.operationButton = await this.getTextByDescLoc(this.selectors.bridgeDescriptors.bridgeTokensBtn);
+      await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.bridgeButton)).resolves.toBe(true);
     }
-
-    return layout;
   }
 
   /**
@@ -538,11 +543,11 @@ class NeuraBridgePage extends BasePage {
    * @param {boolean} checkApproveButton - Whether to check for the approve token transfer button
    * @returns {Promise<Object>} - The preview transaction layout
    */
-  async clickBridgeButtonApprovingCustomChain(context, checkApproveButton = false) {
+  async clickBridgeButtonApprovingCustomChain(context, checkApproveButton = false, amount) {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn);
     await new Promise(r => setTimeout(r, NETWORK_OPERATION_TIMEOUT));
     await this.confirmTransactionWithExplicitPageSearch(context);
-    return await this.assertPreviewTransactionLayout(checkApproveButton);
+    return await this.assertPreviewTransactionLayout(checkApproveButton, amount);
   }
 
   /**
@@ -550,10 +555,10 @@ class NeuraBridgePage extends BasePage {
    * @param {boolean} checkApproveButton - Whether to check for the approve token transfer button
    * @returns {Promise<Object>} - The preview transaction layout
    */
-  async clickBridgeButton(checkApproveButton = false) {
+  async clickBridgeButton(checkApproveButton = false, amount) {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn);
     await new Promise(r => setTimeout(r, DEFAULT_TIMEOUT));
-    return await this.assertPreviewTransactionLayout(checkApproveButton);
+    return await this.assertPreviewTransactionLayout(checkApproveButton, amount);
   }
 
   async approveTokenTransfer(context) {
@@ -696,16 +701,11 @@ class NeuraBridgePage extends BasePage {
    *                                    - BridgeOperationType.BRIDGE_ONLY: only bridge tokens (skip approval)
    * @returns {Promise<void>}
    */
-  async performSepoliaToNeuraOperation(context, operation = BridgeOperationType.APPROVE_AND_BRIDGE) {
-
+  async performSepoliaToNeuraOperation(context, operation = BridgeOperationType.APPROVE_AND_BRIDGE, testAmount) {
     // Determine if we need to show the approve button in the preview
     const showApproveButton = operation !== BridgeOperationType.BRIDGE_ONLY;
-
-    // Click bridge button and get preview transaction layout
-    const previewTransactionLayout = await this.clickBridgeButton(showApproveButton);
-
-    // Always assert preview transaction labels
-    assertionHelpers.assertPreviewTransactionLabels(previewTransactionLayout);
+    // Click bridge button and assert preview transaction layout
+    await this.clickBridgeButton(showApproveButton, testAmount);
 
     // Perform the requested operation
     switch (operation) {
@@ -737,13 +737,12 @@ class NeuraBridgePage extends BasePage {
    *                                    - BridgeOperationType.BRIDGE_ONLY: only bridge tokens (skip approval)
    * @returns {Promise<void>}
    */
-  async performSepoliaToNeuraOperationWithApprovalOfCustomChain(context, operation = BridgeOperationType.APPROVE_AND_BRIDGE) {
+  async performSepoliaToNeuraOperationWithApprovalOfCustomChain(context, operation = BridgeOperationType.APPROVE_AND_BRIDGE, amount) {
+    // Determine if we need to show the approve button in the preview
+    const showApproveButton = operation !== BridgeOperationType.BRIDGE_ONLY;
 
     // Always show approve button for custom chain approval
-    const previewTransactionLayout = await this.clickBridgeButtonApprovingCustomChain(context, true);
-
-    // Always assert preview transaction labels
-    assertionHelpers.assertPreviewTransactionLabels(previewTransactionLayout);
+    await this.clickBridgeButtonApprovingCustomChain(context, showApproveButton, amount);
 
     // Perform the requested operation
     switch (operation) {
@@ -751,6 +750,7 @@ class NeuraBridgePage extends BasePage {
         await this.approveTokenTransfer(context);
         break;
       case BridgeOperationType.BRIDGE_ONLY:
+        await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeTokensBtn);
         await this.approveBridgingTokens(context);
         break;
       case BridgeOperationType.APPROVE_AND_BRIDGE:
@@ -774,8 +774,7 @@ class NeuraBridgePage extends BasePage {
    */
   async performNeuraToSepoliaBridge(context, amount) {
     await this.fillAmount(amount);
-    const previewTransactionLayout = await this.clickBridgeButton(false);
-    assertionHelpers.assertPreviewTransactionLabels(previewTransactionLayout);
+    await this.clickBridgeButton(false, amount);
     await this.bridgeTokensFromNeuraToChain(context);
   }
 
@@ -793,8 +792,7 @@ class NeuraBridgePage extends BasePage {
    */
   async performNeuraToSepoliaBridgeWithApprovalOfCustomChain(context, amount) {
     await this.fillAmount(amount);
-    const previewTransactionLayout = await this.clickBridgeButtonApprovingCustomChain(context, false);
-    assertionHelpers.assertPreviewTransactionLabels(previewTransactionLayout);
+    await this.clickBridgeButtonApprovingCustomChain(context, false);
     await this.bridgeTokensFromNeuraToChain(context);
   }
 

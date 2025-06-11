@@ -1,5 +1,5 @@
 const { expect } = require('@playwright/test');
-const { testWithNeuraAndSepolia: test } = require('../test-utils/testFixtures');
+const { testWithoutSepolia: test } = require('../test-utils/testFixtures');
 const { TEST_AMOUNT, TEST_TIMEOUT } = require('../constants/testConstants');
 
 require('dotenv').config();
@@ -42,7 +42,6 @@ performNeuraToSepoliaBridgeTest = async function(neuraBridgePage, context, addit
     // Step 2: Record balances and perform the bridge operation
     const balances = await neuraBridgePage.recordAndCompareBalances(async () => {
       await neuraBridgePage.performNeuraToSepoliaBridge(context, TEST_AMOUNT);
-      await neuraBridgePage.closeBridgeModal();
     });
 
     // Step 3: Verify balance changes

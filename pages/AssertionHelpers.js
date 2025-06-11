@@ -34,26 +34,6 @@ async function assertMetaMaskWalletScreen(metaMaskScreenLayout) {
 }
 
 /**
- * Asserts preview transaction labels against expected values
- * @param {Object} previewTransactionLayout - The preview transaction layout to verify
- */
-function assertPreviewTransactionLabels(previewTransactionLayout) {
-    const expectedLabels = neuraBridgeAssertions.previewTransactionLayout;
-    expect(previewTransactionLayout.title).toEqual(expectedLabels.title);
-    const [fromChainLabel, toChainLabel, amountLabel] = previewTransactionLayout.previewLabels;
-    expect(fromChainLabel).toEqual(expectedLabels.previewLabels.fromChain);
-    expect(toChainLabel).toEqual(expectedLabels.previewLabels.toChain);
-    expect(amountLabel).toEqual(expectedLabels.previewLabels.amount);
-
-    // Validate the operation button based on which button is present
-    if (previewTransactionLayout.operationButton === expectedLabels.approveTokenTransferButton) {
-        expect(previewTransactionLayout.operationButton).toEqual(expectedLabels.approveTokenTransferButton);
-    } else {
-        expect(previewTransactionLayout.operationButton).toEqual(expectedLabels.bridgeTokenButton);
-    }
-}
-
-/**
  * Asserts network labels against expected values
  * @param {Object} networks - The networks
  * @param {Array} firstNetworkExpected - Expected values for the first network
@@ -70,17 +50,6 @@ function assertNetworkLabels(networks, firstNetworkExpected, secondNetworkExpect
  */
 function assertEnterAmountButtonNotVisible(isVisible) {
     expect(isVisible).toBe(false);
-}
-
-/**
- * Asserts preview transaction layout against expected values
- * @param {Object} previewTransactionLayout - The preview transaction layout to verify
- * @param {Object} expectedValues - The expected values for the preview transaction layout
- */
-function assertPreviewTransactionLayout(previewTransactionLayout, expectedValues) {
-    expect(previewTransactionLayout.title).toEqual(expectedValues.title);
-    expect(previewTransactionLayout.previewLabels).toEqual(expectedValues.previewLabels);
-    expect(previewTransactionLayout.previewValues).toEqual(expectedValues.previewValues);
 }
 
 /**
@@ -104,10 +73,8 @@ function assertSelectedChain(activeSelectedChain, activeChain) {
 
 module.exports = {
     assertMetaMaskWalletScreen,
-    assertPreviewTransactionLabels,
     assertNetworkLabels,
     assertEnterAmountButtonNotVisible,
     assertSelectedChain,
     assertSourceChainModalLayout,
-    assertPreviewTransactionLayout
 };

@@ -1,6 +1,7 @@
 const WalletPage = require('./WalletPage');
 const { launchBrowserWithExtension } = require('../utils/browserSetup');
 const selectors = require('../locators/metamaskLocators');
+const {NETWORK_OPERATION_TIMEOUT} = require("../constants/timeoutConstants");
 
 class MetamaskPage extends WalletPage {
   constructor(page) {
@@ -179,6 +180,8 @@ class MetamaskPage extends WalletPage {
     // Type the network name in the search field
     await this.fill(this.selectors.network.searchSelector, networkName);
 
+    await new Promise(r => setTimeout(r, NETWORK_OPERATION_TIMEOUT));
+
     // data-testid matches the network name exactly
     const exactMatchSelector = `[data-testid="${networkName}"]`;
 
@@ -219,6 +222,11 @@ class MetamaskPage extends WalletPage {
     await this.click(this.selectors.transaction.confirm);
   }
 
+  async cancelTransaction() {
+    await this.waitForElementToBeVisible(this.selectors.transaction.cancel);
+    await this.click(this.selectors.transaction.cancel);
+  }
+
   /**
    * Confirms a transaction in MetaMask
    * @returns {Promise<void>} - Returns a promise that resolves after the submission is confirmed
@@ -228,9 +236,9 @@ class MetamaskPage extends WalletPage {
     await this.click(this.selectors.transaction.submit);
   }
 
-  async cancelTransaction() {
-    await this.waitForElementToBeVisible(this.selectors.transaction.cancel);
-    await this.click(this.selectors.transaction.cancel);
+  async approveSepoliaChainRequest() {
+    await this.waitForElementToBeVisible(this.selectors.transaction.confirmSepoliaChainRequest);
+    await this.click(this.selectors.transaction.confirmSepoliaChainRequest);
   }
 }
 

@@ -16,7 +16,7 @@ class TokensDepositedQuery {
     return `
       query {
         tokensDepositeds(
-          first: 5,
+          first: 10,
           orderBy: blockNumber,
           orderDirection: desc,
           where: {

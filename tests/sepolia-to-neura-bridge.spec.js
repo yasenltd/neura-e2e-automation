@@ -1,7 +1,8 @@
 import {ethers} from 'ethers';
+import { getLatestTransaction } from '../utils/transactions.js';
 
 const {expect} = require('@playwright/test');
-const {testWithNeuraAndSepolia: test} = require('../test-utils/testFixtures');
+const {testWithoutSepolia: test} = require('../test-utils/testFixtures');
 const {waitForAnyDepositInSubgraph} = require('../utils/subgraphQueryUtil');
 const {BridgeOperationType, TEST_AMOUNT, TEST_TIMEOUT} = require('../constants/testConstants');
 
@@ -25,7 +26,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             // Step 3: Record balances and perform the bridge operation
             const balances = await neuraBridgePage.recordAndCompareBalances(async () => {
                 await neuraBridgePage.fillAmount(TEST_AMOUNT);
-                await neuraBridgePage.performSepoliaToNeuraOperation(context, BridgeOperationType.APPROVE_ONLY);
+                await neuraBridgePage.performSepoliaToNeuraOperationWithApprovalOfCustomChain(context, BridgeOperationType.APPROVE_ONLY, TEST_AMOUNT);
                 await neuraBridgePage.cancelTransaction(context);
                 await neuraBridgePage.closeBridgeModal();
             });
@@ -54,7 +55,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             // Step 3: Record balances and perform the bridge operation
             const balances = await neuraBridgePage.recordAndCompareBalances(async () => {
                 await neuraBridgePage.fillAmount(TEST_AMOUNT);
-                await neuraBridgePage.performSepoliaToNeuraOperation(context, BridgeOperationType.BRIDGE_ONLY);
+                await neuraBridgePage.performSepoliaToNeuraOperationWithApprovalOfCustomChain(context, BridgeOperationType.BRIDGE_ONLY, TEST_AMOUNT);
             });
 
             // Step 4: Verify balance changes
@@ -87,9 +88,11 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             // Step 3: Record balances and perform the bridge operation
             const balances = await neuraBridgePage.recordAndCompareBalances(async () => {
                 await neuraBridgePage.fillAmount(TEST_AMOUNT);
-                await neuraBridgePage.performSepoliaToNeuraOperation(context, BridgeOperationType.APPROVE_AND_BRIDGE);
+                await neuraBridgePage.performSepoliaToNeuraOperationWithApprovalOfCustomChain(context, BridgeOperationType.APPROVE_AND_BRIDGE, TEST_AMOUNT);
                 const deposit = await waitForAnyDepositInSubgraph(from, amount);
                 expect(deposit).toBeTruthy();
+                const latest = await getLatestTransaction(from, 'sepolia');
+                console.log('latest', latest);
             });
 
             // Step 4: Verify balance changes
@@ -122,11 +125,11 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             // Step 3: Record balances and perform the bridge operation
             const balances = await neuraBridgePage.recordAndCompareBalances(async () => {
                 await neuraBridgePage.fillAmount(TEST_AMOUNT);
-                await neuraBridgePage.performSepoliaToNeuraOperation(context, BridgeOperationType.APPROVE_ONLY);
+                await neuraBridgePage.performSepoliaToNeuraOperationWithApprovalOfCustomChain(context, BridgeOperationType.APPROVE_ONLY, TEST_AMOUNT);
                 await neuraBridgePage.cancelTransaction(context);
                 await neuraBridgePage.closeBridgeModal();
                 await neuraBridgePage.fillAmount(TEST_AMOUNT);
-                await neuraBridgePage.performSepoliaToNeuraOperation(context, BridgeOperationType.BRIDGE_ONLY);
+                await neuraBridgePage.performSepoliaToNeuraOperation(context, BridgeOperationType.BRIDGE_ONLY, TEST_AMOUNT);
                 const deposit = await waitForAnyDepositInSubgraph(from, amount);
                 expect(deposit).toBeTruthy();
             });

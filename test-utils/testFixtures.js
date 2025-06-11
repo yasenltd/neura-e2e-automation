@@ -123,7 +123,7 @@ const testWithoutNeura = createTestFixture({
  * Test fixture with both Neura and Sepolia networks setup
  */
 const testWithNeuraAndSepolia = createTestFixture({ 
-  setupSepoliaNetwork: false,
+  setupSepoliaNetwork: true,
   setupNeuraNetwork: true 
 });
 

@@ -1,5 +1,5 @@
 const { expect } = require('@playwright/test');
-const { testWithNeuraAndSepolia: test } = require('../test-utils/testFixtures');
+const { testWithoutSepolia: test } = require('../test-utils/testFixtures');
 const {neuraBridgeAssertions} = require("../constants/assertionConstants");
 const { TEST_AMOUNT } = require('../constants/testConstants');
 

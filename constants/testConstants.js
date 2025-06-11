@@ -3,7 +3,7 @@
  */
 
 // Test constants
-const TEST_AMOUNT = '0.000001'; // Amount used for bridge tests
+const TEST_AMOUNT = '0.25'; // Amount used for bridge tests
 const TEST_TIMEOUT = 180_000; // Timeout for bridge operations in case of network delays
 
 // Enum for bridge operation types
@@ -16,6 +16,7 @@ const BridgeOperationType = {
 // Enum for transaction actions
 const TransactionAction = {
   CONFIRM: 'confirm',
+  CONFIRM_CHAIN: 'confirm_chain',
   CANCEL: 'cancel'
 };
 

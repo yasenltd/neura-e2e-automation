@@ -1,6 +1,5 @@
 /**
  * Constants for test assertions
- * Contains all expected values used in test assertions to avoid hardcoding
  */
 
 // MetaMask integration assertions
@@ -23,37 +22,9 @@ const neuraBridgeAssertions = {
       bscTestnet: ['BSC Testnet', 'testnet'],
     },
   },
-  // Preview Transaction Layout assertions
-  previewTransactionLayout: {
-    title: 'Preview Transaction',
-    bridgeTokenButton: 'Bridge Tokens',
-    approveTokenTransferButton: 'Approve Token Transfer',
-    previewLabels: {
-      fromChain: 'From Chain:',
-      toChain: 'To Chain:',
-      amount: 'Amount:',
-    },
-    previewValues: {
-      fromChain: 'Sepolia',
-      toChain: 'Neura Testnet',
-      amount: '0 ANKR',
-    },
-  },
-};
-
-const neuraFaucetAssertions = {
-  // Neura Faucet Page Layout assertions
-  pageLayout: {
-    title: 'Neura Faucet',
-    walletSelectionLabel: 'Select the wallet you want to claim from',
-    disconnectLabel: 'Disconnect',
-    connectWalletLabel: 'Connect Wallet',
-    claimButton: 'Claim Tokens',
-  },
 };
 
 module.exports = {
   neuraBridgeAssertions,
-  neuraFaucetAssertions,
   metaMaskIntegrationAssertions,
 };
