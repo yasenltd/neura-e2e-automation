@@ -1,15 +1,16 @@
 import BridgeDepositWatcher from '../scripts/BridgeDepositWatcher';
-import {expect} from "playwright/test";
-import {roundNumberToTwoDecimals} from "../utils/util";
+import { expect } from "playwright/test";
+import { roundNumberToTwoDecimals } from "../utils/util";
+import ethersUtil from "../utils/ethersUtil";
 
 const BasePage = require('./BasePage');
 const selectors = require('../locators/neuraLocators');
 const { neuraBridgeAssertions } = require('../constants/assertionConstants');
 const { BridgeOperationType, TransactionAction } = require('../constants/testConstants');
-const { 
+const {
   DEFAULT_TIMEOUT,
-  TRANSACTION_APPROVAL_TIMEOUT, 
-  NETWORK_OPERATION_TIMEOUT, 
+  TRANSACTION_APPROVAL_TIMEOUT,
+  NETWORK_OPERATION_TIMEOUT,
   WALLET_OPERATION_TIMEOUT,
   BRIDGE_OPERATION_TIMEOUT,
   TOKEN_TRANSFER_TIMEOUT,
@@ -190,7 +191,7 @@ class NeuraBridgePage extends BasePage {
 
     try {
       [extensionPopup] = await Promise.all([
-        context.waitForEvent('page', {timeout: DEFAULT_TIMEOUT}),
+        context.waitForEvent('page', { timeout: DEFAULT_TIMEOUT }),
         this.page.waitForTimeout(DEFAULT_TIMEOUT / 5), // Short timeout for waiting
       ]);
       console.log('✅ MetaMask popup opened as new tab');
@@ -301,11 +302,11 @@ class NeuraBridgePage extends BasePage {
 
   async detectMetaMaskTabWithFallback(timeout = METAMASK_POPUP_TIMEOUT) {
     return (
-        (await this.waitForMetaMaskTab(timeout)) ||
-        (await this.findExistingMetaMaskTab()) ||
-        (() => {
-          throw new Error('❌ MetaMask tab could not be detected');
-        })()
+      (await this.waitForMetaMaskTab(timeout)) ||
+      (await this.findExistingMetaMaskTab()) ||
+      (() => {
+        throw new Error('❌ MetaMask tab could not be detected');
+      })()
     );
   }
 
@@ -441,9 +442,9 @@ class NeuraBridgePage extends BasePage {
     await this.assertBridgeWidgetLabels();
     const networks = await this.getAllRowTexts(this.selectors.bridgeDescriptors.bridgeLabels, this.selectors.general.cellCss);
     assertionHelpers.assertNetworkLabels(
-        networks,
-        neuraBridgeAssertions.pageLayout.networks.sepolia,
-        neuraBridgeAssertions.pageLayout.networks.neuraTestnet
+      networks,
+      neuraBridgeAssertions.pageLayout.networks.sepolia,
+      neuraBridgeAssertions.pageLayout.networks.neuraTestnet
     );
   }
 
@@ -463,7 +464,7 @@ class NeuraBridgePage extends BasePage {
     const tableLabels = await this.getAllRowTexts(this.selectors.claimTokensDescriptors.tableLabel, this.selectors.general.cellCss);
 
     return {
-      title:  title,
+      title: title,
       subTitle: subTitle,
       tableLabels: tableLabels
     };
@@ -482,7 +483,7 @@ class NeuraBridgePage extends BasePage {
     await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.amountLabel)).resolves.toBe(true);
     await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.neuraLabel)).resolves.toBe(true);
     await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.sepoliaLabel)).resolves.toBe(true);
-    const previewAnkrBalance = await this.getNumericMatch(this.selectors.previewTransactionDescriptors.ankrBalance, 1 , 1);
+    const previewAnkrBalance = await this.getNumericMatch(this.selectors.previewTransactionDescriptors.ankrBalance, 1, 1);
     const expectedValue = roundNumberToTwoDecimals(amount);
     await expect(previewAnkrBalance).toBe(expectedValue);
     if (checkApproveButton) {
@@ -533,8 +534,8 @@ class NeuraBridgePage extends BasePage {
   }
 
   async bridgeTokensFromNeuraToChain(context) {
-      await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeTokensBtn);
-      await this.approveBridgingTokens(context);
+    await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeTokensBtn);
+    await this.approveBridgingTokens(context);
   }
 
   /**
@@ -581,8 +582,8 @@ class NeuraBridgePage extends BasePage {
     await new Promise(r => setTimeout(r, WALLET_OPERATION_TIMEOUT));
     await this.clickDescLoc(this.selectors.bridgeDescriptors.claimTransactionButton);
     await this.confirmTransaction(context);
-    await this.waitForDescLocElementToDisappear({ text: 'Claiming 0.000001 ANKR on Sepolia, please don\'t close the page'},
-        { timeout: BRIDGE_OPERATION_TIMEOUT, longTimeout: BRIDGE_OPERATION_TIMEOUT });
+    await this.waitForDescLocElementToDisappear({ text: 'Claiming 0.000001 ANKR on Sepolia, please don\'t close the page' },
+      { timeout: BRIDGE_OPERATION_TIMEOUT, longTimeout: BRIDGE_OPERATION_TIMEOUT });
   }
 
   async navigateToFaucetPage() {
@@ -600,11 +601,9 @@ class NeuraBridgePage extends BasePage {
   async verifyMetaMaskWalletScreen() {
     await this.clickDescLoc(this.selectors.connection.avatarButton);
     await new Promise(r => setTimeout(r, WALLET_OPERATION_TIMEOUT));
-    const neuraWalletLabels = await this.getAllTextsInit(this.selectors.walletScreen.neuraLabels);
     const testNetLabels = await this.getAllRowTexts(this.selectors.walletScreen.testNetLabels, this.selectors.general.cellCss);
     const activityLabel = await this.getAllTextsInit(this.selectors.walletScreen.activityLabel);
     return {
-      neuraWalletLabels: neuraWalletLabels,
       networkLabels: testNetLabels,
       activityLabel: activityLabel
     };
@@ -616,10 +615,31 @@ class NeuraBridgePage extends BasePage {
    */
   async verifyMetaMaskWalletScreenWithAssertions() {
     const metaMaskScreenLayout = await this.verifyMetaMaskWalletScreen();
+    await this.assertTokenWithDynamicBalance();
     await assertionHelpers.assertMetaMaskWalletScreen(metaMaskScreenLayout);
     await this.clickDescLoc(this.selectors.walletScreen.expandWallet);
     await new Promise(r => setTimeout(r, NETWORK_OPERATION_TIMEOUT));
     return metaMaskScreenLayout;
+  }
+
+  /**
+   * Asserts that a container with "ANKR" and "Neura Chain" also contains the given balance
+   */
+  async assertTokenWithDynamicBalance() {
+    const watcher = new BridgeDepositWatcher();
+    // Neura Testnet balance assertions
+    const ankrNeuraOnChain = ethersUtil.formatBalance(await watcher.getAnkrBalanceOnNeura(), 1);
+    const ANKR_LABEL = 'ANKR';
+    const NEURA_CHAIN_LABEL = 'Neura Chain';
+
+    await expect(
+      this.getContainerElementWithText(
+        this.selectors.walletScreen.neuraContainer,
+        this.selectors.walletScreen.neuraBalance.css,
+        ANKR_LABEL,
+        NEURA_CHAIN_LABEL
+      )
+    ).toHaveText(ankrNeuraOnChain);
   }
 
   /**
@@ -632,7 +652,7 @@ class NeuraBridgePage extends BasePage {
     await this.assertBridgeWidgetLabels();
     const networks = await this.getAllRowTexts(this.selectors.bridgeDescriptors.bridgeLabels, this.selectors.general.cellCss);
     assertionHelpers.assertNetworkLabels(
-        networks,
+      networks,
       neuraBridgeAssertions.pageLayout.networks.neuraTestnet,
       neuraBridgeAssertions.pageLayout.networks.sepolia
     );

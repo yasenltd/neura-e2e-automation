@@ -634,7 +634,7 @@ class BasePage {
   /* -----------------------  Locator builders  ----------------------- */
 
   /**
-   * Build a Playwright locator from a “descriptor”:
+   * Build a Playwright locator from a "descriptor":
    *  - string  ➜  data-test-id
    *  - {role,name?} ➜ getByRole
    *  - {label|placeholder|alt|title|text|testId|css} ➜ matching helper
@@ -654,14 +654,14 @@ class BasePage {
         ...opts,                                // exact, includeHidden, …
       });
     }
-    if (descriptor.text)        return this.window.getByText(descriptor.text, opts);
-    if (descriptor.label)       return this.window.getByLabel(descriptor.label, opts);
+    if (descriptor.text) return this.window.getByText(descriptor.text, opts);
+    if (descriptor.label) return this.window.getByLabel(descriptor.label, opts);
     if (descriptor.placeholder) return this.window.getByPlaceholder(descriptor.placeholder, opts);
-    if (descriptor.alt)         return this.window.getByAltText(descriptor.alt, opts);
-    if (descriptor.title)       return this.window.getByTitle(descriptor.title, opts);
-    if (descriptor.testId)      return this.window.getByTestId(descriptor.testId);   // no opts arg
-    if (descriptor.className)   return this.window.locator(`.${descriptor.className.split(' ').join('.')}`);
-    if (descriptor.css)         return this.window.locator(descriptor.css);          // last-resort
+    if (descriptor.alt) return this.window.getByAltText(descriptor.alt, opts);
+    if (descriptor.title) return this.window.getByTitle(descriptor.title, opts);
+    if (descriptor.testId) return this.window.getByTestId(descriptor.testId);   // no opts arg
+    if (descriptor.className) return this.window.locator(`.${descriptor.className.split(' ').join('.')}`);
+    if (descriptor.css) return this.window.locator(descriptor.css);          // last-resort
     throw new Error(`Unrecognised locator descriptor: ${JSON.stringify(descriptor)}`);
   }
 
@@ -703,7 +703,7 @@ class BasePage {
   }
 
   /**
-   * True ⇢ the chosen element’s text matches the descriptor
+   * True ⇢ the chosen element's text matches the descriptor
    * False ⇢ no element or text mismatch
    *
    * @param {object|string} desc          descriptor / test-id
@@ -712,9 +712,9 @@ class BasePage {
    * @returns {Promise<boolean>}
    */
   async doesTextMatchDescriptor(
-      desc,
-      nth = null,
-      timeout = this.DEFAULT_TIMEOUT
+    desc,
+    nth = null,
+    timeout = this.DEFAULT_TIMEOUT
   ) {
     const all = this.getElementWithDescLoc(desc, null);
     const node = (nth === null || nth === undefined) ? all.first() : all.nth(nth);
@@ -735,24 +735,23 @@ class BasePage {
     }
 
     const result = expected instanceof RegExp
-        ? expected.test(actual)
-        : actual === expected;
+      ? expected.test(actual)
+      : actual === expected;
 
     console.log(
-        `[doesTextMatchDescriptor] "${actual}" ${
-            result ? 'matches' : 'does NOT match'
-        } ${expected instanceof RegExp ? expected : `"${expected}"`}`
+      `Text comparison is done "${actual}" ${result ? 'matches' : 'does NOT match'
+      } ${expected instanceof RegExp ? expected : `"${expected}"`}`
     );
 
     return result;
   }
 
   /**
-   * Pull a floating-point number out of an element’s text.
+   * Pull a floating-point number out of an element's text.
    *
-   * The descriptor’s `text` (or `name`) should contain a RegExp
+   * The descriptor's `text` (or `name`) should contain a RegExp
    * with a capturing group that surrounds the number you want:
-   *     { text: /ANKR\s*([0-9.]+)/ }   // group 1 = “0.03”
+   *     { text: /ANKR\s*([0-9.]+)/ }   // group 1 = "0.03"
    *
    * @param {object|string} desc          locator descriptor / test-id string
    * @param {number}        [groupIdx=1]  which capture group holds the number
@@ -761,10 +760,10 @@ class BasePage {
    * @returns {Promise<number>}           parsed float, or NaN if no match
    */
   async getNumericMatch(
-      desc,
-      groupIdx = 1,
-      nth = null,
-      timeout = this.DEFAULT_TIMEOUT
+    desc,
+    groupIdx = 1,
+    nth = null,
+    timeout = this.DEFAULT_TIMEOUT
   ) {
     const loc = this.getElementWithDescLoc(desc, null);
     const matchLoc = (nth === null || nth === undefined) ? loc.first() : loc.nth(nth);
@@ -800,7 +799,7 @@ class BasePage {
   }
 
   /**
-   * Read the text of every direct-child “cell” inside every “row”.
+   * Read the text of every direct-child "cell" inside every "row".
    *
    * @param {object|string} rowsDesc  – descriptor (or test-id string) that points
    *                                    to the collection of rows.
@@ -835,9 +834,9 @@ class BasePage {
    */
   async waitForElement(
     desc,
-    nth      = null,
-    state    = 'visible',
-    timeout  = this.DEFAULT_TIMEOUT,
+    nth = null,
+    state = 'visible',
+    timeout = this.DEFAULT_TIMEOUT,
   ) {
     const target = this.getElementWithDescLoc(desc, nth);   // re-use your builder
     await target.waitFor({ state, timeout });
@@ -845,7 +844,7 @@ class BasePage {
   }
 
   /**
-   * Return true ⇢ element is disabled, false ⇢ it isn’t.
+   * Return true ⇢ element is disabled, false ⇢ it isn't.
    *
    * @param {object|string} desc  – the same descriptor / test-id you pass to
    *                                clickDescLoc(), getTextDescLoc(), etc.
@@ -873,9 +872,9 @@ class BasePage {
    */
   async isElementHidden(
     role,
-    name   = null,
-    opts   = {},
-    index  = null,
+    name = null,
+    opts = {},
+    index = null,
     timeout = this.DEFAULT_TIMEOUT,
   ) {
     console.log(`Checking visibility of role=${role} name=${name ?? '∅'}`);
@@ -918,6 +917,40 @@ class BasePage {
     } catch {
       return false;      // not found or never became visible
     }
+  }
+
+  /**
+   * Gets a container element that contains specific labels.
+   * @param {string} containerSelector - The selector for the container element.
+   * @param {string} [firstLabel] - Optional first label text to filter by.
+   * @param {string} [secondLabel] - Optional second label text to filter by.
+   * @returns {Locator} - The filtered container element.
+   */
+  getLocatorContainerByLabels(containerSelector, firstLabel = null, secondLabel = null) {
+    let container = this.getElementWithDescLoc(containerSelector);
+
+    if (firstLabel) {
+      container = container.filter({ has: this.window.locator(`text=${firstLabel}`) });
+    }
+
+    if (secondLabel) {
+      container = container.filter({ has: this.window.locator(`text=${secondLabel}`) });
+    }
+
+    return container;
+  }
+
+  /**
+   * Gets a locator for an element within a container that matches specific labels.
+   * @param {string} containerSelector - The selector for the container element.
+   * @param {string} selector - The selector for the element within the container.
+   * @param {string} [firstLabel] - Optional first label text to filter by.
+   * @param {string} [secondLabel] - Optional second label text to filter by.
+   * @returns {Locator} - The locator for the element within the filtered container.
+   */
+  getContainerElementWithText(containerSelector, selector, firstLabel = null, secondLabel = null) {
+    const container = this.getLocatorContainerByLabels(containerSelector, firstLabel, secondLabel);
+    return container.locator(selector);
   }
 
   async waitForDescLocElementToDisappear(descriptor, options = {}) {

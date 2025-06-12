@@ -8,7 +8,7 @@ const networks = {
     chainId: '268',
     currencySymbol: 'ANKR',
     name: 'Neura Devnet',
-    explorer: 'https://devnet-blockscout.infra.neuraprotocol.io/'
+    explorer: process.env.NEURA_DEVNET_EXPLORER
   },
   neuraTestnet: {
     networkName: 'Neura Testnet',
@@ -16,7 +16,7 @@ const networks = {
     chainId: '267',
     currencySymbol: 'ANKR',
     name: 'Neura Testnet',
-    explorer: 'https://testnet-explorer.neura.network'
+    explorer: process.env.NEURA_TESTNET_EXPLORER
   },
   sepolia: {
     networkName: 'Sepolia',

@@ -1,6 +1,6 @@
 const { expect } = require('@playwright/test');
 const { testWithoutSepolia: test } = require('../test-utils/testFixtures');
-const {neuraBridgeAssertions} = require("../constants/assertionConstants");
+const { neuraBridgeAssertions } = require("../constants/assertionConstants");
 const { TEST_AMOUNT } = require('../constants/testConstants');
 
 require('dotenv').config();

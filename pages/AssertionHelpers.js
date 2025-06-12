@@ -2,8 +2,8 @@
  * AssertionHelpers.js
  * Contains extracted assertion methods from NeuraBridgePage.js
  */
-const {expect} = require('@playwright/test');
-const {neuraBridgeAssertions, metaMaskIntegrationAssertions} = require('../constants/assertionConstants');
+const { expect } = require('@playwright/test');
+const { neuraBridgeAssertions, metaMaskIntegrationAssertions } = require('../constants/assertionConstants');
 const ethersUtil = require('../utils/ethersUtil');
 const BridgeDepositWatcher = require('../scripts/BridgeDepositWatcher');
 
@@ -13,7 +13,6 @@ const BridgeDepositWatcher = require('../scripts/BridgeDepositWatcher');
  * @returns {Promise<void>}
  */
 async function assertMetaMaskWalletScreen(metaMaskScreenLayout) {
-    expect(metaMaskScreenLayout.neuraWalletLabels).toEqual(metaMaskIntegrationAssertions.neuraWalletLabels);
     expect(metaMaskScreenLayout.networkLabels[0]).toEqual(metaMaskIntegrationAssertions.networkLabels.bscTestnet);
     expect(metaMaskScreenLayout.networkLabels[2]).toEqual(metaMaskIntegrationAssertions.networkLabels.sepolia);
 

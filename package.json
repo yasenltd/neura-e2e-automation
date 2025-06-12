@@ -9,7 +9,7 @@
     "report": "npx playwright show-report",
     "format": "npx prettier . --write",
     "demo": "npx playwright test -g 'Neura Bridge page validation' && npx playwright show-report",
-    "runTests": "npx playwright test  && npx playwright show-report"
+    "runTests": "npx playwright test && npx playwright show-report"
   },
   "devDependencies": {
     "@playwright/test": "^1.50.1",

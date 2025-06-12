@@ -1,16 +1,17 @@
-import {ethers} from 'ethers';
+import { ethers } from 'ethers';
 import { getLatestTransaction } from '../utils/transactions.js';
+import networks from '../constants/networkConstants.js';
 
-const {expect} = require('@playwright/test');
-const {testWithoutSepolia: test} = require('../test-utils/testFixtures');
-const {waitForAnyDepositInSubgraph} = require('../utils/subgraphQueryUtil');
-const {BridgeOperationType, TEST_AMOUNT, TEST_TIMEOUT} = require('../constants/testConstants');
+const { expect } = require('@playwright/test');
+const { testWithoutSepolia: test } = require('../test-utils/testFixtures');
+const { waitForAnyDepositInSubgraph } = require('../utils/subgraphQueryUtil');
+const { BridgeOperationType, TEST_AMOUNT, TEST_TIMEOUT } = require('../constants/testConstants');
 
 require('dotenv').config();
 
 test.describe('Sepolia to Neura Bridge UI Automation', () => {
 
-    test('Verify Sepolia to Neura only approve transaction', async ({neuraBridgePage, context}) => {
+    test('Verify Sepolia to Neura only approve transaction', async ({ neuraBridgePage, context }) => {
         test.setTimeout(TEST_TIMEOUT);
 
         try {
@@ -40,7 +41,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
         }
     });
 
-    test('Verify Sepolia to Neura only bridge transaction', async ({neuraBridgePage, context}) => {
+    test('Verify Sepolia to Neura only bridge transaction', async ({ neuraBridgePage, context }) => {
         test.setTimeout(TEST_TIMEOUT);
         try {
             // Step 1: Initialize bridge with options (with wallet connection, no network switch)
@@ -67,7 +68,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
         }
     });
 
-    test('Verify Sepolia to Neura Bridge', async ({neuraBridgePage, context}) => {
+    test('Verify Sepolia to Neura Bridge', async ({ neuraBridgePage, context }) => {
         test.setTimeout(TEST_TIMEOUT);
 
         // Step 1: Setup test data
@@ -84,16 +85,16 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
                 },
                 switchNetworkDirection: false
             });
-
             // Step 3: Record balances and perform the bridge operation
             const balances = await neuraBridgePage.recordAndCompareBalances(async () => {
                 await neuraBridgePage.fillAmount(TEST_AMOUNT);
                 await neuraBridgePage.performSepoliaToNeuraOperationWithApprovalOfCustomChain(context, BridgeOperationType.APPROVE_AND_BRIDGE, TEST_AMOUNT);
                 const deposit = await waitForAnyDepositInSubgraph(from, amount);
                 expect(deposit).toBeTruthy();
-                const latest = await getLatestTransaction(from, 'sepolia');
-                console.log('latest', latest);
             });
+
+            const latest = await getLatestTransaction(from, networks.sepolia);
+            console.log('latest', latest);
 
             // Step 4: Verify balance changes
             // The balance should decrease or remain the same after bridging from Sepolia to Neura
@@ -104,7 +105,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
         }
     });
 
-    test('Verify Sepolia to Neura approve and then bridge transaction', async ({neuraBridgePage, context}) => {
+    test('Verify Sepolia to Neura approve and then bridge transaction', async ({ neuraBridgePage, context }) => {
         test.setTimeout(TEST_TIMEOUT);
 
         // Step 1: Setup test data
