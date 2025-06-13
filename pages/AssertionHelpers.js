@@ -5,7 +5,7 @@
 const { expect } = require('@playwright/test');
 const { neuraBridgeAssertions, metaMaskIntegrationAssertions } = require('../constants/assertionConstants');
 const ethersUtil = require('../utils/ethersUtil');
-const BridgeDepositWatcher = require('../scripts/BridgeDepositWatcher');
+const BridgeDepositWatcher = require('../utils/BridgeDepositWatcher');
 
 /**
  * Asserts MetaMask wallet screen against expected values

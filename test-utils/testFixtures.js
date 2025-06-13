@@ -35,13 +35,13 @@ const createTestFixture = (options = { setupSepoliaNetwork: true, setupNeuraNetw
 
         // Validate required environment variables
         const config = {
-          seedPhrase: process.env.PRIVATE_KEY,
+          seedPhrase: process.env.SEED_PHRASE,
           password: process.env.WALLET_PASSWORD,
           bridgePageUrl: process.env.NEURA_TESTNET_URL,
         };
 
         if (!config.seedPhrase || !config.password || !config.bridgePageUrl) {
-          console.error('Missing required environment variables: PRIVATE_KEY, WALLET_PASSWORD, and NEURA URL must be set');
+          console.error('Missing required environment variables:  , WALLET_PASSWORD, and NEURA URL must be set');
         }
 
         // Initialize browser with MetaMask
@@ -106,33 +106,33 @@ const createTestFixture = (options = { setupSepoliaNetwork: true, setupNeuraNetw
 /**
  * Test fixture without Sepolia network setup (only Neura)
  */
-const testWithoutSepolia = createTestFixture({ 
-  setupSepoliaNetwork: false, 
-  setupNeuraNetwork: true 
+const testWithoutSepolia = createTestFixture({
+  setupSepoliaNetwork: false,
+  setupNeuraNetwork: true
 });
 
 /**
  * Test fixture without Neura network setup (only Sepolia)
  */
-const testWithoutNeura = createTestFixture({ 
-  setupSepoliaNetwork: true, 
-  setupNeuraNetwork: false 
+const testWithoutNeura = createTestFixture({
+  setupSepoliaNetwork: true,
+  setupNeuraNetwork: false
 });
 
 /**
  * Test fixture with both Neura and Sepolia networks setup
  */
-const testWithNeuraAndSepolia = createTestFixture({ 
+const testWithNeuraAndSepolia = createTestFixture({
   setupSepoliaNetwork: true,
-  setupNeuraNetwork: true 
+  setupNeuraNetwork: true
 });
 
 /**
  * Test fixture without both Neura and Sepolia networks setup
  */
-const testWithoutNeuraAndSepolia = createTestFixture({ 
-  setupSepoliaNetwork: false, 
-  setupNeuraNetwork: false 
+const testWithoutNeuraAndSepolia = createTestFixture({
+  setupSepoliaNetwork: false,
+  setupNeuraNetwork: false
 });
 
 module.exports = {

@@ -95,6 +95,7 @@ module.exports = {
         bridgeTokensBtn: { css: 'button[data-slot="button"]:has-text("Bridge Tokens")' },
         claimTokensBtn: { css: 'button[data-slot="button"]:has-text("Claim Tokens")' },
         claimTransactionButton: { css: 'button[data-slot="button"]:has-text("Claim")' },
+        refreshClaimTransactionButton: { role: 'button', name: 'Refresh transactions' },
         approveTokenTransferButton: { css: 'button[data-slot="button"]:has-text("Approve Token Transfer")' },
         bridgeTabBtn: { css: 'a[href="/"]' },
         howItWorksBtn: { css: 'a[href="#"]' },
