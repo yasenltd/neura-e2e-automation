@@ -136,9 +136,8 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
 
         // Step 1: Setup test data
         const from = process.env.MY_ADDRESS.toLowerCase();
-        const rawAmount = ethers.utils.parseUnits(TEST_AMOUNT, 18); // BigNumber
-        const amount = rawAmount.toString(); // String representation of the amount in wei
-
+        const rawAmount = ethers.utils.parseUnits(TEST_AMOUNT, 18);
+        const amount = rawAmount.toString();
         try {
             // Step 2: Initialize bridge with options (with wallet connection, no network switch)
             await neuraBridgePage.initializeBridgeWithOptions({

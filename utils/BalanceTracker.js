@@ -29,6 +29,18 @@ class BalanceTracker {
     }
 
     /**
+     * Records current balances
+     * @returns {Promise<Object>} - Current balance snapshot
+     */
+    async recordNeuraBalances() {
+        const ankrBalance = await this.watcher.getAnkrBalanceOnNeura();
+        return {
+            ankr: ankrBalance,
+            ankrBN: ethers.utils.parseUnits(ankrBalance, 18),
+        };
+    }
+
+    /**
      * Compares two balance snapshots and calculates differences
      * @param {Object} beforeBalances - Balance snapshot before operation
      * @param {Object} afterBalances - Balance snapshot after operation
@@ -55,7 +67,25 @@ class BalanceTracker {
         };
     }
 
+    /**
+     * Compares two balance snapshots and calculates differences
+     * @param {Object} beforeBalances - Balance snapshot before operation
+     * @param {Object} afterBalances - Balance snapshot after operation
+     * @returns {Object} - Balance comparison results
+     */
+    compareNeuraBalances(beforeBalances, afterBalances) {
+        const ankrDiff = afterBalances.ankrBN.sub(beforeBalances.ankrBN);
 
+        console.log(`🪙 ANKR before: ${beforeBalances.ankr}`);
+        console.log(`🪙 ANKR after : ${afterBalances.ankr}`);
+        console.log('💡 ANKR diff:', ankrDiff.toString());
+
+        return {
+            ankrBeforeBN: beforeBalances.ankrBN,
+            ankrAfterBN: afterBalances.ankrBN,
+            ankrDiff,
+        };
+    }
 }
 
 module.exports = BalanceTracker; 

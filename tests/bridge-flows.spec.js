@@ -9,18 +9,14 @@ test.describe('Smart-contract bridge flows (no UI)', () => {
         test.setTimeout(TEST_TIMEOUT);
 
         const watcher = new BridgeDepositWatcher();
-
-        // Approve allowance first (no deposit yet)
         await watcher.depositAnkr(TEST_AMOUNT, undefined, { approveOnly: true });
 
-        // Gas estimation before deposit
         const gasEstimate = await watcher.estimateDepositGas(TEST_AMOUNT);
         expect(gasEstimate.gt(0)).toBeTruthy();
         console.log('Estimated gas:', gasEstimate.toString());
 
         const balanceBefore = await watcher.getAnkrBalance();
 
-        // Deposit ANKR
         const depositReceipt = await watcher.depositAnkr(TEST_AMOUNT);
         expect(depositReceipt.status).toBe(1);
 
@@ -53,7 +49,7 @@ test.describe('Smart-contract bridge flows (no UI)', () => {
         const watcher = new BridgeDepositWatcher();
         const { messageHash } = await watcher.depositNativeOnNeura(TEST_AMOUNT, networks.sepolia.chainId);
         const blockStart = await watcher.getFreshBlockNumber(watcher.neuraProvider);
-        const approvalReceipt = await watcher.waitForApproval(messageHash, 30_000, blockStart);
+        const approvalReceipt = await watcher.waitForApproval(messageHash, 60_000, blockStart);
         expect(approvalReceipt.status).toBe(1);
 
         const topicApproved =

@@ -97,114 +97,6 @@ class BridgeDepositWatcher {
         return parseInt(await prov.send('eth_blockNumber', []));
     }
 
-    /**
-     * Return the canonical messageHash for a given **TokensDeposited** log.
-     * 1. Try userMessages(recipient, nonce)
-     * 2. If that reverts, try userMessages(from, nonce)
-     * 3. If both fail, compute keccak256 of the packed message locally.
-     *
-     * @param {ethers.utils.LogDescription} parsed  decoded TokensDeposited
-     * @returns {Promise<string>} 0x-prefixed bytes32 hash
-     */
-    async getMessageHashFromEvent(parsed) {
-        const { from, recipient, amount, nonce, chainId } = parsed.args;
-
-        /* helper that handles call-revert → null */
-        const tryUserMessages = async (key) => {
-            try {
-                return await this.neuraBridge.userMessages(key, nonce);
-            } catch {
-                return null;
-            }
-        };
-
-        /* 1️⃣  recipient key */
-        let hash = await tryUserMessages(recipient);
-        if (hash && hash !== ethers.constants.HashZero) return hash;
-
-        /* 2️⃣  sender key */
-        hash = await tryUserMessages(from);
-        if (hash && hash !== ethers.constants.HashZero) return hash;
-
-        /* 3️⃣  Fallback: re-encode exactly as the contract does */
-        const srcChainId = parsed.args.sourceChainId.toString();
-        const packed = ethers.utils.defaultAbiCoder.encode(
-            ['uint256', 'address', 'uint256', 'address', 'uint256', 'uint256'],
-            [nonce, this.MY_ADDRESS, amount, recipient, chainId, srcChainId],
-        );
-        return ethers.utils.keccak256(packed);
-    }
-
-    //     /**
-    //  * Derive the canonical messageHash for a given TokensDeposited log.
-    //  * It tries multiple layouts until one of them already has validator
-    //  * signatures, making the helper future-proof against slight contract changes.
-    //  *
-    //  * @param {ethers.utils.LogDescription} parsed  decoded TokensDeposited log
-    //  * @returns {Promise<string>} 0x-prefixed bytes32 hash
-    //  */
-    //     /**
-    //      * Return the canonical messageHash from a decoded TokensDeposited log.
-    //      * Tries both historical and current pack-orders; picks the first one that
-    //      * already has validator signatures.
-    //      */
-    //     async getMessageHashFromEvent(parsed) {
-    //         const { recipient, amount, nonce, chainId, sourceChainId } = parsed.args;
-    //         const coder = ethers.utils.defaultAbiCoder;
-
-    //         /* candidate layouts, each with explicit values array */
-    //         const layouts = [
-    //             {
-    //                 types: ['address', 'uint256', 'uint256', 'uint256', 'uint256'],   // current
-    //                 values: [recipient, amount, nonce, chainId, sourceChainId],
-    //             },
-    //             {
-    //                 types: ['uint256', 'address', 'uint256', 'uint256', 'uint256'],   // legacy
-    //                 values: [amount, recipient, nonce, chainId, sourceChainId],
-    //             },
-    //         ];
-
-    //         for (const { types, values } of layouts) {
-    //             const hash = ethers.utils.keccak256(coder.encode(types, values));
-    //             if ((await this.getSignatureCount(hash)) > 0) return hash;   // first with sigs
-    //         }
-
-    //         /* if no signatures yet, fall back to the current layout */
-    //         const { types, values } = layouts[0];
-    //         return ethers.utils.keccak256(coder.encode(types, values));
-    //     }
-
-    /**
-     * Wait for the first TokensDeposited event on **Neura** that lands
-     * strictly after `blockStart`.
-     *
-     * @param {number} blockStart   fresh height captured BEFORE the UI click
-     * @param {number} [timeoutMs=30_000]
-     * @returns {Promise<{ txHash:string, parsed: ethers.utils.LogDescription }>}
-     */
-    waitForNextDepositOnNeura(blockStart, timeoutMs = 10_000) {
-        return new Promise((resolve, reject) => {
-            const filter = this.neuraBridge.filters.TokensDeposited();
-
-            const timer = setTimeout(() => {
-                this.neuraProvider.off(filter, handler);
-                reject(new Error('Timed out waiting for TokensDeposited on Neura'));
-            }, timeoutMs);
-
-            const handler = (log) => {
-                if (log.blockNumber < blockStart) return;  // ignore anything before
-
-                clearTimeout(timer);
-                this.neuraProvider.off(filter, handler);
-
-                const parsed = this.neuraBridge.interface.parseLog(log);
-                resolve({ txHash: log.transactionHash, parsed });
-            };
-
-            this.neuraProvider.on(filter, handler);
-        });
-    }
-
     /* ────────────────── Bridge helpers ────────────────── */
 
     /**
@@ -238,6 +130,13 @@ class BridgeDepositWatcher {
         const tx = await bridge.deposit(parsed, recipient);
         console.log(`⏳ Tx hash: ${tx.hash}`);
         return tx.wait();
+    }
+
+    /** Predict the hash a UI deposit will emit (no state change). */
+    async predictNativeDepositHash(amount, destChainId, recipient = this.MY_ADDRESS) {
+        const value = ethers.utils.parseEther(amount.toString());
+        const bridge = this.neuraBridge.connect(this.neuraSigner);
+        return bridge.callStatic.deposit(recipient, destChainId, { value });
     }
 
     /**
@@ -283,7 +182,7 @@ class BridgeDepositWatcher {
             this.getMessage(messageHash),
             this.neuraBridge.getSignatures(messageHash),
         ]);
-        console.log('sigs', sigs.length);
+        console.log('signatures count', sigs.length);
         if (!sigs.length) throw new Error('No validator signatures collected yet');
 
         const sepoliaBridge = this.ethBscBridge.connect(this.signer);
@@ -293,27 +192,7 @@ class BridgeDepositWatcher {
         return receipt;
     }
 
-    /**
-     * Wait until BridgeTransferApproved emits for given hash.
-     */
-    // waitForApproval(messageHash, timeoutMs = 30_000) {
-    //     return new Promise((resolve, reject) => {
-    //         const timer = setTimeout(
-    //             () => reject(new Error('Timed out waiting for validator approvals')),
-    //             timeoutMs,
-    //         );
-
-    //         const filter = this.neuraBridge.filters.BridgeTransferApproved(messageHash);
-    //         this.neuraBridge.once(filter, async (...eventArgs) => {
-    //             clearTimeout(timer);
-    //             const event = eventArgs[eventArgs.length - 1];
-    //             const receipt =
-    //                 (event.getTransactionReceipt && (await event.getTransactionReceipt())) ||
-    //                 (await this.neuraProvider.getTransactionReceipt(event.transactionHash));
-    //             resolve(receipt);
-    //         });
-    //     });
-    // }
+    /* ────────────────── Event waiter helpers ────────────────── */
 
     /**
      * Resolve with the tx-receipt once `BridgeTransferApproved(messageHash)` is
@@ -362,52 +241,6 @@ class BridgeDepositWatcher {
             this.neuraProvider.on(filter, handler);
         });
     }
-
-    /* ────────────────── Event waiter helpers ────────────────── */
-    /**
-     * Resolve with the transaction receipt once `BridgeTransferApproved`
-     * for `messageHash` is observed.  Works even if the event fired before
-     * the listener was attached.
-     *
-     * @param {string}  messageHash
-     * @param {number} [timeoutMs=30_000]
-     * @returns {Promise<ethers.providers.TransactionReceipt>}
-     */
-    // waitForApproval(messageHash, timeoutMs = 30_000, fromBlock) {
-    //     const filter = this.neuraBridge.filters.BridgeTransferApproved(messageHash);
-
-    //     return new Promise(async (resolve, reject) => {
-    //         const latest = await this.getFreshBlockNumber(this.neuraProvider);
-    //         const lookupStart = fromBlock ?? Math.max(latest - 20, 0);
-
-    //         const pastLogs = await this.neuraProvider.getLogs({
-    //             ...filter,
-    //             fromBlock: lookupStart,
-    //             toBlock: 'latest',
-    //         });
-
-    //         if (pastLogs.length) {
-    //             const rc = await this.neuraProvider.getTransactionReceipt(pastLogs[0].transactionHash);
-    //             return resolve(rc);
-    //         }
-
-    //         const timer = setTimeout(() => {
-    //             this.neuraProvider.off(filter, handler);
-    //             reject(new Error('Timed out waiting for BridgeTransferApproved'));
-    //         }, timeoutMs);
-
-    //         const handler = (log) => {
-    //             clearTimeout(timer);
-    //             this.neuraProvider.off(filter, handler);
-    //             this.neuraProvider
-    //                 .getTransactionReceipt(log.transactionHash)
-    //                 .then(resolve)
-    //                 .catch(reject);
-    //         };
-
-    //         this.neuraProvider.on(filter, handler);
-    //     });
-    // }
 
     /**
      * Wait for the next TokensDeposited(from = MY_ADDRESS) event that appears

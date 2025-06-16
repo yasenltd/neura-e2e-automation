@@ -1,8 +1,10 @@
 import BridgeDepositWatcher from '../utils/BridgeDepositWatcher.js';
 
+const { ethers } = require('ethers');
 const { expect } = require('@playwright/test');
 const { testWithoutSepolia: test } = require('../test-utils/testFixtures');
 const { TEST_AMOUNT, TEST_TIMEOUT } = require('../constants/testConstants');
+const networks = require('../constants/networkConstants');
 const BalanceTracker = require('../utils/BalanceTracker');
 
 require('dotenv').config();
@@ -37,45 +39,66 @@ performNeuraToSepoliaBridgeTest = async function (
   const balanceTracker = new BalanceTracker();
 
   try {
-    /* 1️⃣  Prepare the UI & connect wallet */
     await neuraBridgePage.initializeBridgeWithOptions({
       context,
       walletConnection: { connect: true },
       switchNetworkDirection: true,          // Neura → Sepolia
     });
 
-    /* 2️⃣  Record balances before */
-    const beforeBalances = await balanceTracker.recordBalances();
+    const before = await balanceTracker.recordNeuraBalances();
 
-    /* 3️⃣  Drive the browser (fill + approve) */
     await neuraBridgePage.fillAmount(TEST_AMOUNT);
     await neuraBridgePage.clickBridgeButton(false, TEST_AMOUNT);
-    const blockStart = await watcher.getFreshBlockNumber(watcher.neuraProvider);
-    console.log('Block start', blockStart);
-    await neuraBridgePage.bridgeTokensFromNeuraToChain(context);
-    /* 4️⃣  Marker block BEFORE user signs */
-
-    /* 5️⃣  Catch the Neura TokensDeposited event */
-    const { parsed } = await watcher.waitForNextDepositOnNeura(blockStart, TEST_TIMEOUT);
-
-    const messageHash = await watcher.getMessageHashFromEvent(parsed);
+    const messageHash = await watcher.predictNativeDepositHash(TEST_AMOUNT, networks.sepolia.chainId);
     console.log('📬 messageHash:', messageHash);
-    // block marker captured right after TokensDeposited arrived
-    const approvalStart = await watcher.getFreshBlockNumber(watcher.neuraProvider);
 
-    // wait up to 30 s from that block
-    // await watcher.waitForApproval(messageHash, 30_000, approvalStart);
+    await neuraBridgePage.bridgeTokensFromNeuraToChain(context);
+
+    const blockStart = await watcher.getFreshBlockNumber(watcher.neuraProvider);
+    const approvalReceipt = await watcher.waitForApproval(messageHash, 60_000, blockStart);
+    expect(approvalReceipt.status).toBe(1);
+
+    const topicApproved =
+      watcher.neuraBridge.interface.getEventTopic('BridgeTransferApproved');
+    const approvedLog = approvalReceipt.logs.find(
+      (l) => l.topics[0] === topicApproved,
+    );
+    const parsed = watcher.neuraBridge.interface.parseLog(approvedLog);
+    expect(parsed.args._messageHash.toLowerCase()).toBe(
+      messageHash.toLowerCase(),
+    );
+    expect(parsed.args.recipient.toLowerCase())
+      .toBe(watcher.MY_ADDRESS);
+
+    expect(parsed.args.chainId.toNumber())
+      .toBe(Number(networks.sepolia.chainId));
+    expect(parsed.args.sourceChainId.toNumber())
+      .toBe(Number(networks.neuraTestnet.chainId));
+
+    expect(parsed.args.amount.eq(
+      ethers.utils.parseEther(TEST_AMOUNT),
+    )).toBe(true);
+
+    const sigsAfter = await watcher.getSignatureCount(messageHash);
+    expect(sigsAfter).toEqual(10);
+
+    const packedMessage = await watcher.getMessage(messageHash);
+    expect(ethers.utils.isBytesLike(packedMessage)).toBe(true);
+    expect(packedMessage.length).toBeGreaterThan(2);
+
     const claimRc = await watcher.claimTransfer(messageHash);
     expect(claimRc.status).toBe(1);
 
-    /* 7️⃣  Record balances after & basic sanity */
-    const afterBalances = await balanceTracker.recordBalances();
-    const diff = balanceTracker.compareBalances(beforeBalances, afterBalances);
+    const after = await balanceTracker.recordNeuraBalances();
+    const diff = balanceTracker.compareNeuraBalances(before, after);
 
-    expect(diff.ankrAfterBN.lte(diff.ankrBeforeBN)).toBe(true);
-    expect(diff.ethAfterBN.lte(diff.ethBeforeBN)).toBe(true);
+    const expectedDrop = ethers.utils.parseEther(TEST_AMOUNT);
+    const tolerance = ethers.BigNumber.from('10000000000000');
 
-    /* 8️⃣  Extra checks */
+    expect(diff.ankrDiff.isNegative()).toBe(true);
+    const error = diff.ankrDiff.abs().sub(expectedDrop).abs();
+    expect(error.lte(tolerance)).toBe(true);
+
     if (additionalOperations) {
       await additionalOperations(neuraBridgePage, context);
     }
