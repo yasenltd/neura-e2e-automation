@@ -19,7 +19,7 @@ async function launchBrowserWithExtension(walletName) {
   if (!wallet) throw new Error(`Unsupported wallet: ${walletName}`);
 
   const extensionPath = await downloadAndExtractWalletAuto(walletName);
-  console.log('Browser set to:', CHANNEL.toUpperCase(), 'headless=', HEADLESS);
+  console.log('Browser set to:', CHANNEL, 'headless mode is:', HEADLESS);
   return chromium.launchPersistentContext(USER_DATA_DIR, {
     headless: HEADLESS, // 'false'
     channel : CHANNEL, // 'chrome'
