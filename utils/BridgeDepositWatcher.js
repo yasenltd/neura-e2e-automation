@@ -210,7 +210,7 @@ class BridgeDepositWatcher {
         return new Promise(async (resolve, reject) => {
             // Past-log scan
             const latest = await this.getFreshBlockNumber(this.neuraProvider);
-            const startBlock = fromBlock ?? Math.max(latest - 20, 0);
+            const startBlock = fromBlock ?? Math.max(latest - 30, 0);
 
             const past = await this.neuraProvider.getLogs({
                 ...filter,

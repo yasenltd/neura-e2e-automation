@@ -150,6 +150,37 @@ async function assertApprovalReceipt(watcher, messageHash, timeout = 60000, bloc
     return watcher.neuraBridge.interface.parseLog(approvedLog);
 }
 
+/**
+ * Asserts that the deposit receipt is valid and returns the deposit log
+ * @param {Object} depositReceipt - The transaction receipt from the deposit
+ * @param {Object} watcher - The BridgeDepositWatcher instance
+ * @returns {Object} - The deposit log from the TokensDeposited event
+ */
+function assertDepositReceipt(depositReceipt, watcher) {
+    expect(depositReceipt.status).toBe(1);
+    const topicDeposited = watcher.ethBscBridge.interface.getEventTopic('TokensDeposited');
+    const depositedLog = depositReceipt.logs.find((l) => l.topics[0] === topicDeposited);
+    expect(depositedLog).toBeTruthy();
+    return depositedLog;
+}
+
+/**
+ * Asserts that the deposit log details contain the expected values
+ * @param {Object} depositedLog - The log from the TokensDeposited event
+ * @param {Object} watcher - The BridgeDepositWatcher instance
+ * @param {Object} networks - The network constants
+ * @param {string} testAmount - The expected amount as a string
+ * @returns {Object} - The parsed deposit log
+ */
+function assertDepositLogDetails(depositedLog, watcher, networks, testAmount) {
+    const parsedDep = watcher.ethBscBridge.interface.parseLog(depositedLog);
+    expect(parsedDep.args.from.toLowerCase()).toBe(watcher.MY_ADDRESS);
+    expect(parsedDep.args.recipient.toLowerCase()).toBe(watcher.MY_ADDRESS);
+    expect(parsedDep.args.chainId.toNumber()).toBe(Number(networks.sepolia.chainId));
+    expect(parsedDep.args.amount.eq(ethers.utils.parseUnits(testAmount, 18))).toBe(true);
+    return parsedDep;
+}
+
 module.exports = {
     assertMetaMaskWalletScreen,
     assertNetworkLabels,
@@ -161,4 +192,6 @@ module.exports = {
     assertSignatureCount,
     assertPackedMessage,
     assertApprovalReceipt,
+    assertDepositReceipt,
+    assertDepositLogDetails,
 };
