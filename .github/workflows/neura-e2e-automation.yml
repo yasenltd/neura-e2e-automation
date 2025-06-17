@@ -77,8 +77,8 @@ jobs:
           ANKR_TOKEN_ADDRESS:           ${{ vars.ANKR_TOKEN_ADDRESS }}
           NEURA_TESTNET_URL:            ${{ vars.NEURA_TESTNET_URL }}
           SUBGRAPH_URL:                 ${{ vars.SUBGRAPH_URL }}
-          HEADLESS: true            # forces headless even if CI is false
-          BROWSER_CHANNEL: 'chromium' # switch from 'chrome' to bare Chromium
+          HEADLESS: ${{ vars.HEADLESS }}
+          BROWSER_CHANNEL: ${{ vars.BROWSER_CHANNEL }}
       # ────────────────────────── artifacts / traces ────────────────────────────
       - name: Upload Playwright report
         if: ${{ always() }}
