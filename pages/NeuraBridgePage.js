@@ -664,7 +664,7 @@ class NeuraBridgePage extends BasePage {
   async assertTokenWithDynamicBalance() {
     const watcher = new BridgeDepositWatcher();
     // Neura Testnet balance assertions
-    const ankrNeuraOnChain = ethersUtil.formatBalance(await watcher.getAnkrBalanceOnNeura(), 1);
+    const ankrNeuraOnChain = ethersUtil.formatBalance(await watcher.getAnkrBalanceOnNeura(), 2);
     const ANKR_LABEL = 'ANKR';
     const NEURA_CHAIN_LABEL = 'Neura Chain';
 
