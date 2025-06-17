@@ -46,7 +46,7 @@ class MetamaskPage extends WalletPage {
    */
   async processCredentials(seedPhrase) {
     await this.fillSeedPhrase(seedPhrase);
-    await this.clickDescLoc(this.selectors.seedPhrase.confirmButton);
+    await this.click(this.selectors.seedPhrase.confirmButton);
   }
 
   /**
