@@ -8,12 +8,12 @@
     "test": "npx playwright test",
     "report": "npx playwright show-report",
     "format": "npx prettier . --write",
-    "demo": "npx playwright test -g 'Neura Bridge page validation' && npx playwright show-report",
-    "demo": "npx playwright test -g 'ANKR deposit from Sepolia to Neura' && npx playwright show-report",
+    "demoUi": "npx playwright test -g 'Neura Bridge page validation' && npx playwright show-report",
+    "demoSC": "npx playwright test -g 'ANKR deposit from Sepolia to Neura' && npx playwright show-report",
     "runTests": "npx playwright test && npx playwright show-report"
   },
   "devDependencies": {
-    "@playwright/test": "^1.50.1",
+    "@playwright/test": "^1.53.0",
     "axios": "^1.7.7",
     "dotenv": "^16.3.1",
     "jszip": "^3.10.1",
