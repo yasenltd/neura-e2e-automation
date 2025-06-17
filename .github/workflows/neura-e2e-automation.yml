@@ -22,7 +22,7 @@ jobs:
   e2e:
     name: Neura E2E Automation tests
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 3
 
     # cancel the previous hourly run if a new one starts
     concurrency:
