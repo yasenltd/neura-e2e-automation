@@ -47,12 +47,18 @@ jobs:
       # ──────────────────────────────── run tests ────────────────────────────────
       - name: Run Playwright tests
         run: |
-          if [[ -n "${{ github.event.inputs.spec_file }}" ]]; then
+          if [[ -n "${{ github.event.inputs.spec_file }}" && -n "${{ github.event.inputs.test_pattern }}" ]]; then
+            echo "🎯 Running spec + grep: ${{ github.event.inputs.spec_file }} --grep '${{ github.event.inputs.test_pattern }}'"
+            npx playwright test "${{ github.event.inputs.spec_file }}" --grep "${{ github.event.inputs.test_pattern }}"
+          
+          elif [[ -n "${{ github.event.inputs.spec_file }}" ]]; then
             echo "🎯 Running single spec: ${{ github.event.inputs.spec_file }}"
             npx playwright test "${{ github.event.inputs.spec_file }}"
+          
           elif [[ -n "${{ github.event.inputs.test_pattern }}" ]]; then
-            echo "🎯 Running tests matching --grep='${{ github.event.inputs.test_pattern }}'"
+            echo "🎯 Running grep pattern: --grep '${{ github.event.inputs.test_pattern }}'"
             npx playwright test --grep "${{ github.event.inputs.test_pattern }}"
+          
           else
             echo "🎯 Running full Playwright suite"
             npx playwright test
