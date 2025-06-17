@@ -488,7 +488,7 @@ class NeuraBridgePage extends BasePage {
   }
 
   async isConnectWalletBtnVisible() {
-    return await this.isElementHidden(this.selectors.connection.connectWalletButton);
+    return await this.isElementHidden(this.selectors.connection.connectWalletButton.role, this.selectors.connection.connectWalletButton.name);
   }
 
   async assertClaimTokenPageLayout() {
