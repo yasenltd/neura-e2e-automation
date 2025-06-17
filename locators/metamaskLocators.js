@@ -15,7 +15,7 @@ module.exports = {
   },
   seedPhrase: {
     dropdown: '.dropdown__select',
-    confirmButton: 'import-srp-confirm',
+    confirmButton: { testId: 'import-srp-confirm'},
     wordInputPrefix: 'import-srp__srp-word-',
   },
   password: {
