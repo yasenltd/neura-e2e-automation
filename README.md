@@ -35,7 +35,7 @@ This repository contains an automated end-to-end testing framework for the Neura
 
 1. Create a `.env` file in the root directory with the following variables:
    ```
-   PRIVATE_KEY=your_wallet_seed_phrase
+   SEED_PHRASE=your_wallet_seed_phrase
    WALLET_PASSWORD=your_wallet_password
    NEURA_NET_URL=https://url-to-neura-bridge-app
    SEPOLIA_RPC_URL=https://sepolia-rpc-url

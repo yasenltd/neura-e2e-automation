@@ -1,0 +1,77 @@
+name: Neura E2E Automation
+
+on:
+  schedule:                 # ── run automatically every hour (at minute 0) ──
+    - cron: '0 * * * *'     #   → uses UTC; adjust if you prefer local time
+  push:                     # ── still run on every branch push
+    branches: [ main ]
+  pull_request:             # ── and on every PR (optional)
+    branches: [ '**' ]
+  workflow_dispatch:        # ── manual trigger in the GH UI
+    inputs:
+      test_pattern:
+        description: 'Optional grep (@playwright/test --grep) pattern'
+        required: false
+        default: ''
+
+jobs:
+  e2e:
+    name: Playwright tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    # cancel previous hourly run if a new one starts
+    concurrency:
+      group: e2e-${{ github.ref }}-${{ github.event_name == 'schedule' && 'hourly' || 'ci' }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Use Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache:        'npm'
+
+      - name: Install deps
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      # ▸ Playwright’s HTML report and trace viewer are uploaded as artifacts
+      - name: Run Playwright tests
+        run: |
+          npx playwright test ${{ github.event.inputs.test_pattern }}
+        env:
+          # ────────────── your secrets / env vars here ──────────────
+          SEED_PHRASE: ${{ secrets.SEED_PHRASE }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          WALLET_PASSWORD: ${{ secrets.WALLET_PASSWORD }}
+          MY_ADDRESS: ${{ secrets.MY_ADDRESS }}
+          SEPOLIA_RPC_URL: ${{ vars.SEPOLIA_RPC_URL }}
+          NEURA_TESTNET_RPC_URL: ${{ vars.NEURA_TESTNET_RPC_URL }}
+          SEPOLIA_BRIDGE_PROXY_ADDRESS: ${{ vars.SEPOLIA_BRIDGE_PROXY_ADDRESS }}
+          NEURA_BRIDGE_PROXY_ADDRESS: ${{ vars.NEURA_BRIDGE_PROXY_ADDRESS }}
+          ANKR_TOKEN_ADDRESS: ${{ vars.ANKR_TOKEN_ADDRESS }}
+          NEURA_TESTNET_URL: ${{ vars.NEURA_TESTNET_URL }}
+          SUBGRAPH_URL: ${{ vars.SUBGRAPH_URL }}
+          # …any other vars used in .env files
+
+      - name: Upload Playwright report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 14
+
+      - name: Upload traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: |
+            test-results/**/trace.zip
+          retention-days: 14
