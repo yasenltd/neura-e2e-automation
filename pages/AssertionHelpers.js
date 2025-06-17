@@ -3,6 +3,7 @@
  * Contains extracted assertion methods from NeuraBridgePage.js
  */
 const { expect } = require('@playwright/test');
+const { ethers } = require('ethers');
 const { neuraBridgeAssertions, metaMaskIntegrationAssertions } = require('../constants/assertionConstants');
 const ethersUtil = require('../utils/ethersUtil');
 const BridgeDepositWatcher = require('../utils/BridgeDepositWatcher');
@@ -70,10 +71,94 @@ function assertSelectedChain(activeSelectedChain, activeChain) {
     expect(activeSelectedChain).toContainText(activeChain).then(r => "Selected chain is: " + r);
 }
 
+/**
+ * Asserts that the Neura balance difference matches the expected amount within tolerance
+ * @param {Object} balanceTracker - The BalanceTracker instance
+ * @param {Object} before - Balance snapshot before operation
+ * @param {Object} after - Balance snapshot after operation
+ * @param {string} expectedAmount - Expected amount as a string
+ */
+function assertNeuraBalanceDifference(balanceTracker, before, after, expectedAmount) {
+    const diff = balanceTracker.compareNeuraBalances(before, after);
+
+    const expectedDrop = ethers.utils.parseEther(expectedAmount);
+    const tolerance = ethers.BigNumber.from('10000000000000');
+
+    expect(diff.ankrDiff.isNegative()).toBe(true);
+    const error = diff.ankrDiff.abs().sub(expectedDrop).abs();
+    expect(error.lte(tolerance)).toBe(true);
+}
+
+/**
+ * Asserts that the parsed bridge transfer log contains the expected values
+ * @param {Object} parsedLog - The parsed log from the bridge transfer event
+ * @param {string} messageHash - The expected message hash
+ * @param {Object} watcher - The BridgeDepositWatcher instance
+ * @param {string} testAmount - The expected amount as a string
+ * @param {Object} networks - The network constants
+ */
+function assertBridgeTransferLog(parsedLog, messageHash, watcher, testAmount, networks) {
+    expect(parsedLog.args._messageHash.toLowerCase()).toBe(messageHash.toLowerCase());
+    expect(parsedLog.args.recipient.toLowerCase()).toBe(watcher.MY_ADDRESS);
+    expect(parsedLog.args.chainId.toNumber()).toBe(Number(networks.sepolia.chainId));
+    expect(parsedLog.args.sourceChainId.toNumber()).toBe(Number(networks.neuraTestnet.chainId));
+    expect(parsedLog.args.amount.eq(ethers.utils.parseEther(testAmount))).toBe(true);
+}
+
+/**
+ * Asserts that the signature count for a message hash equals the expected value
+ * @param {Object} watcher - The BridgeDepositWatcher instance
+ * @param {string} messageHash - The message hash to check signatures for
+ */
+async function assertSignatureCount(watcher, messageHash) {
+    const signatures = await watcher.neuraBridge.getSignatures(messageHash);
+    console.log(`Total signatures count: ${signatures.length}`);
+
+    // Print each signature
+    signatures.forEach((signature, index) => {
+        console.log(`Signature ${index + 1}: ${signature}`);
+    });
+
+    expect(signatures.length).toEqual(10);
+}
+
+/**
+ * Asserts that the packed message is valid
+ * @param {Object} watcher - The BridgeDepositWatcher instance
+ * @param {string} messageHash - The message hash to get the packed message for
+ * @returns {Promise<void>}
+ */
+async function assertPackedMessage(watcher, messageHash) {
+    const packedMessage = await watcher.getMessage(messageHash);
+    expect(ethers.utils.isBytesLike(packedMessage)).toBe(true);
+    expect(packedMessage.length).toBeGreaterThan(2);
+}
+
+/**
+ * Asserts that the approval receipt is valid and returns the parsed log
+ * @param {Object} watcher - The BridgeDepositWatcher instance
+ * @param {string} messageHash - The message hash to check approval for
+ * @param {number} [timeout=60000] - Optional timeout in milliseconds
+ * @param {number} [blockStart] - Optional block number to start searching from
+ * @returns {Promise<Object>} - The parsed log from the approval event
+ */
+async function assertApprovalReceipt(watcher, messageHash, timeout = 60000, blockStart) {
+    const approvalReceipt = await watcher.waitForApproval(messageHash, timeout, blockStart);
+    expect(approvalReceipt.status).toBe(1);
+    const topicApproved = watcher.neuraBridge.interface.getEventTopic('BridgeTransferApproved');
+    const approvedLog = approvalReceipt.logs.find((l) => l.topics[0] === topicApproved);
+    return watcher.neuraBridge.interface.parseLog(approvedLog);
+}
+
 module.exports = {
     assertMetaMaskWalletScreen,
     assertNetworkLabels,
     assertEnterAmountButtonNotVisible,
     assertSelectedChain,
     assertSourceChainModalLayout,
+    assertNeuraBalanceDifference,
+    assertBridgeTransferLog,
+    assertSignatureCount,
+    assertPackedMessage,
+    assertApprovalReceipt,
 };

@@ -89,8 +89,8 @@ class BridgeDepositWatcher {
     }
 
     async getSignatureCount(messageHash) {
-        const sigs = await this.neuraBridge.getSignatures(messageHash);
-        return sigs.length;
+        const signatures = await this.neuraBridge.getSignatures(messageHash);
+        return signatures.length;
     }
 
     async getFreshBlockNumber(prov = this.provider) {
@@ -154,7 +154,7 @@ class BridgeDepositWatcher {
 
         console.log(
             `🚀 Depositing ${ethers.utils.formatEther(value)} native token(s) to chain ${destChainId}`
-            + ` for ${recipient} …`,
+            + ` for ${recipient}…`,
         );
         const tx = await bridge.deposit(recipient, destChainId, { value });
         console.log(`⏳ Tx hash: ${tx.hash}`);
@@ -178,16 +178,16 @@ class BridgeDepositWatcher {
      * @returns {Promise<ethers.providers.TransactionReceipt>}
      */
     async claimTransfer(messageHash) {
-        const [message, sigs] = await Promise.all([
+        const [message, signatures] = await Promise.all([
             this.getMessage(messageHash),
             this.neuraBridge.getSignatures(messageHash),
         ]);
-        console.log('signatures count', sigs.length);
-        if (!sigs.length) throw new Error('No validator signatures collected yet');
+        console.log('Validators signatures count:', signatures.length);
+        if (!signatures.length) throw new Error('No validator signatures collected yet');
 
         const sepoliaBridge = this.ethBscBridge.connect(this.signer);
         console.log(`🚚 Claiming on Sepolia via ${sepoliaBridge.address} …`);
-        const receipt = await (await sepoliaBridge.claim(message, sigs)).wait();
+        const receipt = await (await sepoliaBridge.claim(message, signatures)).wait();
         console.log(`✅ Claim confirmed in block ${receipt.blockNumber}`);
         return receipt;
     }
@@ -204,11 +204,11 @@ class BridgeDepositWatcher {
      * @param {number} [fromBlock]                 start block for past-log scan
      *                                             – pass your marker for zero-lag
      */
-    waitForApproval(messageHash, timeoutMs = 30_000, fromBlock) {
+    waitForApproval(messageHash, timeoutMs = 60_000, fromBlock) {
         const filter = this.neuraBridge.filters.BridgeTransferApproved(messageHash);
 
         return new Promise(async (resolve, reject) => {
-            /* 1️⃣  Past-log scan (bounded window) */
+            // Past-log scan
             const latest = await this.getFreshBlockNumber(this.neuraProvider);
             const startBlock = fromBlock ?? Math.max(latest - 20, 0);
 
@@ -223,7 +223,7 @@ class BridgeDepositWatcher {
                 return resolve(rc);
             }
 
-            /* 2️⃣  Future listener */
+            // Future listener
             const timer = setTimeout(() => {
                 this.neuraProvider.off(filter, handler);
                 reject(new Error('Timed out waiting for BridgeTransferApproved'));
