@@ -10,7 +10,7 @@ module.exports = {
     video: 'on', // 👈 Record video of the test run
     slowMo: 500, // Slow down by 500ms to observe actions
   },
-  reporter: [['html', { open: 'always' }]],
+  reporter: [['html', { title: 'Neura E2E Automation Report',  open: 'always' }]],
   projects: [
     {
       name: 'chromium',
