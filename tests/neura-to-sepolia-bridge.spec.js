@@ -43,7 +43,7 @@ async function initializeAndBridgeFromNeuraToSepolia(neuraBridgePage, context, w
 
 test.describe('Neura to Sepolia Bridge UI Automation', () => {
 
-    test('Verify Neura to Sepolia Bridge', async ({neuraBridgePage, context}) => {
+    test('Verify Neura to Sepolia Bridge transaction via UI and Claim transaction via SC call', async ({neuraBridgePage, context}) => {
         test.setTimeout(TEST_TIMEOUT);
         const watcher = new BridgeDepositWatcher();
         const balanceTracker = new BalanceTracker();
@@ -62,7 +62,7 @@ test.describe('Neura to Sepolia Bridge UI Automation', () => {
         }
     });
 
-    test('Verify claim transaction', async ({neuraBridgePage, context}) => {
+    test('Verify Neura to Sepolia Bridge and Claim transactions via UI', async ({neuraBridgePage, context}) => {
         test.setTimeout(TEST_TIMEOUT);
 
         const watcher = new BridgeDepositWatcher();
