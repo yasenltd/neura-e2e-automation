@@ -157,6 +157,12 @@ class NeuraBridgePage extends BasePage {
       await popupWallet.cancelTransaction();
     } else if (action === TransactionAction.CONFIRM_CHAIN) {
       await popupWallet.approveSepoliaChainRequest();
+    } else if (action === TransactionAction.CONNECT) {
+      await popupWallet.connectWallet();
+      await new Promise(r => setTimeout(r, TRANSACTION_APPROVAL_TIMEOUT / 3)); // Reduced timeout for signing
+      await this.click(this.selectors.connection.signMessage);
+      await this.confirmTransaction(context);
+      await this.page.bringToFront();
     }
     else {
       throw new Error(`Invalid transaction action: ${action}`);
@@ -554,7 +560,8 @@ class NeuraBridgePage extends BasePage {
       await this.clickDescLoc(this.selectors.connection.connectWalletButton);
     }
     await this.clickDescLoc(this.selectors.connection.selectMetaMaskWallet);
-    await this.attachWallet(context);
+    // await this.attachWallet(context);
+    await this.handleTransactionPopup(context, TransactionAction.CONNECT);
     await new Promise(r => setTimeout(r, NETWORK_OPERATION_TIMEOUT));
   }
 
