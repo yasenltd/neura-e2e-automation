@@ -121,7 +121,7 @@ class NeuraBridgePage extends BasePage {
     // Wait for the extension prompt modal to open
     console.log('Waiting for MetaMask to load');
     const [extensionPopup] = await Promise.all([context.waitForEvent('page')]);
-    // await extensionPopup.waitForLoadState('domcontentloaded');
+    await extensionPopup.waitForLoadState('domcontentloaded');
 
     // Bring the extension prompt modal to the front
     await extensionPopup.bringToFront();
