@@ -6,10 +6,10 @@ on:
     - cron: '*/15 * * * *'
   # ── on any push ──
   push:
-    branches: ['**']
+    branches: ['main']
   # ── on any PR ──
   pull_request:
-    branches: ['**']
+    branches: ['main']
   # ── manual trigger with inputs ──
   workflow_dispatch:
     inputs:
