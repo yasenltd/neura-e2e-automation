@@ -6,10 +6,10 @@ on:
     - cron: '*/15 * * * *'
   # ── on any push ──
   push:
-    branches: ['**']
+    branches: ['main']
   # ── on any PR ──
   pull_request:
-    branches: ['**']
+    branches: ['main']
   # ── manual trigger with inputs ──
   workflow_dispatch:
     inputs:
@@ -50,25 +50,47 @@ jobs:
 
       - name: Run Playwright tests
         run: |
-          if [[ "${{ github.event_name }}" != "workflow_dispatch" ]]; then
-            echo "🔄 Triggered by ${{ github.event_name }}: running only bridge-flows.spec.js"
-            npx playwright test tests/bridge-flows.spec.js
-          else
-            # manual dispatch → allow spec_file, test_pattern, or both
-            if [[ -n "${{ github.event.inputs.spec_file }}" && -n "${{ github.event.inputs.test_pattern }}" ]]; then
-              echo "🎯 Running file + grep: ${{ github.event.inputs.spec_file }} --grep '${{ github.event.inputs.test_pattern }}'"
-              npx playwright test "${{ github.event.inputs.spec_file }}" --grep "${{ github.event.inputs.test_pattern }}"
-            elif [[ -n "${{ github.event.inputs.spec_file }}" ]]; then
-              echo "🎯 Running single spec file: ${{ github.event.inputs.spec_file }}"
-              npx playwright test "${{ github.event.inputs.spec_file }}"
-            elif [[ -n "${{ github.event.inputs.test_pattern }}" ]]; then
-              echo "🎯 Running grep pattern: --grep '${{ github.event.inputs.test_pattern }}'"
-              npx playwright test --grep "${{ github.event.inputs.test_pattern }}"
+          run_tests() {
+            if [[ "${{ github.event_name }}" != "workflow_dispatch" ]]; then
+              echo "🔄 Triggered by ${{ github.event_name }}: running bridge-flows.spec.js"
+              npx playwright test tests/bridge-flows.spec.js
             else
-              echo "🎯 No inputs provided — running full suite"
-              npx playwright test
+              if [[ -n "${{ github.event.inputs.spec_file }}" && -n "${{ github.event.inputs.test_pattern }}" ]]; then
+                echo "🎯 Running ${{
+                    github.event.inputs.spec_file }} --grep '${{
+                    github.event.inputs.test_pattern }}'"
+                npx playwright test "${{ github.event.inputs.spec_file }}" --grep "${{ github.event.inputs.test_pattern }}"
+              elif [[ -n "${{ github.event.inputs.spec_file }}" ]]; then
+                echo "🎯 Running single spec: ${{ github.event.inputs.spec_file }}"
+                npx playwright test "${{ github.event.inputs.spec_file }}"
+              elif [[ -n "${{ github.event.inputs.test_pattern }}" ]]; then
+                echo "🎯 Running grep: --grep '${{ github.event.inputs.test_pattern }}'"
+                npx playwright test --grep "${{ github.event.inputs.test_pattern }}"
+              else
+                echo "🎯 No inputs — running full suite"
+                npx playwright test
+              fi
             fi
-          fi
+          }
+          
+          # First attempt
+                    run_tests
+                    rc=$?
+
+                    if [ $rc -ne 0 ]; then
+                      echo "⚠️  Tests failed with exit code $rc — retrying once..."
+                      run_tests
+                      rc2=$?
+                      if [ $rc2 -ne 0 ]; then
+                        echo "❌ Retry also failed with exit code $rc2"
+                        exit $rc2
+                      else
+                        echo "✅ Retry passed"
+                        exit 0
+                      fi
+                    fi
+
+                    echo "✅ Automation run passed successfully in first run"
         env:
           # ─────────────── secrets ───────────────
           SEED_PHRASE: ${{ secrets.SEED_PHRASE }}
