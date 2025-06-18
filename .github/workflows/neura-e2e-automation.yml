@@ -1,20 +1,24 @@
 name: Neura E2E Automation
 
 on:
-  schedule:               # ── automatic run every hour (UTC)
+  # ── every 15 minutes ──
+  schedule:
     - cron: '*/15 * * * *'
-  push:                    # ── CI for main branch
-    branches: [ main ]
-  pull_request:            # ── CI for all PRs
-    branches: [ '**' ]
-  workflow_dispatch:       # ── manual trigger in the GitHub UI
+  # ── on any push ──
+  push:
+    branches: ['**']
+  # ── on any PR ──
+  pull_request:
+    branches: ['**']
+  # ── manual trigger with inputs ──
+  workflow_dispatch:
     inputs:
       spec_file:
-        description: 'Run only this spec file (e.g. tests/bridge-flows.spec.js)'
+        description: 'Path to one spec file (e.g. tests/bridge-ui.spec.js)'
         required: false
         default: ''
       test_pattern:
-        description: 'Playwright --grep pattern (optional)'
+        description: 'Playwright --grep pattern (test title regex)'
         required: false
         default: ''
 
@@ -26,41 +30,44 @@ jobs:
 
     # cancel the previous hourly run if a new one starts
     concurrency:
-      group: e2e-${{ github.ref }}-${{ github.event_name == 'schedule' && 'hourly' || 'ci' }}
+      group: e2e-${{ github.ref }}-${{ github.event_name == 'schedule' && 'cron' || 'ci' }}
       cancel-in-progress: true
 
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
 
-      - name: Use Node 20
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: npm
 
-      - name: Install dependencies
+      - name: Install dependencies (Chromium only)
         run: |
           npm ci
           npx playwright install --with-deps chromium
 
       - name: Run Playwright tests
         run: |
-          if [ "$GITHUB_EVENT_NAME" = "schedule" ]; then
-            echo "🎯 Scheduled run: Smart-contract bridge flows only"
+          if [[ "${{ github.event_name }}" != "workflow_dispatch" ]]; then
+            echo "🔄 Triggered by ${{ github.event_name }}: running only bridge-flows.spec.js"
             npx playwright test tests/bridge-flows.spec.js
-          elif [[ -n "${{ github.event.inputs.spec_file }}" && -n "${{ github.event.inputs.test_pattern }}" ]]; then
-            echo "🎯 Running spec + grep: ${{ github.event.inputs.spec_file }} --grep '${{ github.event.inputs.test_pattern }}'"
-            npx playwright test "${{ github.event.inputs.spec_file }}" --grep "${{ github.event.inputs.test_pattern }}"
-          elif [[ -n "${{ github.event.inputs.spec_file }}" ]]; then
-            echo "🎯 Running single spec: ${{ github.event.inputs.spec_file }}"
-            npx playwright test "${{ github.event.inputs.spec_file }}"
-          elif [[ -n "${{ github.event.inputs.test_pattern }}" ]]; then
-            echo "🎯 Running grep pattern: --grep '${{ github.event.inputs.test_pattern }}'"
-            npx playwright test --grep "${{ github.event.inputs.test_pattern }}"
           else
-            echo "🎯 Running full Playwright suite"
-            npx playwright test
+            # manual dispatch → allow spec_file, test_pattern, or both
+            if [[ -n "${{ github.event.inputs.spec_file }}" && -n "${{ github.event.inputs.test_pattern }}" ]]; then
+              echo "🎯 Running file + grep: ${{ github.event.inputs.spec_file }} --grep '${{ github.event.inputs.test_pattern }}'"
+              npx playwright test "${{ github.event.inputs.spec_file }}" --grep "${{ github.event.inputs.test_pattern }}"
+            elif [[ -n "${{ github.event.inputs.spec_file }}" ]]; then
+              echo "🎯 Running single spec file: ${{ github.event.inputs.spec_file }}"
+              npx playwright test "${{ github.event.inputs.spec_file }}"
+            elif [[ -n "${{ github.event.inputs.test_pattern }}" ]]; then
+              echo "🎯 Running grep pattern: --grep '${{ github.event.inputs.test_pattern }}'"
+              npx playwright test --grep "${{ github.event.inputs.test_pattern }}"
+            else
+              echo "🎯 No inputs provided — running full suite"
+              npx playwright test
+            fi
           fi
         env:
           # ─────────────── secrets ───────────────
