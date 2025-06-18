@@ -2,7 +2,7 @@ name: Neura E2E Automation
 
 on:
   schedule:               # ── automatic run every hour (UTC)
-    - cron: '0 * * * *'
+    - cron: '*/15 * * * *'
   push:                    # ── CI for main branch
     branches: [ main ]
   pull_request:            # ── CI for all PRs
