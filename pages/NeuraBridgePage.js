@@ -1,12 +1,12 @@
 import { expect } from "playwright/test";
-import { roundNumberToTwoDecimals } from "../utils/util";
+import { formatBalanceString } from "../utils/util";
 import ethersUtil from "../utils/ethersUtil";
 import BridgeDepositWatcher from '../utils/BridgeDepositWatcher';
 
 const BasePage = require('./BasePage');
 const selectors = require('../locators/neuraLocators');
 const { neuraBridgeAssertions } = require('../constants/assertionConstants');
-const { BridgeOperationType, TransactionAction } = require('../constants/testConstants');
+const { TransactionAction } = require('../constants/testConstants');
 const {
   DEFAULT_TIMEOUT,
   TRANSACTION_APPROVAL_TIMEOUT,
@@ -18,7 +18,6 @@ const {
   AMOUNT_FILL_TIMEOUT
 } = require('../constants/timeoutConstants');
 const assertionHelpers = require('./AssertionHelpers');
-const { ethers } = require('ethers');
 
 class NeuraBridgePage extends BasePage {
   constructor(page) {
@@ -458,13 +457,9 @@ class NeuraBridgePage extends BasePage {
   async assertSourceChainModalLayout(activeChain) {
     const title = await this.getElementWithDescLoc(this.selectors.sourceChainModal.selectSourceChainTitle).isVisible();
     expect(title).toBe(true);
-    // const labels = await this.getAllTextsInit(this.selectors.sourceChainModal.networkLabels);
-    // assertionHelpers.assertSourceChainModalLayout(labels);
-
     await expect(this.doesTextMatchDescriptor(this.selectors.sourceChainModal.bscTestnet)).resolves.toBe(true);
     await expect(this.doesTextMatchDescriptor(this.selectors.sourceChainModal.neuraLabel)).resolves.toBe(true);
     await expect(this.doesTextMatchDescriptor(this.selectors.sourceChainModal.sepoliaLabel)).resolves.toBe(true);
-
     const activeSelectedChain = this.getElementWithDescLoc(this.selectors.sourceChainModal.activeChain);
     assertionHelpers.assertSelectedChain(activeSelectedChain, activeChain);
   }
@@ -519,8 +514,8 @@ class NeuraBridgePage extends BasePage {
     await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.neuraLabel)).resolves.toBe(true);
     await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.sepoliaLabel)).resolves.toBe(true);
     const previewAnkrBalance = await this.getNumericMatch(this.selectors.previewTransactionDescriptors.ankrBalance, 1, 1);
-    const expectedValue = roundNumberToTwoDecimals(amount);
-    // await expect(previewAnkrBalance).toBe(expectedValue);
+    const expectedValue = formatBalanceString(amount);
+    await expect(previewAnkrBalance).toBe(Number(expectedValue));
     if (checkApproveButton) {
       await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.approveButton)).resolves.toBe(true);
     } else {

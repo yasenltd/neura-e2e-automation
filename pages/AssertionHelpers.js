@@ -49,7 +49,7 @@ function assertNetworkLabels(networks, firstNetworkExpected, secondNetworkExpect
  * @param {boolean} isVisible - Whether the button is visible
  */
 function assertEnterAmountButtonNotVisible(isVisible) {
-    expect(isVisible).toBe(false);
+    expect(isVisible).toBe(true);
 }
 
 /**

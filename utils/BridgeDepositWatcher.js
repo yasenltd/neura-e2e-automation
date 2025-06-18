@@ -9,6 +9,7 @@ const {
     getBalance,
     getTokenBalance,
 } = require('../utils/ethersUtil');
+const { formatBalanceString } = require('../utils/util');
 
 const erc20Abi = [
     'function balanceOf(address) view returns (uint256)',
@@ -61,14 +62,18 @@ class BridgeDepositWatcher {
 
     async getEthBalance() {
         const raw = await getBalance(this.MY_ADDRESS, process.env.SEPOLIA_RPC_URL);
-        const readable = ethers.utils.formatEther(raw);
+        const tokenStr = ethers.utils.formatEther(raw);
+        console.log(`💰 Raw ETH string: ${tokenStr}`);
+        const readable = formatBalanceString(tokenStr, 'ETH on Sepolia');
         console.log(`💰 ETH on Sepolia: ${readable}`);
         return readable;
     }
 
     async getAnkrBalanceOnNeura() {
         const raw = await getBalance(this.MY_ADDRESS, process.env.NEURA_TESTNET_RPC_URL);
-        const readable = ethers.utils.formatEther(raw);
+        const tokenStr = ethers.utils.formatEther(raw);
+        console.log(`💰 Raw ANKR string on Neura: ${tokenStr}`);
+        const readable = formatBalanceString(tokenStr, 'ETH on Sepolia');
         console.log(`💰 ANKR on Neura: ${readable}`);
         return readable;
     }
