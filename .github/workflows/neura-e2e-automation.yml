@@ -4,13 +4,13 @@ on:
   # ── every 30 minutes ──
   schedule:
     - cron: '*/30 * * * *'
-  # ── on any push ──
+  # ── on any push to main ──
   push:
     branches: ['main']
-  # ── on any PR ──
+  # ── on any PR targeting main ──
   pull_request:
     branches: ['main']
-  # ── manual trigger with inputs ──
+  # ── manual trigger with optional inputs ──
   workflow_dispatch:
     inputs:
       spec_file:
@@ -27,11 +27,24 @@ jobs:
     name: Neura E2E Automation tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
-
-    # cancel the previous hourly run if a new one starts
     concurrency:
       group: e2e-${{ github.ref }}-${{ github.event_name == 'schedule' && 'cron' || 'ci' }}
       cancel-in-progress: true
+
+    env:
+      SEED_PHRASE:                  ${{ secrets.SEED_PHRASE }}
+      PRIVATE_KEY:                  ${{ secrets.PRIVATE_KEY }}
+      WALLET_PASSWORD:              ${{ secrets.WALLET_PASSWORD }}
+      MY_ADDRESS:                   ${{ secrets.MY_ADDRESS }}
+      SEPOLIA_RPC_URL:              ${{ vars.SEPOLIA_RPC_URL }}
+      NEURA_TESTNET_RPC_URL:        ${{ vars.NEURA_TESTNET_RPC_URL }}
+      SEPOLIA_BRIDGE_PROXY_ADDRESS: ${{ vars.SEPOLIA_BRIDGE_PROXY_ADDRESS }}
+      NEURA_BRIDGE_PROXY_ADDRESS:   ${{ vars.NEURA_BRIDGE_PROXY_ADDRESS }}
+      ANKR_TOKEN_ADDRESS:           ${{ vars.ANKR_TOKEN_ADDRESS }}
+      NEURA_TESTNET_URL:            ${{ vars.NEURA_TESTNET_URL }}
+      SUBGRAPH_URL:                 ${{ vars.SUBGRAPH_URL }}
+      HEADLESS:                     ${{ vars.HEADLESS }}
+      BROWSER_CHANNEL:              ${{ vars.BROWSER_CHANNEL }}
 
     steps:
       - name: Check out repo
@@ -48,69 +61,22 @@ jobs:
           npm ci
           npx playwright install --with-deps chromium
 
-      - name: Run Playwright tests
-        shell: bash
-        run: |
-          run_tests() {
-            if [[ "${{ github.event_name }}" != "workflow_dispatch" ]]; then
-              echo "🔄 Triggered by ${{ github.event_name }}: running bridge-flows.spec.js"
-              npx playwright test tests/bridge-flows.spec.js
-            else
-              if [[ -n "${{ github.event.inputs.spec_file }}" && -n "${{ github.event.inputs.test_pattern }}" ]]; then
-                echo "🎯 Running ${{
-                    github.event.inputs.spec_file }} --grep '${{
-                    github.event.inputs.test_pattern }}'"
-                npx playwright test "${{ github.event.inputs.spec_file }}" --grep "${{ github.event.inputs.test_pattern }}"
-              elif [[ -n "${{ github.event.inputs.spec_file }}" ]]; then
-                echo "🎯 Running single spec: ${{ github.event.inputs.spec_file }}"
-                npx playwright test "${{ github.event.inputs.spec_file }}"
-              elif [[ -n "${{ github.event.inputs.test_pattern }}" ]]; then
-                echo "🎯 Running grep: --grep '${{ github.event.inputs.test_pattern }}'"
-                npx playwright test --grep "${{ github.event.inputs.test_pattern }}"
-              else
-                echo "🎯 No inputs — running full suite"
-                npx playwright test
-              fi
-            fi
-          }
+      - name: Run bridge-flows.spec.js (schedule, push to main, PR to main)
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        run: xvfb-run -a npx playwright test tests/bridge-flows.spec.js
 
-          # First attempt
-          run_tests
-          rc=$?
+      - name: Run single spec file (manual dispatch + spec_file)
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.spec_file != '' }}
+        run: xvfb-run -a npx playwright test ${{ github.event.inputs.spec_file }}
 
-          # On failure, retry once
-          if [ $rc -ne 0 ]; then
-            echo "⚠️  Tests failed (exit code $rc). Retrying once..."
-            run_tests
-            rc2=$?
-            if [ $rc2 -ne 0 ]; then
-              echo "❌ Retry failed (exit code $rc2)."
-              exit $rc2
-            else
-              echo "✅ Retry passed."
-            fi
-          else
-            echo "✅ First run passed."
-          fi
+      - name: Run grep pattern only (manual dispatch + test_pattern)
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.spec_file == '' && github.event.inputs.test_pattern != '' }}
+        run: xvfb-run -a npx playwright test --grep "${{ github.event.inputs.test_pattern }}"
 
-          echo "✅ Automation run passed successfully in first run"
-        env:
-          # ─────────────── secrets ───────────────
-          SEED_PHRASE: ${{ secrets.SEED_PHRASE }}
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-          WALLET_PASSWORD: ${{ secrets.WALLET_PASSWORD }}
-          MY_ADDRESS: ${{ secrets.MY_ADDRESS }}
-          # ─────────────── public variables ───────────────
-          SEPOLIA_RPC_URL:              ${{ vars.SEPOLIA_RPC_URL }}
-          NEURA_TESTNET_RPC_URL:        ${{ vars.NEURA_TESTNET_RPC_URL }}
-          SEPOLIA_BRIDGE_PROXY_ADDRESS: ${{ vars.SEPOLIA_BRIDGE_PROXY_ADDRESS }}
-          NEURA_BRIDGE_PROXY_ADDRESS:   ${{ vars.NEURA_BRIDGE_PROXY_ADDRESS }}
-          ANKR_TOKEN_ADDRESS:           ${{ vars.ANKR_TOKEN_ADDRESS }}
-          NEURA_TESTNET_URL:            ${{ vars.NEURA_TESTNET_URL }}
-          SUBGRAPH_URL:                 ${{ vars.SUBGRAPH_URL }}
-          HEADLESS: ${{ vars.HEADLESS }}
-          BROWSER_CHANNEL: ${{ vars.BROWSER_CHANNEL }}
-      # ────────────────────────── artifacts / traces ────────────────────────────
+      - name: Run full suite (manual dispatch default)
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.spec_file == '' && github.event.inputs.test_pattern == '' }}
+        run: xvfb-run -a npx playwright test
+
       - name: Upload Playwright report
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
