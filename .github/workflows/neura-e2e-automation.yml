@@ -49,6 +49,7 @@ jobs:
           npx playwright install --with-deps chromium
 
       - name: Run Playwright tests
+        shell: bash
         run: |
           run_tests() {
             if [[ "${{ github.event_name }}" != "workflow_dispatch" ]]; then
@@ -72,25 +73,25 @@ jobs:
               fi
             fi
           }
-          
+
           # First attempt
-                    run_tests
-                    rc=$?
+          run_tests
+          rc=$?
 
-                    if [ $rc -ne 0 ]; then
-                      echo "⚠️  Tests failed with exit code $rc — retrying once..."
-                      run_tests
-                      rc2=$?
-                      if [ $rc2 -ne 0 ]; then
-                        echo "❌ Retry also failed with exit code $rc2"
-                        exit $rc2
-                      else
-                        echo "✅ Retry passed"
-                        exit 0
-                      fi
-                    fi
+          if [ $rc -ne 0 ]; then
+            echo "⚠️  Tests failed with exit code $rc — retrying once..."
+            run_tests
+            rc2=$?
+            if [ $rc2 -ne 0 ]; then
+              echo "❌ Retry also failed with exit code $rc2"
+              exit $rc2
+            else
+              echo "✅ Retry passed"
+              exit 0
+            fi
+          fi
 
-                    echo "✅ Automation run passed successfully in first run"
+          echo "✅ Automation run passed successfully in first run"
         env:
           # ─────────────── secrets ───────────────
           SEED_PHRASE: ${{ secrets.SEED_PHRASE }}
