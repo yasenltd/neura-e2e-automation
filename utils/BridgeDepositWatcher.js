@@ -147,7 +147,7 @@ class BridgeDepositWatcher {
             `🚀 Depositing ${ethers.utils.formatUnits(parsed, decimals)} ANKR ` +
             `to ${recipient} with gasLimit ${gasLimitWithBuffer.toString()} …`
         );
-        const tx = await bridge.deposit(parsed, recipient, { gasLimitWithBuffer });
+        const tx = await bridge.deposit(parsed, recipient, { gasLimit: gasLimitWithBuffer });
         console.log(`⏳ Tx hash: ${tx.hash}`);
         return tx.wait();
     }
@@ -194,7 +194,7 @@ class BridgeDepositWatcher {
             gasLimitWithBuffer = BigNumber.from(300_000);
         }
 
-        const tx = await bridge.deposit(recipient, destChainId, { value, gasLimitWithBuffer });
+        const tx = await bridge.deposit(recipient, destChainId, { value, gasLimit: gasLimitWithBuffer });
         console.log(`⏳ Tx hash: ${tx.hash}`);
 
         const receipt = await tx.wait();
