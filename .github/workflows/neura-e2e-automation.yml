@@ -63,19 +63,19 @@ jobs:
 
       - name: Run bridge-flows.spec.js (schedule, push to main, PR to main)
         if: ${{ github.event_name != 'workflow_dispatch' }}
-        run: npx playwright test tests/bridge-flows.spec.js
+        run: xvfb-run -a npx playwright test --headed tests/bridge-flows.spec.js
 
       - name: Run single spec file (manual dispatch + spec_file)
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.spec_file != '' }}
-        run: npx playwright test ${{ github.event.inputs.spec_file }}
+        run: xvfb-run -a npx playwright test --headed ${{ github.event.inputs.spec_file }}
 
       - name: Run grep pattern only (manual dispatch + test_pattern)
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.spec_file == '' && github.event.inputs.test_pattern != '' }}
-        run: npx playwright test --grep "${{ github.event.inputs.test_pattern }}"
+        run: xvfb-run -a npx playwright test --headed --grep "${{ github.event.inputs.test_pattern }}"
 
       - name: Run full suite (manual dispatch default)
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.spec_file == '' && github.event.inputs.test_pattern == '' }}
-        run: npx playwright test
+        run: xvfb-run -a npx playwright test --headed
 
       - name: Upload Playwright report
         if: ${{ always() }}
