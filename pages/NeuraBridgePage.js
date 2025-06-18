@@ -119,6 +119,7 @@ class NeuraBridgePage extends BasePage {
 
   async attachWallet(context) {
     // Wait for the extension prompt modal to open
+    console.log('Waiting for MetaMask to load');
     const [extensionPopup] = await Promise.all([context.waitForEvent('page')]);
     await extensionPopup.waitForLoadState('domcontentloaded');
 
@@ -126,11 +127,16 @@ class NeuraBridgePage extends BasePage {
     await extensionPopup.bringToFront();
 
     const popupWallet = new this.wallet.constructor(extensionPopup);
+    console.log('Connecting MetaMask wallet');
     await popupWallet.connectWallet();
 
     // Signing user message for authentication
-    await new Promise(r => setTimeout(r, TRANSACTION_APPROVAL_TIMEOUT / 3)); // Reduced timeout for signing
+    await new Promise(r => setTimeout(r, TRANSACTION_APPROVAL_TIMEOUT / 3));
+    console.log('Signing message for authentication');
+
     await this.click(this.selectors.connection.signMessage);
+    console.log('Confirming MetaMask transaction after signing authentication message');
+
     await this.confirmTransaction(context);
     // Return to the dapp page
     await this.page.bringToFront();
@@ -489,7 +495,7 @@ class NeuraBridgePage extends BasePage {
   }
 
   async isConnectWalletBtnVisible() {
-    return await this.isElementHidden(this.selectors.connection.connectWalletButton.role, this.selectors.connection.connectWalletButton.name);
+    return await this.isElementHidden(this.selectors.connection.connectWalletButton.name);
   }
 
   async assertClaimTokenPageLayout() {
@@ -536,7 +542,7 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<void>} - Resolves when the connection is complete
    */
   async connectMetaMaskWallet(context, useConnectWalletWidgetButton = false) {
-    const enterAmountBtnIsHidden = await this.isElementHidden(this.selectors.roles.text, this.selectors.bridgeDescriptors.enterAmountBtnLabel.text);
+    const enterAmountBtnIsHidden = await this.isElementHidden(this.selectors.bridgeDescriptors.enterAmountBtnLabel.text);
     assertionHelpers.assertEnterAmountButtonNotVisible(enterAmountBtnIsHidden);
     await this.wireMetaMask(context, useConnectWalletWidgetButton);
   }
@@ -560,8 +566,8 @@ class NeuraBridgePage extends BasePage {
       await this.clickDescLoc(this.selectors.connection.connectWalletButton);
     }
     await this.clickDescLoc(this.selectors.connection.selectMetaMaskWallet);
-    // await this.attachWallet(context);
-    await this.handleTransactionPopup(context, TransactionAction.CONNECT);
+    await this.attachWallet(context);
+    // await this.handleTransactionPopup(context, TransactionAction.CONNECT);
     await new Promise(r => setTimeout(r, NETWORK_OPERATION_TIMEOUT));
   }
 
@@ -579,6 +585,7 @@ class NeuraBridgePage extends BasePage {
    * Clicks the bridge button and asserts the preview transaction layout
    * @param {Object} context - The browser context
    * @param {boolean} checkApproveButton - Whether to check for the approve token transfer button
+   * @param amount
    * @returns {Promise<Object>} - The preview transaction layout
    */
   async clickBridgeButtonApprovingCustomChain(context, checkApproveButton = false, amount) {

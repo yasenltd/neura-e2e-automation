@@ -885,11 +885,11 @@ class BasePage {
 
     try {
       const hidden = await locator.isHidden({ timeout });
-      console.log(`isHidden() for locator with text ${index} has returned ${hidden}`);
+      console.log(`isHidden() for locator with text ${descriptor} has returned ${hidden}`);
       return hidden;
     } catch (err) {
       console.warn(
-          `isHidden() for ${index} has timed out after ${timeout}ms or failed: ${err.message}`
+          `isHidden() for ${descriptor} has timed out after ${timeout}ms or failed: ${err.message}`
       );
       return false;
     }
@@ -925,7 +925,6 @@ class BasePage {
    * @param {string} containerSelector - The selector for the container element.
    * @param {string} [firstLabel] - Optional first label text to filter by.
    * @param {string} [secondLabel] - Optional second label text to filter by.
-   * @returns {Locator} - The filtered container element.
    */
   getLocatorContainerByLabels(containerSelector, firstLabel = null, secondLabel = null) {
     let container = this.getElementWithDescLoc(containerSelector);
