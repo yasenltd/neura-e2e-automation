@@ -1,9 +1,9 @@
 name: Neura E2E Automation
 
 on:
-  # ── every 15 minutes ──
+  # ── every 30 minutes ──
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '*/30 * * * *'
   # ── on any push ──
   push:
     branches: ['main']

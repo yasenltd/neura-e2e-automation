@@ -1,7 +1,7 @@
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
-const { ethers } = require('ethers');
+const { BigNumber, ethers } = require('ethers');
 const ethBscBridgeAbi = require('../abi/EthBscBridge.json');
 const neuraBridgeAbi = require('../abi/NeuraBridge.json');
 const {
@@ -76,11 +76,9 @@ class BridgeDepositWatcher {
     async estimateDepositGas(amount, recipient = this.MY_ADDRESS) {
         const decimals = 18;
         const parsed = ethers.utils.parseUnits(amount, decimals);
-
-        const bridge = this.ethBscBridge.connect(this.signer); // ensures correct `from`
+        const bridge = this.ethBscBridge.connect(this.signer);
         return bridge.estimateGas.deposit(parsed, recipient, { from: this.MY_ADDRESS });
     }
-
 
     /* ─────────────────────── Tracking helpers ───────────────────── */
 
@@ -107,32 +105,54 @@ class BridgeDepositWatcher {
      * @param {{ approveOnly?: boolean }} [opts]
      *        • approveOnly=true → only set allowance, don’t send deposit
      */
-    async depositAnkr(amount, recipient = this.MY_ADDRESS, { approveOnly = false } = {}) {
-        // Parse amount
-        const ankrToken = new ethers.Contract(process.env.ANKR_TOKEN_ADDRESS, erc20Abi, this.signer);
+    async depositAnkr(
+        amount,
+        recipient = this.MY_ADDRESS,
+        { approveOnly = false } = {}
+    ) {
+        const ankrToken = new ethers.Contract(
+            process.env.ANKR_TOKEN_ADDRESS,
+            erc20Abi,
+            this.signer
+        );
         const decimals = await ankrToken.decimals();
-        const parsed = ethers.utils.parseUnits(amount, decimals);
+        const parsed   = ethers.utils.parseUnits(amount.toString(), decimals);
 
-        // Allowance to be approved
         const bridgeAddr = this.ethBscBridge.address;
-        const allowance = await ankrToken.allowance(this.MY_ADDRESS, bridgeAddr);
+        const allowance  = await ankrToken.allowance(this.MY_ADDRESS, bridgeAddr);
         if (allowance.lt(parsed)) {
             console.log(`🔑 Approving ${ethers.utils.formatUnits(parsed, decimals)} ANKR …`);
             const txApprove = await ankrToken.approve(bridgeAddr, parsed);
             await txApprove.wait();
         }
-
         if (approveOnly) return { approved: true };
 
-        // Deposit
+        // Estimate gas with buffer, or fallback
         const bridge = this.ethBscBridge.connect(this.signer);
-        console.log(`🚀 Depositing ${ethers.utils.formatUnits(parsed, decimals)} ANKR to ${recipient} …`);
-        const tx = await bridge.deposit(parsed, recipient);
+        let gasLimitWithBuffer;
+        try {
+            const estimated = await bridge.estimateGas.deposit(parsed, recipient);
+            gasLimitWithBuffer = estimated.mul(120).div(100);            // +20%
+            console.log(`✅ estimateGas OK, using gasLimit=${gasLimit.toString()}`);
+        } catch (err) {
+            console.warn(
+                `⚠️ estimateGas failed (${err.code || err.reason}), ` +
+                `falling back to 300_000 gasLimit`
+            );
+            gasLimitWithBuffer = BigNumber.from(300_000);
+        }
+
+        // Send deposit txn with explicit gasLimit
+        console.log(
+            `🚀 Depositing ${ethers.utils.formatUnits(parsed, decimals)} ANKR ` +
+            `to ${recipient} with gasLimit ${gasLimitWithBuffer.toString()} …`
+        );
+        const tx = await bridge.deposit(parsed, recipient, { gasLimitWithBuffer });
         console.log(`⏳ Tx hash: ${tx.hash}`);
         return tx.wait();
     }
 
-    /** Predict the hash a UI deposit will emit (no state change). */
+/** Predict the hash a UI deposit will emit (no state change). */
     async predictNativeDepositHash(amount, destChainId, recipient = this.MY_ADDRESS) {
         const value = ethers.utils.parseEther(amount.toString());
         const bridge = this.neuraBridge.connect(this.neuraSigner);
@@ -142,28 +162,45 @@ class BridgeDepositWatcher {
     /**
      * Deposit ANKR on NEURA via the Neura bridge (payable) and return messageHash.
      */
-    async depositNativeOnNeura(amount, destChainId, recipient = this.MY_ADDRESS) {
+    async depositNativeOnNeura(
+        amount,
+        destChainId,
+        recipient = this.MY_ADDRESS
+    ) {
         if (destChainId === undefined || destChainId === null) {
             throw new Error('destChainId is required');
         }
 
-        const value = ethers.utils.parseEther(amount);
-
+        const value  = ethers.utils.parseEther(amount.toString());
         const bridge = this.neuraBridge.connect(this.neuraSigner);
-        const predictedHash = await bridge.callStatic.deposit(recipient, destChainId, { value });
+
+        const messageHash = await bridge.callStatic.deposit(recipient, destChainId, { value });
 
         console.log(
-            `🚀 Depositing ${ethers.utils.formatEther(value)} native token(s) to chain ${destChainId}`
-            + ` for ${recipient}…`,
+            `🚀 Depositing ${ethers.utils.formatEther(value)} native token(s)` +
+            ` to chain ${destChainId} for ${recipient}…`
         );
-        const tx = await bridge.deposit(recipient, destChainId, { value });
+
+        let gasLimitWithBuffer;
+        try {
+            const estimated = await bridge.estimateGas.deposit(recipient, destChainId, { value });
+            gasLimitWithBuffer = estimated.mul(120).div(100);
+            console.log(`✅ estimateGas OK, using gasLimit=${gasLimitWithBuffer.toString()}`);
+        } catch (err) {
+            console.warn(
+                `⚠️ estimateGas failed (${err.code || err.reason || err.message}), ` +
+                `falling back to gasLimit=300_000`
+            );
+            gasLimitWithBuffer = BigNumber.from(300_000);
+        }
+
+        const tx = await bridge.deposit(recipient, destChainId, { value, gasLimitWithBuffer });
         console.log(`⏳ Tx hash: ${tx.hash}`);
 
         const receipt = await tx.wait();
         console.log(`✅ Confirmed in block ${receipt.blockNumber}`);
-        console.log(`📬 messageHash: ${predictedHash}`);
-
-        return { tx, receipt, messageHash: predictedHash };
+        console.log(`📬 messageHash: ${messageHash}`);
+        return { tx, receipt, messageHash };
     }
 
     /**
