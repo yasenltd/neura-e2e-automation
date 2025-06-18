@@ -44,21 +44,20 @@ jobs:
           npm ci
           npx playwright install --with-deps chromium
 
-      # ──────────────────────────────── run tests ────────────────────────────────
       - name: Run Playwright tests
         run: |
-          if [[ -n "${{ github.event.inputs.spec_file }}" && -n "${{ github.event.inputs.test_pattern }}" ]]; then
+          if [ "$GITHUB_EVENT_NAME" = "schedule" ]; then
+            echo "🎯 Scheduled run: Smart-contract bridge flows only"
+            npx playwright test tests/bridge-flows.spec.js
+          elif [[ -n "${{ github.event.inputs.spec_file }}" && -n "${{ github.event.inputs.test_pattern }}" ]]; then
             echo "🎯 Running spec + grep: ${{ github.event.inputs.spec_file }} --grep '${{ github.event.inputs.test_pattern }}'"
             npx playwright test "${{ github.event.inputs.spec_file }}" --grep "${{ github.event.inputs.test_pattern }}"
-          
           elif [[ -n "${{ github.event.inputs.spec_file }}" ]]; then
             echo "🎯 Running single spec: ${{ github.event.inputs.spec_file }}"
             npx playwright test "${{ github.event.inputs.spec_file }}"
-          
           elif [[ -n "${{ github.event.inputs.test_pattern }}" ]]; then
             echo "🎯 Running grep pattern: --grep '${{ github.event.inputs.test_pattern }}'"
             npx playwright test --grep "${{ github.event.inputs.test_pattern }}"
-          
           else
             echo "🎯 Running full Playwright suite"
             npx playwright test
