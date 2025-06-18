@@ -859,37 +859,38 @@ class BasePage {
   }
 
   /**
-   * Check whether an element identified by its ARIA role (and optional
-   * accessible name) is visible on the page.
+   * Returns whether an element described by a locator descriptor is hidden.
    *
-   * @param {string}                role       – ARIA role, e.g. 'button', 'link', 'dialog'
-   * @param {string|RegExp|null}    [name=null]– Accessible name; pass a RegExp for fuzzy match
-   * @param {object}                [opts={}]  – getByRole options (exact, includeHidden, pressed, …)
-   * @param {number|null}           [index=null] – nth match to use when multiple elements share the role/name
-   * @param {number}                [timeout=this.DEFAULT_TIMEOUT]
-   *
-   * @returns {Promise<boolean>}    true if the target element becomes visible within `timeout`
+   * @param {object|string} descriptor
+   *        Either a string (testId) or an object with one of:
+   *          { role, name?, options? },
+   *          { text, options? },
+   *          { label, options? }, etc.
+   * @param {number}          [index=0]    zero-based match index
+   * @param {number}          [timeout]    how long to wait (ms)
+   * @returns {Promise<boolean>}
    */
   async isElementHidden(
-    role,
-    name = null,
-    opts = {},
-    index = null,
-    timeout = this.DEFAULT_TIMEOUT,
+      descriptor,
+      index = 0,
+      timeout = this.DEFAULT_TIMEOUT
   ) {
-    console.log(`Checking visibility of role=${role} name=${name ?? '∅'}`);
+    console.log(
+        `Checking hidden state for descriptor=${JSON.stringify(
+            descriptor
+        )} index=${index}`
+    );
 
-    const descriptor = {
-      role,
-      ...(name !== null ? { name } : {}),
-      options: opts,
-    };
+    const locator = this.#buildLocator(descriptor).nth(index);
 
     try {
-      const element = this.getElementWithDescLoc(descriptor, index);
-      await element.waitFor({ state: 'hidden', timeout });
-      return await element.isVisible();
-    } catch {
+      const hidden = await locator.isHidden({ timeout });
+      console.log(`isHidden() for locator with text ${index} has returned ${hidden}`);
+      return hidden;
+    } catch (err) {
+      console.warn(
+          `isHidden() for ${index} has timed out after ${timeout}ms or failed: ${err.message}`
+      );
       return false;
     }
   }

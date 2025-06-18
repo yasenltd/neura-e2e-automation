@@ -86,25 +86,39 @@ function updateSelectorsWithIndex(selectorsObj, replacements) {
 }
 
 /**
- * Round any numeric input to two decimals, then remove trailing zeros.
- * "0.000001"  -> 0
- *  0.105      -> 0.11
- *  "5.10"     -> 5.1
+ * Normalize a raw token string so that:
+ *  - “1” or “1.000” → “1.0”
+ *  - “1.2” or “1.14” → stays as-is
+ *  - anything with >2 decimals → rounded to 1 decimal place
  *
- * @param {number|string} numLike
- * @returns {number}  NaN if input isn’t a finite number
+ * @param {string} tokenStr   e.g. output of ethers.utils.formatEther(...)
+ * @param {string} [label]    optional name for the console log
+ * @returns {string}          the formatted string
  */
-function roundNumberToTwoDecimals(numLike) {
-  const num = Number(numLike);           // ⬅️ force conversion to Number
-  if (!Number.isFinite(num)) return NaN; // guard against non-numerics
+function formatBalanceString(tokenStr, label = '') {
+  const [intPart, fracPart = ''] = tokenStr.split('.');
+  let readable;
 
-  const rounded = +num.toFixed(2);       // unary + turns "0.00" into 0
-  return rounded === 0 ? 0 : rounded;    // avoid negative zero edge-case
+  if (fracPart.length === 0 || /^0+$/.test(fracPart)) {
+    readable = `${intPart}.0`;
+    console.debug(`🔢 ${label} no decimals → ${readable}`);
+  } else if (fracPart.length <= 2) {
+    readable = tokenStr;
+    console.debug(`🔢 ${label} preserve up to two decimals → ${readable}`);
+  } else {
+    const num     = parseFloat(tokenStr);
+    const rounded = Math.round(num * 100) / 100;
+    readable = rounded.toString();
+    console.debug(`🔢 ${label} rounded to 2dp → ${readable}`);
+  }
+
+  return readable;
 }
+
 
 module.exports = {
   clearUserDataDir,
-  roundNumberToTwoDecimals,
+  formatBalanceString,
   createNewUserDataDirForParallelExecution,
   updateSelectorsWithIndex,
   normalizeAndSortText

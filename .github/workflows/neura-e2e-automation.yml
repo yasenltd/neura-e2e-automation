@@ -1,9 +1,9 @@
 name: Neura E2E Automation
 
 on:
-  # ── every 15 minutes ──
+  # ── every 30 minutes ──
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '*/30 * * * *'
   # ── on any push ──
   push:
     branches: ['main']
@@ -78,17 +78,19 @@ jobs:
           run_tests
           rc=$?
 
+          # On failure, retry once
           if [ $rc -ne 0 ]; then
-            echo "⚠️  Tests failed with exit code $rc — retrying once..."
+            echo "⚠️  Tests failed (exit code $rc). Retrying once..."
             run_tests
             rc2=$?
             if [ $rc2 -ne 0 ]; then
-              echo "❌ Retry also failed with exit code $rc2"
+              echo "❌ Retry failed (exit code $rc2)."
               exit $rc2
             else
-              echo "✅ Retry passed"
-              exit 0
+              echo "✅ Retry passed."
             fi
+          else
+            echo "✅ First run passed."
           fi
 
           echo "✅ Automation run passed successfully in first run"
