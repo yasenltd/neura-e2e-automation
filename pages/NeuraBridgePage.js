@@ -19,6 +19,9 @@ const {
 } = require('../constants/timeoutConstants');
 const assertionHelpers = require('./AssertionHelpers');
 
+const CONNECT_BTN_TIMEOUT    = 10_000;
+const POPUP_LOAD_TIMEOUT     = 5_000;
+
 class NeuraBridgePage extends BasePage {
   constructor(page) {
     super(page);
@@ -117,20 +120,56 @@ class NeuraBridgePage extends BasePage {
     this.wallet = wallet;
   }
 
+  // async attachWallet(context) {
+  //   // Wait for the extension prompt modal to open
+  //   console.log('Waiting for MetaMask to load');
+  //   const [extensionPopup] = await Promise.all([context.waitForEvent('page')]);
+  //   await extensionPopup.waitForLoadState('domcontentloaded');
+  //
+  //   // Bring the extension prompt modal to the front
+  //   await extensionPopup.bringToFront();
+  //
+  //   const popupWallet = new this.wallet.constructor(extensionPopup);
+  //   console.log('Connecting MetaMask wallet');
+  //   await popupWallet.connectWallet();
+  //
+  //   // Signing user message for authentication
+  //   await new Promise(r => setTimeout(r, TRANSACTION_APPROVAL_TIMEOUT / 3));
+  //   console.log('Signing message for authentication');
+  //
+  //   await this.click(this.selectors.connection.signMessage);
+  //   console.log('Confirming MetaMask transaction after signing authentication message');
+  //
+  //   await this.confirmTransaction(context);
+  //   // Return to the dapp page
+  //   await this.page.bringToFront();
+  // }
+
   async attachWallet(context) {
-    // Wait for the extension prompt modal to open
-    console.log('Waiting for MetaMask to load');
-    const [extensionPopup] = await Promise.all([context.waitForEvent('page')]);
-    await extensionPopup.waitForLoadState('domcontentloaded');
+    console.log('Waiting for MetaMask popup to open…');
+    let extensionPopup;
+    try {
+      [extensionPopup] = await Promise.all([
+        context.waitForEvent('page', {
+          timeout: CONNECT_BTN_TIMEOUT,
+          predicate: p => p.url().startsWith('chrome-extension://'),
+        }),
+      ]);
+    } catch {
+      throw new Error(`MetaMask popup did not appear within ${CONNECT_BTN_TIMEOUT}ms`);
+    }
 
-    // Bring the extension prompt modal to the front
+    console.log('Waiting for popup DOM to load…');
+    await extensionPopup.waitForLoadState('domcontentloaded', { timeout: POPUP_LOAD_TIMEOUT });
+    console.log('MetaMask extension popup loaded at', extensionPopup.url());
+
     await extensionPopup.bringToFront();
-
+    console.log('Calling popupWallet.connectWallet()…');
     const popupWallet = new this.wallet.constructor(extensionPopup);
-    console.log('Connecting MetaMask wallet');
     await popupWallet.connectWallet();
 
-    // Signing user message for authentication
+    console.log('Back to DApp: waiting for Sign Message button…');
+
     await new Promise(r => setTimeout(r, TRANSACTION_APPROVAL_TIMEOUT / 3));
     console.log('Signing message for authentication');
 
@@ -138,7 +177,6 @@ class NeuraBridgePage extends BasePage {
     console.log('Confirming MetaMask transaction after signing authentication message');
 
     await this.confirmTransaction(context);
-    // Return to the dapp page
     await this.page.bringToFront();
   }
 

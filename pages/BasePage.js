@@ -875,12 +875,6 @@ class BasePage {
       index = 0,
       timeout = this.DEFAULT_TIMEOUT
   ) {
-    console.log(
-        `Checking hidden state for descriptor=${JSON.stringify(
-            descriptor
-        )} index=${index}`
-    );
-
     const locator = this.#buildLocator(descriptor).nth(index);
 
     try {
