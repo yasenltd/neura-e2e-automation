@@ -15,6 +15,7 @@ const BridgeOperationType = {
 
 // Enum for transaction actions
 const TransactionAction = {
+  CONNECT: 'connect',
   CONFIRM: 'confirm',
   CONFIRM_CHAIN: 'confirm_chain',
   CANCEL: 'cancel'
