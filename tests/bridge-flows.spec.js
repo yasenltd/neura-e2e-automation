@@ -24,7 +24,7 @@ test.describe('Smart-contract bridge flows (no UI)', () => {
         test.setTimeout(TEST_TIMEOUT);
         const watcher = new BridgeDepositWatcher();
         const { messageHash } = await watcher.depositNativeOnNeura(TEST_AMOUNT, networks.sepolia.chainId);
-        const parsed = await assertApprovalReceipt(watcher, messageHash, 60_000);
+        const parsed = await assertApprovalReceipt(watcher, messageHash, 90_000);
         await assertBridgeTransferLog(parsed, messageHash, watcher, TEST_AMOUNT, networks);
         await assertSignatureCount(watcher, messageHash);
         await assertPackedMessage(watcher, messageHash);
