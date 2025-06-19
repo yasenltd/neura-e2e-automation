@@ -6,9 +6,7 @@ const { clearUserDataDir }             = require('./util');
 
 const USER_DATA_DIR = path.join(__dirname, '..', 'user_data');
 
-const HEADLESS = process.env.HEADLESS?.toLowerCase() === 'true'
-    || process.env.CI === 'true'
-    || process.env.GITHUB_ACTIONS === 'true';
+const HEADLESS = process.env.HEADLESS;
 
 const CHANNEL  = process.env.BROWSER_CHANNEL || (HEADLESS ? 'chromium' : 'chrome');
 
