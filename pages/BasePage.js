@@ -916,7 +916,7 @@ class BasePage {
 
   /**
    * Gets a container element that contains specific labels.
-   * @param {string} containerSelector - The selector for the container element.
+   * @param {{css: string}} containerSelector - The selector for the container element.
    * @param {string} [firstLabel] - Optional first label text to filter by.
    * @param {string} [secondLabel] - Optional second label text to filter by.
    */
@@ -945,6 +945,10 @@ class BasePage {
   getContainerElementWithText(containerSelector, selector, firstLabel = null, secondLabel = null) {
     const container = this.getLocatorContainerByLabels(containerSelector, firstLabel, secondLabel);
     return container.locator(selector);
+  }
+
+  getTextFromContainerElement(containerSelector, selector, firstLabel = null, secondLabel = null) {
+    return this.getContainerElementWithText(containerSelector, selector, firstLabel, secondLabel).textContent();
   }
 
   async waitForDescLocElementToDisappear(descriptor, options = {}) {

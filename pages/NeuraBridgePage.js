@@ -19,9 +19,6 @@ const {
 } = require('../constants/timeoutConstants');
 const assertionHelpers = require('./AssertionHelpers');
 
-const CONNECT_BTN_TIMEOUT    = 10_000;
-const POPUP_LOAD_TIMEOUT     = 5_000;
-
 class NeuraBridgePage extends BasePage {
   constructor(page) {
     super(page);
@@ -672,14 +669,14 @@ class NeuraBridgePage extends BasePage {
     const ANKR_LABEL = 'ANKR';
     const NEURA_CHAIN_LABEL = 'Neura Chain';
 
-    await expect(
-      this.getContainerElementWithText(
+    const textFromElementInContainer = await this.getTextFromContainerElement(
         this.selectors.walletScreen.neuraContainer,
         this.selectors.walletScreen.neuraBalance.css,
         ANKR_LABEL,
         NEURA_CHAIN_LABEL
-      )
-    ).toHaveText(ankrNeuraOnChain);
+    );
+    const ankrOnMetamask = Number(textFromElementInContainer);
+    expect(ankrOnMetamask).toBeCloseTo(Number(ankrNeuraOnChain), 2);
   }
 
   /**

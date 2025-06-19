@@ -2,7 +2,6 @@ const { devices } = require('@playwright/test');
 
 module.exports = {
   testDir: './tests',
-  retries: 1,
   use: {
     headless: false,
     viewport: { width: 1280, height: 720 },
