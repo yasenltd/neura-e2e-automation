@@ -1,4 +1,5 @@
 import BridgeDepositWatcher from '../utils/BridgeDepositWatcher.js';
+import {assertClaimReceipt} from "../pages/AssertionHelpers";
 
 const {testWithoutSepolia: test} = require('../test-utils/testFixtures');
 const {TEST_AMOUNT, TEST_TIMEOUT} = require('../constants/testConstants');
@@ -37,7 +38,6 @@ async function initializeAndBridgeFromNeuraToSepolia(neuraBridgePage, context, w
     const blockStart = await watcher.getFreshBlockNumber(watcher.neuraProvider);
     const parsed = await assertApprovalReceipt(watcher, messageHash, 60_000, blockStart);
     await assertBridgeTransferLog(parsed, messageHash, watcher, TEST_AMOUNT, networks);
-
     return { messageHash, parsed, blockStart, before };
 }
 
@@ -55,7 +55,13 @@ test.describe('Neura to Sepolia Bridge UI Automation', () => {
             );
             await assertSignatureCount(watcher, messageHash);
             await assertPackedMessage(watcher, messageHash);
-            const claimRc = await watcher.claimTransfer(messageHash);
+            const receipt = await watcher.claimTransfer(messageHash);
+            await assertClaimReceipt(receipt, watcher.ethBscBridge,
+                {
+                    recipient: watcher.MY_ADDRESS,
+                    amount: TEST_AMOUNT
+                }
+            );
             const after = await balanceTracker.recordNeuraBalances();
             assertNeuraBalanceDifference(balanceTracker, before, after, TEST_AMOUNT);
         } catch (err) {
@@ -64,7 +70,7 @@ test.describe('Neura to Sepolia Bridge UI Automation', () => {
         }
     });
 
-    test('Verify Neura to Sepolia Bridge and Claim transactions via UI', async ({neuraBridgePage, context}) => {
+    test('Verify Neura to Sepolia Bridge and Claim transactions via UI', { tag: '@scheduledRun' }, async ({neuraBridgePage, context}) => {
         test.setTimeout(TEST_TIMEOUT);
         const watcher = new BridgeDepositWatcher();
         const balanceTracker = new BalanceTracker();

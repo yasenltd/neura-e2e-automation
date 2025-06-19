@@ -1,9 +1,9 @@
 name: Neura E2E Automation
 
 on:
-  # ── every 30 minutes ──
+  # ── every 60 minutes ──
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '0 * * * *'
   # ── on any push to main ──
   push:
     branches: ['main']
@@ -63,7 +63,7 @@ jobs:
 
       - name: Run bridge-flows.spec.js (schedule, push to main, PR to main)
         if: ${{ github.event_name != 'workflow_dispatch' }}
-        run: xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' npx playwright test --headed tests/bridge-flows.spec.js
+        run: xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' npx playwright test --grep scheduledRun
 
       - name: Run single spec file (manual dispatch + spec_file)
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.spec_file != '' }}

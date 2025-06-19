@@ -181,11 +181,22 @@ function assertDepositLogDetails(depositedLog, watcher, networks, testAmount) {
     return parsedDep;
 }
 
+async function assertClaimReceipt(receipt, bridgeContract, { recipient, amount }) {
+    const topic = bridgeContract.interface.getEventTopic('TokensClaimed');
+    const log   = receipt.logs.find((l) => l.topics[0] === topic);
+    expect(log, 'TokensClaimed event not found').toBeDefined();
+    const { args } = bridgeContract.interface.parseLog(log);
+    expect(args.recipient.toLowerCase()).toBe(recipient.toLowerCase());
+    const expectedAmount = ethers.utils.parseEther(amount);
+    expect(args.amount.eq(expectedAmount)).toBe(true);
+}
+
 module.exports = {
     assertMetaMaskWalletScreen,
     assertNetworkLabels,
     assertEnterAmountButtonNotVisible,
     assertSelectedChain,
+    assertClaimReceipt,
     assertSourceChainModalLayout,
     assertNeuraBalanceDifference,
     assertBridgeTransferLog,

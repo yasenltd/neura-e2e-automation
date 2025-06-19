@@ -81,7 +81,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
         }
     });
 
-    test('Verify Sepolia to Neura Bridge', async ({ neuraBridgePage, context }) => {
+    test('Verify Sepolia to Neura Bridge', { tag: '@scheduledRun' }, async ({ neuraBridgePage, context }) => {
         test.setTimeout(TEST_TIMEOUT);
 
         // Step 1: Setup test data

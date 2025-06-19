@@ -569,9 +569,8 @@ class NeuraBridgePage extends BasePage {
       await this.clickDescLoc(this.selectors.connection.connectWalletButton);
     }
     await this.clickDescLoc(this.selectors.connection.selectMetaMaskWallet);
-    // await this.attachWallet(context);
-    console.log('New Handle is called');
-    await this.handleTransactionPopup(/** @type {import('playwright').BrowserContext} */ (context), TransactionAction.CONNECT);
+    await this.attachWallet(context);
+    // await this.handleTransactionPopup(/** @type {import('playwright').BrowserContext} */ (context), TransactionAction.CONNECT);
     // await this.handleTransactionPopup(context, TransactionAction.CONNECT);
     await new Promise(r => setTimeout(r, NETWORK_OPERATION_TIMEOUT));
   }

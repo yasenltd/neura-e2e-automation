@@ -2,9 +2,13 @@ const { test, expect } = require('@playwright/test');
 const BridgeDepositWatcher = require('../utils/BridgeDepositWatcher');
 const { TEST_AMOUNT, TEST_TIMEOUT } = require('../constants/testConstants');
 const networks = require('../constants/networkConstants');
-const { assertBridgeTransferLog, assertSignatureCount, assertPackedMessage, assertApprovalReceipt, assertDepositReceipt, assertDepositLogDetails } = require('../pages/AssertionHelpers');
+const { assertBridgeTransferLog, assertSignatureCount, assertPackedMessage, assertApprovalReceipt, assertDepositReceipt, assertDepositLogDetails,
+    assertClaimReceipt,
+    assertNeuraBalanceDifference
+} = require('../pages/AssertionHelpers');
+const BalanceTracker = require("../utils/BalanceTracker");
 
-test.describe('Smart-contract bridge flows (no UI)', () => {
+test.describe('Smart-contract bridge flows (no UI)', { tag: '@scheduledRun' },() => {
     test('ANKR deposit from Sepolia to Neura', async () => {
         test.setTimeout(TEST_TIMEOUT);
         const watcher = new BridgeDepositWatcher();
@@ -23,11 +27,21 @@ test.describe('Smart-contract bridge flows (no UI)', () => {
     test('ANKR deposit from Neura to Sepolia', async () => {
         test.setTimeout(TEST_TIMEOUT);
         const watcher = new BridgeDepositWatcher();
+        const balanceTracker = new BalanceTracker();
+        const before = await balanceTracker.recordNeuraBalances();
         const { messageHash } = await watcher.depositNativeOnNeura(TEST_AMOUNT, networks.sepolia.chainId);
-        const parsed = await assertApprovalReceipt(watcher, messageHash, 90_000);
+        const parsed = await assertApprovalReceipt(watcher, messageHash, 120_000);
         await assertBridgeTransferLog(parsed, messageHash, watcher, TEST_AMOUNT, networks);
         await assertSignatureCount(watcher, messageHash);
         await assertPackedMessage(watcher, messageHash);
-        const claimRc = await watcher.claimTransfer(messageHash);
+        const receipt = await watcher.claimTransfer(messageHash);
+        await assertClaimReceipt(receipt, watcher.ethBscBridge,
+            {
+                recipient: watcher.MY_ADDRESS,
+                amount: TEST_AMOUNT
+            }
+        );
+        const after = await balanceTracker.recordNeuraBalances();
+        await assertNeuraBalanceDifference(balanceTracker, before, after, TEST_AMOUNT);
     });
 });
