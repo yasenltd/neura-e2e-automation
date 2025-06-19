@@ -51,7 +51,9 @@ test.describe('Neura Bridge page validation', () => {
     }
   });
 
-  test('Verify Neura Bridge page network switch modal', async ({ neuraBridgePage, context }) => {
+  test('Verify Neura Bridge page network switch modal',
+      { tag: '@scheduledRun' },
+      async ({ neuraBridgePage, context }) => {
     try {
       // Step 1: Initialize bridge with options (no wallet connection, with network switch, no initial page layout verification)
       // This will automatically switch the network direction and verify the layout after switching
@@ -163,7 +165,9 @@ test.describe('Neura Bridge page validation', () => {
     expect(enteredAmount).toBe(TEST_AMOUNT);
   });
 
-  test('Verify user connects to MetaMask wallet from top Connect Wallet button and switch networks successfully', async ({ neuraBridgePage, context }) => {
+  test('Verify user connects to MetaMask wallet from top Connect Wallet button and switch networks successfully',
+      { tag: '@scheduledRun' },
+      async ({ neuraBridgePage, context }) => {
     // Step 1: Initialize bridge with options (with wallet connection, no network switch, verify page layout)
     await neuraBridgePage.initializeBridgeWithOptions({
       context,
@@ -185,7 +189,9 @@ test.describe('Neura Bridge page validation', () => {
     expect(enteredAmount).toBe(TEST_AMOUNT);
   });
 
-  test('Verify user connects to and disconnects from MetaMask wallet', async ({ neuraBridgePage, context }) => {
+  test('Verify user connects to and disconnects from MetaMask wallet',
+      { tag: '@scheduledRun' },
+      async ({ neuraBridgePage, context }) => {
     // Step 1: Initialize bridge with options (with wallet connection, no network switch, verify page layout)
     await neuraBridgePage.initializeBridgeWithOptions({
       context,

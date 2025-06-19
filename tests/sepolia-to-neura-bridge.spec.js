@@ -4,7 +4,8 @@ import BridgeDepositWatcher from '../utils/BridgeDepositWatcher.js';
 const { expect } = require('@playwright/test');
 const { testWithoutSepolia: test } = require('../test-utils/testFixtures');
 const { waitForAnyDepositInSubgraph } = require('../utils/subgraphQueryUtil');
-const { TEST_AMOUNT, TEST_TIMEOUT } = require('../constants/testConstants');
+const { TEST_AMOUNT } = require('../constants/testConstants');
+const { TEST_TIMEOUT } = require('../constants/timeoutConstants');
 const BalanceTracker = require('../utils/BalanceTracker');
 
 require('dotenv').config();
@@ -81,7 +82,9 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
         }
     });
 
-    test('Verify Sepolia to Neura Bridge', async ({ neuraBridgePage, context }) => {
+    test('Verify Sepolia to Neura Bridge',
+        { tag: '@scheduledRun' },
+        async ({ neuraBridgePage, context }) => {
         test.setTimeout(TEST_TIMEOUT);
 
         // Step 1: Setup test data

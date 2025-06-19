@@ -875,12 +875,6 @@ class BasePage {
       index = 0,
       timeout = this.DEFAULT_TIMEOUT
   ) {
-    console.log(
-        `Checking hidden state for descriptor=${JSON.stringify(
-            descriptor
-        )} index=${index}`
-    );
-
     const locator = this.#buildLocator(descriptor).nth(index);
 
     try {
@@ -942,7 +936,7 @@ class BasePage {
 
   /**
    * Gets a locator for an element within a container that matches specific labels.
-   * @param {string} containerSelector - The selector for the container element.
+   * @param {{css: string}} containerSelector - The selector for the container element.
    * @param {string} selector - The selector for the element within the container.
    * @param {string} [firstLabel] - Optional first label text to filter by.
    * @param {string} [secondLabel] - Optional second label text to filter by.

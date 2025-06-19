@@ -4,6 +4,7 @@
  */
 
 // Standard timeouts
+const TEST_TIMEOUT = 180_000;
 const DEFAULT_TIMEOUT = 1000;
 const LONG_TIMEOUT = 5500;
 
@@ -17,6 +18,7 @@ const METAMASK_POPUP_TIMEOUT = 2000;
 const AMOUNT_FILL_TIMEOUT = 3000;
 
 module.exports = {
+  TEST_TIMEOUT,
   DEFAULT_TIMEOUT,
   LONG_TIMEOUT,
   TRANSACTION_APPROVAL_TIMEOUT,

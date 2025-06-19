@@ -19,6 +19,9 @@ const {
 } = require('../constants/timeoutConstants');
 const assertionHelpers = require('./AssertionHelpers');
 
+const CONNECT_BTN_TIMEOUT    = 10_000;
+const POPUP_LOAD_TIMEOUT     = 5_000;
+
 class NeuraBridgePage extends BasePage {
   constructor(page) {
     super(page);
@@ -121,7 +124,7 @@ class NeuraBridgePage extends BasePage {
     // Wait for the extension prompt modal to open
     console.log('Waiting for MetaMask to load');
     const [extensionPopup] = await Promise.all([context.waitForEvent('page')]);
-    // await extensionPopup.waitForLoadState('domcontentloaded');
+    await extensionPopup.waitForLoadState('domcontentloaded');
 
     // Bring the extension prompt modal to the front
     await extensionPopup.bringToFront();
@@ -163,12 +166,6 @@ class NeuraBridgePage extends BasePage {
       await popupWallet.cancelTransaction();
     } else if (action === TransactionAction.CONFIRM_CHAIN) {
       await popupWallet.approveSepoliaChainRequest();
-    } else if (action === TransactionAction.CONNECT) {
-      await popupWallet.connectWallet();
-      await new Promise(r => setTimeout(r, TRANSACTION_APPROVAL_TIMEOUT / 3)); // Reduced timeout for signing
-      await this.click(this.selectors.connection.signMessage);
-      await this.confirmTransaction(context);
-      await this.page.bringToFront();
     }
     else {
       throw new Error(`Invalid transaction action: ${action}`);
@@ -567,7 +564,6 @@ class NeuraBridgePage extends BasePage {
     }
     await this.clickDescLoc(this.selectors.connection.selectMetaMaskWallet);
     await this.attachWallet(context);
-    // await this.handleTransactionPopup(context, TransactionAction.CONNECT);
     await new Promise(r => setTimeout(r, NETWORK_OPERATION_TIMEOUT));
   }
 
@@ -672,8 +668,7 @@ class NeuraBridgePage extends BasePage {
    */
   async assertTokenWithDynamicBalance() {
     const watcher = new BridgeDepositWatcher();
-    // Neura Testnet balance assertions
-    const ankrNeuraOnChain = ethersUtil.formatBalance(await watcher.getAnkrBalanceOnNeura(), 2);
+    const ankrNeuraOnChain = ethersUtil.formatBalance(await watcher.getAnkrBalanceOnNeura(), 4);
     const ANKR_LABEL = 'ANKR';
     const NEURA_CHAIN_LABEL = 'Neura Chain';
 
