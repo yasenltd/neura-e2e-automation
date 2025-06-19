@@ -18,7 +18,6 @@ const TransactionAction = {
 
 module.exports = {
   TEST_AMOUNT,
-  TEST_TIMEOUT,
   BridgeOperationType,
   TransactionAction
 };
