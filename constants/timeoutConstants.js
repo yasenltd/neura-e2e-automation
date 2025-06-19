@@ -4,6 +4,7 @@
  */
 
 // Standard timeouts
+const TEST_TIMEOUT = 180_000;
 const DEFAULT_TIMEOUT = 1000;
 const LONG_TIMEOUT = 5500;
 

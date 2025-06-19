@@ -2,7 +2,8 @@ import BridgeDepositWatcher from '../utils/BridgeDepositWatcher.js';
 import {assertClaimReceipt} from "../pages/AssertionHelpers";
 
 const {testWithoutSepolia: test} = require('../test-utils/testFixtures');
-const {TEST_AMOUNT, TEST_TIMEOUT} = require('../constants/testConstants');
+const {TEST_AMOUNT} = require('../constants/testConstants');
+const {TEST_TIMEOUT} = require('../constants/timeoutConstants');
 const networks = require('../constants/networkConstants');
 const BalanceTracker = require('../utils/BalanceTracker');
 const {

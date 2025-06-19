@@ -1,6 +1,7 @@
 const { test, expect } = require('@playwright/test');
 const BridgeDepositWatcher = require('../utils/BridgeDepositWatcher');
-const { TEST_AMOUNT, TEST_TIMEOUT } = require('../constants/testConstants');
+const { TEST_AMOUNT } = require('../constants/testConstants');
+const { TEST_TIMEOUT } = require('../constants/timeoutConstants');
 const networks = require('../constants/networkConstants');
 const { assertBridgeTransferLog, assertSignatureCount, assertPackedMessage, assertApprovalReceipt, assertDepositReceipt, assertDepositLogDetails,
     assertClaimReceipt,
