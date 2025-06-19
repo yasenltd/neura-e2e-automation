@@ -6,8 +6,8 @@ const { clearUserDataDir }             = require('./util');
 
 const USER_DATA_DIR = path.join(__dirname, '..', 'user_data');
 
-// always use env.BROWSER_CHANNEL if present, otherwise fall back to 'chrome'
 const CHANNEL = process.env.BROWSER_CHANNEL || 'chrome';
+const HEADLESS = false;
 
 async function launchBrowserWithExtension(walletName) {
   clearUserDataDir(USER_DATA_DIR);
@@ -18,7 +18,7 @@ async function launchBrowserWithExtension(walletName) {
   const extensionPath = await downloadAndExtractWalletAuto(walletName);
   console.log(`Browser set to: ${CHANNEL} and headless mode is: ${HEADLESS}`);
   return chromium.launchPersistentContext(USER_DATA_DIR, {
-    headless: false,
+    headless: HEADLESS,
     channel : CHANNEL,
     args: [
       `--disable-extensions-except=${extensionPath}`,
