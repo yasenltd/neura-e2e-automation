@@ -28,7 +28,8 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             // Step 3: Record balances and perform the bridge operation
             const balanceTracker = new BalanceTracker();
             const beforeBalances = await balanceTracker.recordBalances();
-
+            const watcher = new BridgeDepositWatcher();
+            await watcher.clearAnkrAllowance();
             await neuraBridgePage.fillAmount(TEST_AMOUNT);
             await neuraBridgePage.clickBridgeButtonApprovingCustomChain(context, true, TEST_AMOUNT);
             await neuraBridgePage.approveTokenTransfer(context);
@@ -63,7 +64,6 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             // Step 3: Record balances and perform the bridge operation
             const balanceTracker = new BalanceTracker();
             const beforeBalances = await balanceTracker.recordBalances();
-
             await neuraBridgePage.fillAmount(TEST_AMOUNT);
             await neuraBridgePage.clickBridgeButtonApprovingCustomChain(context, false, TEST_AMOUNT);
             await neuraBridgePage.clickDescLoc(neuraBridgePage.selectors.bridgeDescriptors.bridgeTokensBtn);
@@ -82,7 +82,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
         }
     });
 
-    test('Verify Sepolia to Neura Bridge',
+    test('Verify Sepolia to Neura Bridge approving and bridging transaction via UI',
         { tag: '@scheduledRun' },
         async ({ neuraBridgePage, context }) => {
         test.setTimeout(TEST_TIMEOUT);
@@ -102,12 +102,11 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
                 switchNetworkDirection: false
             });
 
-            const watcher = new BridgeDepositWatcher();
-
             // Step 3: Record balances and perform the bridge operation
+            const watcher = new BridgeDepositWatcher();
             const balanceTracker = new BalanceTracker(watcher);
             const beforeBalances = await balanceTracker.recordBalances();
-
+            await watcher.clearAnkrAllowance();
             await neuraBridgePage.fillAmount(TEST_AMOUNT);
             await neuraBridgePage.clickBridgeButtonApprovingCustomChain(context, true, TEST_AMOUNT);
             await neuraBridgePage.approveTokenTransfer(context);
@@ -154,7 +153,8 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             // Step 3: Record balances and perform the bridge operation
             const balanceTracker = new BalanceTracker();
             const beforeBalances = await balanceTracker.recordBalances();
-
+            const watcher = new BridgeDepositWatcher();
+            await watcher.clearAnkrAllowance();
             await neuraBridgePage.fillAmount(TEST_AMOUNT);
             await neuraBridgePage.clickBridgeButtonApprovingCustomChain(context, true, TEST_AMOUNT);
             await neuraBridgePage.approveTokenTransfer(context);

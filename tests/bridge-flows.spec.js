@@ -13,6 +13,7 @@ test.describe('Smart-contract bridge flows (no UI)', () => {
     test('ANKR deposit from Sepolia to Neura', async () => {
         test.setTimeout(TEST_TIMEOUT);
         const watcher = new BridgeDepositWatcher();
+        await watcher.clearAnkrAllowance();
         await watcher.depositAnkr(TEST_AMOUNT, undefined, { approveOnly: true });
         const gasEstimate = await watcher.estimateDepositGas(TEST_AMOUNT);
         expect(gasEstimate.gt(0)).toBeTruthy();

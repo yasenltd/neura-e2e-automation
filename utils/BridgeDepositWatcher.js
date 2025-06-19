@@ -157,7 +157,47 @@ class BridgeDepositWatcher {
         return tx.wait();
     }
 
-/** Predict the hash a UI deposit will emit (no state change). */
+    /**
+     * Returns the current ANKR allowance you’ve given to the bridge.
+     *
+     * @param {string} [spender=this.ethBscBridge.address]
+     * @returns {Promise<ethers.BigNumber>}
+     */
+    async getAnkrAllowance(spender = this.ethBscBridge.address) {
+        const ankrToken = new ethers.Contract(
+            process.env.ANKR_TOKEN_ADDRESS,
+            erc20Abi,
+            this.provider   // read‐only
+        );
+        return await ankrToken.allowance(this.MY_ADDRESS, spender);
+    }
+
+    /**
+     * If you already have a nonzero allowance, clear it by approving 0.
+     * Helps force the “approve” flow in your UI tests.
+     *
+     * @param {string} [spender=this.ethBscBridge.address]
+     * @returns {Promise<ethers.providers.TransactionReceipt|null>}
+     */
+    async clearAnkrAllowance(spender = this.ethBscBridge.address) {
+        const ankrToken = new ethers.Contract(
+            process.env.ANKR_TOKEN_ADDRESS,
+            erc20Abi,
+            this.signer     // must be a signer to send tx
+        );
+
+        const current = await ankrToken.allowance(this.MY_ADDRESS, spender);
+        if (current.gt(0)) {
+            console.log(`🔄 Clearing existing ANKR allowance of ${current.toString()} → 0`);
+            const tx = await ankrToken.approve(spender, 0);
+            return tx.wait();
+        } else {
+            console.log(`ℹ️ No ANKR allowance to clear (already zero)`);
+            return null;
+        }
+    }
+
+    /** Predict the hash a UI deposit will emit (no state change). */
     async predictNativeDepositHash(amount, destChainId, recipient = this.MY_ADDRESS) {
         const value = ethers.utils.parseEther(amount.toString());
         const bridge = this.neuraBridge.connect(this.neuraSigner);
