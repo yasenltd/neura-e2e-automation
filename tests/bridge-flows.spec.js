@@ -8,7 +8,7 @@ const { assertBridgeTransferLog, assertSignatureCount, assertPackedMessage, asse
 } = require('../pages/AssertionHelpers');
 const BalanceTracker = require("../utils/BalanceTracker");
 
-test.describe('Smart-contract bridge flows (no UI)', { tag: '@scheduledRun' },() => {
+test.describe('Smart-contract bridge flows (no UI)', () => {
     test('ANKR deposit from Sepolia to Neura', async () => {
         test.setTimeout(TEST_TIMEOUT);
         const watcher = new BridgeDepositWatcher();
