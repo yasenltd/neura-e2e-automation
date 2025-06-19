@@ -19,7 +19,7 @@ async function launchBrowserWithExtension(walletName) {
   const extensionPath = await downloadAndExtractWalletAuto(walletName);
   console.log(`Browser set to: ${CHANNEL} and headless mode is: ${HEADLESS}`);
   return chromium.launchPersistentContext(USER_DATA_DIR, {
-    headless: HEADLESS, // 'false'
+    headless: false, // 'false'
     channel : CHANNEL, // 'chrome'
     args: [
       `--disable-extensions-except=${extensionPath}`,
