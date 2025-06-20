@@ -582,7 +582,7 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<Object>} - The preview transaction layout
    */
   async clickBridgeButtonApprovingCustomChain(context, checkApproveButton = false, amount) {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn, { timeout: 5000 });
+    await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn, null, WALLET_OPERATION_TIMEOUT);
     await new Promise(r => setTimeout(r, NETWORK_OPERATION_TIMEOUT));
     await this.confirmTransactionWithExplicitPageSearch(context);
     return await this.assertPreviewTransactionLayout(checkApproveButton, amount);
@@ -595,7 +595,7 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<Object>} - The preview transaction layout
    */
   async clickBridgeButton(checkApproveButton = false, amount) {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn, { timeout: 5000 });
+    await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn, null, WALLET_OPERATION_TIMEOUT);
     await new Promise(r => setTimeout(r, DEFAULT_TIMEOUT));
     return await this.assertPreviewTransactionLayout(checkApproveButton, amount);
   }
