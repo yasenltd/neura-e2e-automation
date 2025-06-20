@@ -189,7 +189,7 @@ class NeuraBridgePage extends BasePage {
 
   /**
    * Confirm MetaMask transaction with flexible tab detection
-   * @param {BrowserContext} context - Playwright browser context
+   * @param {Object} context - Playwright browser context
    * @param {string[]} urlMatchers - URL fragments to identify the correct MetaMask tab
    */
   async confirmTransactionWithExplicitPageSearch(context, urlMatchers = ['notification.html', 'metamask']) {
@@ -582,7 +582,7 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<Object>} - The preview transaction layout
    */
   async clickBridgeButtonApprovingCustomChain(context, checkApproveButton = false, amount) {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn);
+    await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn, { timeout: 5000 });
     await new Promise(r => setTimeout(r, NETWORK_OPERATION_TIMEOUT));
     await this.confirmTransactionWithExplicitPageSearch(context);
     return await this.assertPreviewTransactionLayout(checkApproveButton, amount);
@@ -591,10 +591,11 @@ class NeuraBridgePage extends BasePage {
   /**
    * Clicks the bridge button and asserts the preview transaction layout without confirming transaction
    * @param {boolean} checkApproveButton - Whether to check for the approve token transfer button
+   * @param amount
    * @returns {Promise<Object>} - The preview transaction layout
    */
   async clickBridgeButton(checkApproveButton = false, amount) {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn);
+    await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn, { timeout: 5000 });
     await new Promise(r => setTimeout(r, DEFAULT_TIMEOUT));
     return await this.assertPreviewTransactionLayout(checkApproveButton, amount);
   }
