@@ -601,7 +601,7 @@ class NeuraBridgePage extends BasePage {
   }
 
   async approveTokenTransfer(context) {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.approveTokenTransferButton);
+    await this.clickDescLoc(this.selectors.bridgeDescriptors.approveTokenTransferButton, null, WALLET_OPERATION_TIMEOUT);
     await this.confirmTransaction(context);
     await this.waitForDescLocElementToDisappear({ text: 'Approving token transfer...' }, { timeout: TOKEN_TRANSFER_TIMEOUT, longTimeout: TOKEN_TRANSFER_TIMEOUT });
   }
