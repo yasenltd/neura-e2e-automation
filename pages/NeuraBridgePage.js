@@ -513,19 +513,19 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<Object>} - The preview transaction layout
    */
   async assertPreviewTransactionLayout(checkApproveButton = false, amount) {
-    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.titleLabel)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.fromChainLabel)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.toChainLabel)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.amountLabel)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.neuraLabel)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.sepoliaLabel)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.titleLabel, null, WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.fromChainLabel, null, WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.toChainLabel, null, WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.amountLabel, null, WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.neuraLabel, null, WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.sepoliaLabel, null, WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
     const previewAnkrBalance = await this.getNumericMatch(this.selectors.previewTransactionDescriptors.ankrBalance, 1, 1);
     const expectedValue = formatBalanceString(amount);
     await expect(previewAnkrBalance).toBe(Number(expectedValue));
     if (checkApproveButton) {
-      await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.approveButton)).resolves.toBe(true);
+      await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.approveButton, null, WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
     } else {
-      await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.bridgeButton)).resolves.toBe(true);
+      await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.bridgeButton, null, WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
     }
   }
 
