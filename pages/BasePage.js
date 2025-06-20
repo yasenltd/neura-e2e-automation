@@ -690,6 +690,12 @@ class BasePage {
       .nth(cNth);
   }
 
+  /**
+   * Returns a locator for a nested element using descriptor locators for both parent and child.
+   * @param descriptor
+   * @param {number|null}   [nth=null]    which match (null ⇒ first)
+   * @param timeout
+   */
   async clickDescLoc(descriptor, nth = 0, timeout = this.DEFAULT_TIMEOUT) {
     const el = this.getElementWithDescLoc(descriptor, nth);
     await el.waitFor({ state: 'visible', timeout });
