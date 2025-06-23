@@ -10,7 +10,6 @@ test.describe('Neura Bridge page validation', () => {
   test('Verify Neura Bridge page without connected wallet', async ({ neuraBridgePage, context }) => {
     try {
       // Step 1: Initialize bridge with options (no wallet connection, with network switch, verify page layout)
-      // This will automatically switch the network direction and verify the layout after switching
       await neuraBridgePage.initializeBridgeWithOptions({
         context,
         switchNetworkDirection: false,
@@ -32,7 +31,6 @@ test.describe('Neura Bridge page validation', () => {
   test('Verify Neura Bridge page without connected wallet after network switch', async ({ neuraBridgePage, context }) => {
     try {
       // Step 1: Initialize bridge with options (no wallet connection, with network switch, no initial page layout verification)
-      // This will automatically switch the network direction and verify the layout after switching
       await neuraBridgePage.initializeBridgeWithOptions({
         context,
         walletConnection: {
@@ -56,7 +54,6 @@ test.describe('Neura Bridge page validation', () => {
       async ({ neuraBridgePage, context }) => {
     try {
       // Step 1: Initialize bridge with options (no wallet connection, with network switch, no initial page layout verification)
-      // This will automatically switch the network direction and verify the layout after switching
       await neuraBridgePage.initializeBridgeWithOptions({
         context,
         switchNetworkDirection: false,
@@ -80,7 +77,6 @@ test.describe('Neura Bridge page validation', () => {
   test('Verify Neura Claim page layout', async ({ neuraBridgePage, context }) => {
     try {
       // Step 1: Initialize bridge with options (no wallet connection, with network switch, no initial page layout verification)
-      // This will automatically switch the network direction and verify the layout after switching
       await neuraBridgePage.initializeBridgeWithOptions({
         context,
         switchNetworkDirection: false,

@@ -640,6 +640,12 @@ class BasePage {
    *  - {label|placeholder|alt|title|text|testId|css} ➜ matching helper
    */
   #buildLocator(descriptor) {
+    if (descriptor.parent && descriptor.child) {
+      const parentLoc = this.#buildLocator(descriptor.parent);
+      const childLoc  = this.#buildLocator(descriptor.child);
+      return parentLoc.locator(childLoc);
+    }
+
     // Simple string → treat as test-id
     if (typeof descriptor === 'string') {
       return this.window.getByTestId(descriptor);
@@ -776,7 +782,10 @@ class BasePage {
     await matchLoc.waitFor({ state: 'visible', timeout });
 
     const locatorText = (await matchLoc.textContent())?.trim() || '';
-    const pattern = (desc && (desc.text || desc.name));
+    let pattern = desc && (desc.text || desc.name);
+    if (!(pattern instanceof RegExp) && desc && desc.child) {
+      pattern = desc.child.text || desc.child.name;
+    }
     if (!(pattern instanceof RegExp)) return NaN;
 
     const match = pattern.exec(locatorText);

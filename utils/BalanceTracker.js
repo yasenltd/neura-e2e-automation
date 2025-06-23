@@ -1,5 +1,6 @@
 const { ethers } = require('ethers');
 const BridgeDepositWatcher = require('./BridgeDepositWatcher');
+const { parseToEth } = require('./ethersUtil');
 
 /**
  * Utility class for tracking and comparing token balances before and after operations
@@ -23,7 +24,7 @@ class BalanceTracker {
         return {
             ankr: ankrBalance,
             eth: ethBalance,
-            ankrBN: ethers.utils.parseUnits(ankrBalance, 18),
+            ankrBN: parseToEth(ankrBalance),
             ethBN: ethers.utils.parseEther(ethBalance)
         };
     }
@@ -36,7 +37,7 @@ class BalanceTracker {
         const ankrBalance = await this.watcher.getAnkrBalanceOnNeura();
         return {
             ankr: ankrBalance,
-            ankrBN: ethers.utils.parseUnits(ankrBalance, 18),
+            ankrBN: parseToEth(ankrBalance),
         };
     }
 
@@ -48,23 +49,38 @@ class BalanceTracker {
      */
     compareBalances(beforeBalances, afterBalances) {
         const ankrDiff = afterBalances.ankrBN.sub(beforeBalances.ankrBN);
-        const ethDiff = afterBalances.ethBN.sub(beforeBalances.ethBN);
+
+        // Check if ETH balances exist in both objects
+        const hasEthBalances = beforeBalances.ethBN && afterBalances.ethBN;
+
+        // Only calculate ETH diff if both balances exist
+        const ethDiff = hasEthBalances ? afterBalances.ethBN.sub(beforeBalances.ethBN) : null;
 
         console.log(`🪙 ANKR before: ${beforeBalances.ankr}`);
         console.log(`🪙 ANKR after : ${afterBalances.ankr}`);
-        console.log(`💰 ETH before : ${beforeBalances.eth}`);
-        console.log(`💰 ETH after  : ${afterBalances.eth}`);
-        console.log('💡 ANKR diff:', ankrDiff.toString());
-        console.log('💡 ETH diff :', ethDiff.toString());
 
-        return {
+        if (hasEthBalances) {
+            console.log(`💰 ETH before : ${beforeBalances.eth}`);
+            console.log(`💰 ETH after  : ${afterBalances.eth}`);
+            console.log('💡 ETH diff :', ethDiff.toString());
+        }
+
+        console.log('💡 ANKR diff:', ankrDiff.toString());
+
+        const result = {
             ankrBeforeBN: beforeBalances.ankrBN,
             ankrAfterBN: afterBalances.ankrBN,
-            ethBeforeBN: beforeBalances.ethBN,
-            ethAfterBN: afterBalances.ethBN,
-            ankrDiff,
-            ethDiff
+            ankrDiff
         };
+
+        // Only include ETH properties if ETH balances exist
+        if (hasEthBalances) {
+            result.ethBeforeBN = beforeBalances.ethBN;
+            result.ethAfterBN = afterBalances.ethBN;
+            result.ethDiff = ethDiff;
+        }
+
+        return result;
     }
 
     /**

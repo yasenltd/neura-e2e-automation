@@ -30,7 +30,7 @@ async function initializeAndBridgeFromNeuraToSepolia(neuraBridgePage, context, w
         walletConnection: {connect: true},
         switchNetworkDirection: true,
     });
-    const before = await balanceTracker.recordNeuraBalances();
+    const beforeBalances = await balanceTracker.recordNeuraBalances();
     await neuraBridgePage.fillAmount(TEST_AMOUNT);
     await neuraBridgePage.clickBridgeButton(false, TEST_AMOUNT);
     const messageHash = await watcher.predictNativeDepositHash(TEST_AMOUNT, networks.sepolia.chainId);
@@ -39,7 +39,7 @@ async function initializeAndBridgeFromNeuraToSepolia(neuraBridgePage, context, w
     const blockStart = await watcher.getFreshBlockNumber(watcher.neuraProvider);
     const parsed = await assertApprovalReceipt(watcher, messageHash, 60_000, blockStart);
     await assertBridgeTransferLog(parsed, messageHash, watcher, TEST_AMOUNT, networks);
-    return { messageHash, parsed, blockStart, before };
+    return { messageHash, parsed, blockStart, beforeBalances };
 }
 
 test.describe('Neura to Sepolia Bridge UI Automation', () => {
@@ -79,12 +79,14 @@ test.describe('Neura to Sepolia Bridge UI Automation', () => {
         const balanceTracker = new BalanceTracker();
 
         try {
-            const { messageHash, parsed, blockStart, before } = await initializeAndBridgeFromNeuraToSepolia(
+            const { messageHash, parsed, blockStart, beforeBalances } = await initializeAndBridgeFromNeuraToSepolia(
                 neuraBridgePage, context, watcher, balanceTracker
             );
             await neuraBridgePage.claimLatestTransaction(context, TEST_AMOUNT);
-            const after = await balanceTracker.recordNeuraBalances();
-            assertNeuraBalanceDifference(balanceTracker, before, after, TEST_AMOUNT);
+            const afterBalances = await balanceTracker.recordNeuraBalances();
+            const balances = balanceTracker.compareBalances(beforeBalances, afterBalances);
+            assertNeuraBalanceDifference(balanceTracker, beforeBalances, afterBalances, TEST_AMOUNT);
+            await neuraBridgePage.verifyUIBalanceMatchesChain(balances);
         } catch (err) {
             console.error(`❌ Neura → Sepolia bridge test failed: ${err.message}`);
             throw err;

@@ -87,6 +87,10 @@ module.exports = {
             role: 'button',
             name: 'Max'
         },
+        ankrBalanceLabel: { /* ── parent ── */
+            parent: { css: '.relative.h-28.border.rounded-lg' },
+            child:  { text: /([0-9]+(?:\.[0-9]+)?)\s*ANKR/ }
+        },
         connectWalletButtonInWidget: { css: 'button[data-slot="button"]:has-text("Connect Wallet")' },
         enterAmountBtnLabel: { text: 'Enter Amount' },
         closeBridgeModalButton: { css: '#radix-«R6jqhdbH1» > button' },
