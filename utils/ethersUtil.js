@@ -124,6 +124,26 @@ async function verifyBridgeTransaction(address, destinationNetwork, amount, time
   return false;
 }
 
+/**
+ * Parses a string value to Ethereum units
+ * @param {string|number} value - The value to parse
+ * @param {number} [decimals=18] - The number of decimals to use (default: 18)
+ * @returns {BigNumber} - The parsed value as BigNumber
+ */
+function parseToEth(value, decimals = 18) {
+  return ethers.utils.parseUnits(value.toString(), decimals);
+}
+
+/**
+ * Parses a string value to negative Ethereum units
+ * @param {string|number} value - The value to parse
+ * @param {number} [decimals=18] - The number of decimals to use (default: 18)
+ * @returns {BigNumber} - The parsed negative value as BigNumber
+ */
+function parseToNegativeEth(value, decimals = 18) {
+  return ethers.utils.parseUnits(value.toString(), decimals).mul(-1);
+}
+
 module.exports = {
   formatBalance,
   getProvider,
@@ -132,5 +152,7 @@ module.exports = {
   waitForTransaction,
   verifyTransaction,
   verifyTokenTransfer,
-  verifyBridgeTransaction
+  verifyBridgeTransaction,
+  parseToEth,
+  parseToNegativeEth
 };

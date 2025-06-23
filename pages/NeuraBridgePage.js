@@ -629,8 +629,21 @@ class NeuraBridgePage extends BasePage {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.faucetBtn);
   }
 
-  async navigateToClaimPage() {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.claimBtn);
+  async checkBalanceLabels() {
+    const balance = await this.getNumericMatch(this.selectors.bridgeDescriptors.ankrBalanceLabel, 1);
+    console.log('Current ANKR balance:', balance);
+    return balance;
+  }
+
+  /**
+   * Verifies that the UI balance matches the chain balance
+   * @param {Object} balances - The balance comparison result containing ankrAfterBN
+   * @returns {Promise<void>}
+   */
+  async verifyUIBalanceMatchesChain(balances) {
+    const uiNumber = await this.checkBalanceLabels();
+    const chainBN = balances.ankrAfterBN;
+    assertionHelpers.assertUIBalanceMatchesChain(uiNumber, chainBN);
   }
 
   /**

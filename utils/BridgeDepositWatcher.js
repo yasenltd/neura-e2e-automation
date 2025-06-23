@@ -8,6 +8,7 @@ const {
     getProvider,
     getBalance,
     getTokenBalance,
+    parseToEth,
 } = require('../utils/ethersUtil');
 const { formatBalanceString } = require('../utils/util');
 
@@ -80,7 +81,7 @@ class BridgeDepositWatcher {
 
     async estimateDepositGas(amount, recipient = this.MY_ADDRESS) {
         const decimals = 18;
-        const parsed = ethers.utils.parseUnits(amount, decimals);
+        const parsed = parseToEth(amount, decimals);
         const bridge = this.ethBscBridge.connect(this.signer);
         return bridge.estimateGas.deposit(parsed, recipient, { from: this.MY_ADDRESS });
     }
@@ -121,7 +122,7 @@ class BridgeDepositWatcher {
             this.signer
         );
         const decimals = await ankrToken.decimals();
-        const parsed   = ethers.utils.parseUnits(amount.toString(), decimals);
+        const parsed   = parseToEth(amount, decimals);
 
         const bridgeAddr = this.ethBscBridge.address;
         const allowance  = await ankrToken.allowance(this.MY_ADDRESS, bridgeAddr);

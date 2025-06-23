@@ -4,8 +4,10 @@
  */
 const { expect } = require('@playwright/test');
 const { ethers } = require('ethers');
+const { formatUnits } = require('ethers/lib/utils');
 const { neuraBridgeAssertions, metaMaskIntegrationAssertions } = require('../constants/assertionConstants');
 const ethersUtil = require('../utils/ethersUtil');
+const { parseToEth } = require('../utils/ethersUtil');
 const BridgeDepositWatcher = require('../utils/BridgeDepositWatcher');
 
 /**
@@ -50,16 +52,6 @@ function assertNetworkLabels(networks, firstNetworkExpected, secondNetworkExpect
  */
 function assertEnterAmountButtonNotVisible(isVisible) {
     expect(isVisible).toBe(true);
-}
-
-/**
- * Asserts source chain modal labels match expected values
- * @param {Array<string>} labels - The array of chain labels to verify
- */
-function assertSourceChainModalLayout(labels) {
-    expect(labels[0]).toEqual(neuraBridgeAssertions.pageLayout.networks.bscTestnet.at(0));
-    expect(labels[1]).toEqual(neuraBridgeAssertions.pageLayout.networks.neuraTestnet.at(0));
-    expect(labels[2]).toEqual(neuraBridgeAssertions.pageLayout.networks.sepolia.at(0));
 }
 
 /**
@@ -177,7 +169,7 @@ function assertDepositLogDetails(depositedLog, watcher, networks, testAmount) {
     expect(parsedDep.args.from.toLowerCase()).toBe(watcher.MY_ADDRESS);
     expect(parsedDep.args.recipient.toLowerCase()).toBe(watcher.MY_ADDRESS);
     expect(parsedDep.args.chainId.toNumber()).toBe(Number(networks.sepolia.chainId));
-    expect(parsedDep.args.amount.eq(ethers.utils.parseUnits(testAmount, 18))).toBe(true);
+    expect(parsedDep.args.amount.eq(parseToEth(testAmount))).toBe(true);
     return parsedDep;
 }
 
@@ -191,13 +183,23 @@ async function assertClaimReceipt(receipt, bridgeContract, { recipient, amount }
     expect(args.amount.eq(expectedAmount)).toBe(true);
 }
 
+/**
+ * Asserts that the UI balance matches the chain balance after formatting
+ * @param {number} uiNumber - The balance number displayed in the UI
+ * @param {ethers.BigNumber} chainBN - The chain balance as a BigNumber
+ */
+function assertUIBalanceMatchesChain(uiNumber, chainBN) {
+    const chainDecimal = parseFloat(formatUnits(chainBN, 18));
+    const chainRounded = Number(chainDecimal.toFixed(2));
+    expect(chainRounded).toBe(uiNumber);
+}
+
 module.exports = {
     assertMetaMaskWalletScreen,
     assertNetworkLabels,
     assertEnterAmountButtonNotVisible,
     assertSelectedChain,
     assertClaimReceipt,
-    assertSourceChainModalLayout,
     assertNeuraBalanceDifference,
     assertBridgeTransferLog,
     assertSignatureCount,
@@ -205,4 +207,5 @@ module.exports = {
     assertApprovalReceipt,
     assertDepositReceipt,
     assertDepositLogDetails,
+    assertUIBalanceMatchesChain,
 };

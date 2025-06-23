@@ -1,5 +1,5 @@
-import { ethers } from 'ethers';
 import BridgeDepositWatcher from '../utils/BridgeDepositWatcher.js';
+import { parseToEth, parseToNegativeEth } from '../utils/ethersUtil.js';
 
 const { expect } = require('@playwright/test');
 const { testWithoutSepolia: test } = require('../test-utils/testFixtures');
@@ -40,9 +40,9 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             const balances = balanceTracker.compareBalances(beforeBalances, afterBalances);
 
             // Step 4: Verify balance changes
-            // The ANKR balance should decrease by exactly the test amount after bridging from Sepolia to Neura
-            const expectedAnkrDiff = ethers.utils.parseUnits(TEST_AMOUNT, 18).mul(-1);
+            const expectedAnkrDiff = parseToNegativeEth(TEST_AMOUNT);
             expect(balances.ankrDiff.eq(expectedAnkrDiff)).toBe(true);
+            await neuraBridgePage.verifyUIBalanceMatchesChain(balances);
         } catch (error) {
             console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
             throw error;
@@ -73,9 +73,9 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             const balances = balanceTracker.compareBalances(beforeBalances, afterBalances);
 
             // Step 4: Verify balance changes
-            // The ANKR balance should decrease by exactly the test amount after bridging from Sepolia to Neura
-            const expectedAnkrDiff = ethers.utils.parseUnits(TEST_AMOUNT, 18).mul(-1);
+            const expectedAnkrDiff = parseToNegativeEth(TEST_AMOUNT);
             expect(balances.ankrDiff.eq(expectedAnkrDiff)).toBe(true);
+            await neuraBridgePage.verifyUIBalanceMatchesChain(balances);
         } catch (error) {
             console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
             throw error;
@@ -89,7 +89,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
 
         // Step 1: Setup test data
         const from = process.env.MY_ADDRESS.toLowerCase();
-        const rawAmount = ethers.utils.parseUnits(TEST_AMOUNT, 18);
+        const rawAmount = parseToEth(TEST_AMOUNT);
         const amount = rawAmount.toString();
 
         try {
@@ -124,9 +124,9 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             expect(txHash).toEqual(subgraphTxHash);
 
             // Step 4: Verify balance changes
-            // The ANKR balance should decrease by exactly the test amount after bridging from Sepolia to Neura
-            const expectedAnkrDiff = ethers.utils.parseUnits(TEST_AMOUNT, 18).mul(-1);
+            const expectedAnkrDiff = parseToNegativeEth(TEST_AMOUNT);
             expect(balances.ankrDiff.eq(expectedAnkrDiff)).toBe(true);
+            await neuraBridgePage.verifyUIBalanceMatchesChain(balances);
         } catch (error) {
             console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
             throw error;
@@ -138,7 +138,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
 
         // Step 1: Setup test data
         const from = process.env.MY_ADDRESS.toLowerCase();
-        const rawAmount = ethers.utils.parseUnits(TEST_AMOUNT, 18);
+        const rawAmount = parseToEth(TEST_AMOUNT);
         const amount = rawAmount.toString();
         try {
             // Step 2: Initialize bridge with options (with wallet connection, no network switch)
@@ -171,9 +171,9 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             const balances = balanceTracker.compareBalances(beforeBalances, afterBalances);
 
             // Step 4: Verify balance changes
-            // The ANKR balance should decrease by exactly the test amount after bridging from Sepolia to Neura
-            const expectedAnkrDiff = ethers.utils.parseUnits(TEST_AMOUNT, 18).mul(-1);
+            const expectedAnkrDiff = parseToNegativeEth(TEST_AMOUNT);
             expect(balances.ankrDiff.eq(expectedAnkrDiff)).toBe(true);
+            await neuraBridgePage.verifyUIBalanceMatchesChain(balances);
         } catch (error) {
             console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
             throw error;
