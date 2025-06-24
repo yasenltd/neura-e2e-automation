@@ -23,7 +23,7 @@ async function launchBrowserWithExtension(walletName) {
 
   const extensionPath = await downloadAndExtractWalletAuto(walletName);
 
-  console.log('Browser set to:', CHANNEL.toUpperCase(), 'headless=', HEADLESS);
+  console.log('Browser set to:', CHANNEL.toUpperCase(), 'headless mode:', HEADLESS);
   return chromium.launchPersistentContext(USER_DATA_DIR, {
     headless: HEADLESS,
     channel: CHANNEL,
