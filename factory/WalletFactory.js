@@ -1,4 +1,4 @@
-const MetamaskPage = require('../pages/MetamaskPage');
+import MetamaskPage from '../pages/MetamaskPage.js';
 
 /**
  * Factory class to create wallet instances
@@ -19,4 +19,4 @@ class WalletFactory {
   }
 }
 
-module.exports = WalletFactory;
+export default WalletFactory;

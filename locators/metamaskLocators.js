@@ -1,7 +1,7 @@
 /**
  * Selectors for MetaMask extension elements
  */
-module.exports = {
+export default {
   general: {
     cellCss: 'span',
   },

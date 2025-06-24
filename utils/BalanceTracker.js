@@ -1,6 +1,5 @@
-const { ethers } = require('ethers');
-const BridgeDepositWatcher = require('./BridgeDepositWatcher');
-const { parseToEth } = require('./ethersUtil');
+import BridgeDepositWatcher from './BridgeDepositWatcher.js';
+import { parseToEth, parseEther } from './ethersUtil.js';
 
 /**
  * Utility class for tracking and comparing token balances before and after operations
@@ -25,7 +24,7 @@ class BalanceTracker {
             ankr: ankrBalance,
             eth: ethBalance,
             ankrBN: parseToEth(ankrBalance),
-            ethBN: ethers.utils.parseEther(ethBalance)
+            ethBN: parseEther(ethBalance)
         };
     }
 
@@ -104,4 +103,4 @@ class BalanceTracker {
     }
 }
 
-module.exports = BalanceTracker; 
+export default BalanceTracker;

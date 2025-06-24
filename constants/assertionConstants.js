@@ -2,7 +2,6 @@
  * Constants for test assertions
  */
 
-// MetaMask integration assertions
 const metaMaskIntegrationAssertions = {
   neuraWalletLabels: ['ANKR', 'Neura Chain'],
   networkLabels: {
@@ -12,7 +11,6 @@ const metaMaskIntegrationAssertions = {
   activityLabel: ['Activity'],
 };
 
-// Neura Bridge Page Layout assertions
 const neuraBridgeAssertions = {
   pageLayout: {
     title: 'Bridge',
@@ -24,7 +22,7 @@ const neuraBridgeAssertions = {
   },
 };
 
-module.exports = {
+export {
   neuraBridgeAssertions,
   metaMaskIntegrationAssertions,
 };

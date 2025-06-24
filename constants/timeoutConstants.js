@@ -3,29 +3,20 @@
  * Centralizes all timeout values to ensure consistency and maintainability
  */
 
-// Standard timeouts
-const TEST_TIMEOUT = 180_000;
-const DEFAULT_TIMEOUT = 1000;
-const LONG_TIMEOUT = 5500;
+function envOr(name, fallback) {
+  const v = process.env[name];
+  return v != null && !isNaN(parseInt(v, 10))
+      ? parseInt(v, 10)
+      : fallback;
+}
 
-// Operation-specific timeouts
-const TRANSACTION_APPROVAL_TIMEOUT = 7500;
-const NETWORK_OPERATION_TIMEOUT = 7500;
-const WALLET_OPERATION_TIMEOUT = 10000;
-const BRIDGE_OPERATION_TIMEOUT = 60000;
-const TOKEN_TRANSFER_TIMEOUT = 90000;
-const METAMASK_POPUP_TIMEOUT = 10000;
-const AMOUNT_FILL_TIMEOUT = 5000;
-
-module.exports = {
-  TEST_TIMEOUT,
-  DEFAULT_TIMEOUT,
-  LONG_TIMEOUT,
-  TRANSACTION_APPROVAL_TIMEOUT,
-  NETWORK_OPERATION_TIMEOUT,
-  WALLET_OPERATION_TIMEOUT,
-  BRIDGE_OPERATION_TIMEOUT,
-  TOKEN_TRANSFER_TIMEOUT,
-  METAMASK_POPUP_TIMEOUT,
-  AMOUNT_FILL_TIMEOUT
-};
+export const TEST_TIMEOUT = envOr('TEST_TIMEOUT', 90_000);
+export const DEFAULT_TIMEOUT = envOr('DEFAULT_TIMEOUT', 1_000);
+export const LONG_TIMEOUT = envOr('LONG_TIMEOUT', 5_000);
+export const METAMASK_POPUP_TIMEOUT = envOr('METAMASK_POPUP_TIMEOUT', 3_000);
+export const WALLET_OPERATION_TIMEOUT = envOr('WALLET_OPERATION_TIMEOUT', 3_000);
+export const AMOUNT_FILL_TIMEOUT = envOr('AMOUNT_FILL_TIMEOUT', 3_000);
+export const TRANSACTION_APPROVAL_TIMEOUT = envOr('TRANSACTION_APPROVAL_TIMEOUT', 5_000);
+export const NETWORK_OPERATION_TIMEOUT = envOr('NETWORK_OPERATION_TIMEOUT', 2_500);
+export const BRIDGE_OPERATION_TIMEOUT = envOr('BRIDGE_OPERATION_TIMEOUT', 60_000);
+export const TOKEN_TRANSFER_TIMEOUT = envOr('TOKEN_TRANSFER_TIMEOUT', 90_000);

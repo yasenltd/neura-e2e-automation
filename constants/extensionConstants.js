@@ -1,4 +1,9 @@
-const path = require('path');
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Define __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Base URLs for common sources
 const CHROME_STORE =
@@ -31,11 +36,11 @@ const createExtension = config => {
   return extension;
 };
 
-module.exports = {
-  metamask: createExtension({
-    id: 'nkbihfbeogaeaoehlefnkodbefgpgknn',
-    name: 'metamask',
-    version: '12.13.0',
-    github: true,
-  })
-};
+const metamask = createExtension({
+  id: 'nkbihfbeogaeaoehlefnkodbefgpgknn',
+  name: 'metamask',
+  version: '12.13.0',
+  github: true,
+});
+
+export default { metamask };

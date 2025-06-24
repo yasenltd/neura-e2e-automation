@@ -1,6 +1,8 @@
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
-require('dotenv').config();
-const TokensDepositedQuery = require('../models/TokensDepositedQuery');
+import dotenv from 'dotenv';
+dotenv.config();
+
+import fetch from 'node-fetch';
+import TokensDepositedQuery from '../models/TokensDepositedQuery.js';
 
 /**
  * Execute a GraphQL query against the specified subgraph URL
@@ -77,6 +79,6 @@ async function waitForAnyDepositInSubgraph(recipient, expectedAmount, retries = 
   return await waitForAnyDeposit(recipient, expectedAmount, retries, delay);
 }
 
-module.exports = {
+export {
   waitForAnyDepositInSubgraph
 };

@@ -2,10 +2,6 @@
  * TokensDepositedQuery.js
  * A model class for the tokensDepositeds GraphQL query
  */
-
-/**
- * Class representing a tokensDepositeds GraphQL query
- */
 class TokensDepositedQuery {
   /**
    * Get the tokensDepositeds query for a recipient
@@ -35,4 +31,4 @@ class TokensDepositedQuery {
   }
 }
 
-module.exports = TokensDepositedQuery;
+export default TokensDepositedQuery;

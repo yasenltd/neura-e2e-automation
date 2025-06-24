@@ -2,12 +2,12 @@
  * Common test fixtures for Neura Bridge UI tests
  * This module provides reusable setup and teardown logic for test files
  */
-const { test: baseTest } = require('@playwright/test');
-const WalletFactory = require('../factory/WalletFactory');
-const NeuraBridgePage = require('../pages/NeuraBridgePage');
-const networks = require('../constants/networkConstants');
-
-require('dotenv').config();
+import { test as baseTest } from '@playwright/test';
+import WalletFactory            from '../factory/WalletFactory.js';
+import NeuraBridgePage          from '../pages/NeuraBridgePage.js';
+import networks                 from '../constants/networkConstants.js';
+import dotenv from 'dotenv';
+dotenv.config();
 
 /**
  * Creates a test fixture with common setup and teardown logic
@@ -135,7 +135,7 @@ const testWithoutNeuraAndSepolia = createTestFixture({
   setupNeuraNetwork: false
 });
 
-module.exports = {
+export {
   createTestFixture,
   testWithoutSepolia,
   testWithoutNeura,

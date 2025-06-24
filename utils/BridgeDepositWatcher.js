@@ -1,18 +1,17 @@
-const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { BigNumber, ethers } from 'ethers';
+import ethBscBridgeAbi from '../abi/EthBscBridge.json' with { type: 'json' };
+import neuraBridgeAbi from '../abi/NeuraBridge.json' with { type: 'json' };
+import { formatBalanceString } from './util';
+import { getProvider, getBalance, getTokenBalance, parseToEth, parseEther } from './ethersUtil';
 
-const { BigNumber, ethers } = require('ethers');
-const ethBscBridgeAbi = require('../abi/EthBscBridge.json');
-const neuraBridgeAbi = require('../abi/NeuraBridge.json');
-const {
-    getProvider,
-    getBalance,
-    getTokenBalance,
-    parseToEth,
-} = require('../utils/ethersUtil');
-const { formatBalanceString } = require('../utils/util');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const erc20Abi = [
+export const erc20Abi = [
     'function balanceOf(address) view returns (uint256)',
     'function allowance(address owner, address spender) view returns (uint256)',
     'function approve(address spender, uint256 amount) returns (bool)',
@@ -200,7 +199,7 @@ class BridgeDepositWatcher {
 
     /** Predict the hash a UI deposit will emit (no state change). */
     async predictNativeDepositHash(amount, destChainId, recipient = this.MY_ADDRESS) {
-        const value = ethers.utils.parseEther(amount.toString());
+        const value = parseEther(amount.toString());
         const bridge = this.neuraBridge.connect(this.neuraSigner);
         return bridge.callStatic.deposit(recipient, destChainId, { value });
     }
@@ -217,7 +216,7 @@ class BridgeDepositWatcher {
             throw new Error('destChainId is required');
         }
 
-        const value  = ethers.utils.parseEther(amount.toString());
+        const value  = parseEther(amount.toString());
         const bridge = this.neuraBridge.connect(this.neuraSigner);
 
         const messageHash = await bridge.callStatic.deposit(recipient, destChainId, { value });
@@ -364,4 +363,4 @@ class BridgeDepositWatcher {
     }
 }
 
-module.exports = BridgeDepositWatcher;
+export default BridgeDepositWatcher;

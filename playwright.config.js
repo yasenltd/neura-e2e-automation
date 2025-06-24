@@ -1,6 +1,6 @@
-const { devices } = require('@playwright/test');
+import { devices } from '@playwright/test';
 
-module.exports = {
+export default {
   testDir: './tests',
   use: {
     headless: false,

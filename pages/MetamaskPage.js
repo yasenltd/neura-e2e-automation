@@ -1,7 +1,7 @@
-const WalletPage = require('./WalletPage');
-const { launchBrowserWithExtension } = require('../utils/browserSetup');
-const selectors = require('../locators/metamaskLocators');
-const {NETWORK_OPERATION_TIMEOUT} = require("../constants/timeoutConstants");
+import WalletPage from './WalletPage.js';
+import selectors from '../locators/metamaskLocators.js';
+import { launchBrowserWithExtension } from '../utils/browserSetup.js';
+import { NETWORK_OPERATION_TIMEOUT } from '../constants/timeoutConstants.js';
 
 class MetamaskPage extends WalletPage {
   constructor(page) {
@@ -242,4 +242,4 @@ class MetamaskPage extends WalletPage {
   }
 }
 
-module.exports = MetamaskPage;
+export default MetamaskPage;
