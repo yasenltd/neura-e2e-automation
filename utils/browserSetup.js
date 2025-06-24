@@ -11,9 +11,7 @@ const __dirname  = path.dirname(__filename);
 const USER_DATA_DIR = path.join(__dirname, '..', 'user_data');
 
 const CHANNEL  = process.env.BROWSER_CHANNEL || 'chrome';
-const HEADLESS = process.env.HEADLESS?.toLowerCase() === 'true'
-    || process.env.CI === 'true'
-    || process.env.GITHUB_ACTIONS === 'true';
+const HEADLESS = false;
 
 async function launchBrowserWithExtension(walletName) {
   clearUserDataDir(USER_DATA_DIR);
