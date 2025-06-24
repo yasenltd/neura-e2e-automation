@@ -1,6 +1,6 @@
 /**
  * Timeout constants for the Neura E2E Automation project
- * Centralizes all timeout values to ensure consistency and maintainability
+ * Centralize all timeout values to ensure consistency and maintainability
  */
 
 function envOr(name, fallback) {
