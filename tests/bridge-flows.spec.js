@@ -1,13 +1,10 @@
-const { test, expect } = require('@playwright/test');
-const BridgeDepositWatcher = require('../utils/BridgeDepositWatcher');
-const { TEST_AMOUNT } = require('../constants/testConstants');
-const { TEST_TIMEOUT } = require('../constants/timeoutConstants');
-const networks = require('../constants/networkConstants');
-const { assertBridgeTransferLog, assertSignatureCount, assertPackedMessage, assertApprovalReceipt, assertDepositReceipt, assertDepositLogDetails,
-    assertClaimReceipt,
-    assertNeuraBalanceDifference
-} = require('../pages/AssertionHelpers');
-const BalanceTracker = require("../utils/BalanceTracker");
+import { test, expect } from '@playwright/test';
+import BalanceTracker from '../utils/BalanceTracker.js';
+import BridgeDepositWatcher from '../utils/BridgeDepositWatcher.js';
+import { TEST_AMOUNT } from '../constants/testConstants.js';
+import { TEST_TIMEOUT } from '../constants/timeoutConstants.js';
+import networks from '../constants/networkConstants.js';
+import * as assertionHelpers from '../pages/AssertionHelpers.js';
 
 test.describe('Smart-contract bridge flows (no UI)', () => {
     test('ANKR deposit from Sepolia to Neura', async () => {
@@ -20,8 +17,8 @@ test.describe('Smart-contract bridge flows (no UI)', () => {
         console.log('Estimated gas:', gasEstimate.toString());
         const balanceBefore = await watcher.getAnkrBalance();
         const depositReceipt = await watcher.depositAnkr(TEST_AMOUNT);
-        const depositedLog = assertDepositReceipt(depositReceipt, watcher);
-        await assertDepositLogDetails(depositedLog, watcher, networks, TEST_AMOUNT);
+        const depositedLog = assertionHelpers.assertDepositReceipt(depositReceipt, watcher);
+        await assertionHelpers.assertDepositLogDetails(depositedLog, watcher, networks, TEST_AMOUNT);
         const balanceAfter = await watcher.getAnkrBalance();
         expect(Number(balanceBefore) - Number(balanceAfter)).toEqual(Number(TEST_AMOUNT));
     });
@@ -32,18 +29,18 @@ test.describe('Smart-contract bridge flows (no UI)', () => {
         const balanceTracker = new BalanceTracker();
         const before = await balanceTracker.recordNeuraBalances();
         const { messageHash } = await watcher.depositNativeOnNeura(TEST_AMOUNT, networks.sepolia.chainId);
-        const parsed = await assertApprovalReceipt(watcher, messageHash, 120_000);
-        await assertBridgeTransferLog(parsed, messageHash, watcher, TEST_AMOUNT, networks);
-        await assertSignatureCount(watcher, messageHash);
-        await assertPackedMessage(watcher, messageHash);
+        const parsed = await assertionHelpers.assertApprovalReceipt(watcher, messageHash, 120_000);
+        await assertionHelpers.assertBridgeTransferLog(parsed, messageHash, watcher, TEST_AMOUNT, networks);
+        await assertionHelpers.assertSignatureCount(watcher, messageHash);
+        await assertionHelpers.assertPackedMessage(watcher, messageHash);
         const receipt = await watcher.claimTransfer(messageHash);
-        await assertClaimReceipt(receipt, watcher.ethBscBridge,
+        await assertionHelpers.assertClaimReceipt(receipt, watcher.ethBscBridge,
             {
                 recipient: watcher.MY_ADDRESS,
                 amount: TEST_AMOUNT
             }
         );
         const after = await balanceTracker.recordNeuraBalances();
-        await assertNeuraBalanceDifference(balanceTracker, before, after, TEST_AMOUNT);
+        await assertionHelpers.assertNeuraBalanceDifference(balanceTracker, before, after, TEST_AMOUNT);
     });
 });

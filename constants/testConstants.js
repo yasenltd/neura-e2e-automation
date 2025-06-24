@@ -16,7 +16,7 @@ const TransactionAction = {
   CANCEL: 'cancel'
 };
 
-module.exports = {
+export {
   TEST_AMOUNT,
   BridgeOperationType,
   TransactionAction

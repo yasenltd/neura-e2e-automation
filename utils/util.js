@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from 'fs';
 
 /**
  * Deletes the specified directory and all its contents.
@@ -115,8 +115,7 @@ function formatBalanceString(tokenStr, label = '') {
   return readable;
 }
 
-
-module.exports = {
+export {
   clearUserDataDir,
   formatBalanceString,
   createNewUserDataDirForParallelExecution,

@@ -1,7 +1,7 @@
 /**
  * Selectors for DApp example page elements
  */
-module.exports = {
+export default {
     roles: {
         link: 'link',
         text: 'text',
@@ -97,7 +97,6 @@ module.exports = {
         switchBridgeBtn: { css: '.relative.h-0.mt-6 > button' },
         bridgeBtn: { css: 'button[data-slot="button"]:has-text("Bridge")' },
         bridgeTokensBtn: { css: 'button[data-slot="button"]:has-text("Bridge Tokens")' },
-        claimTokensBtn: { css: 'button[data-slot="button"]:has-text("Claim Tokens")' },
         claimTransactionButton: { css: 'button[data-slot="button"]:has-text("Claim")' },
         refreshClaimTransactionButton: { role: 'button', name: 'Refresh transactions' },
         approveTokenTransferButton: { css: 'button[data-slot="button"]:has-text("Approve Token Transfer")' },

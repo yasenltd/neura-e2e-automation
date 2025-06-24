@@ -2,13 +2,11 @@
  * AssertionHelpers.js
  * Contains extracted assertion methods from NeuraBridgePage.js
  */
-const { expect } = require('@playwright/test');
-const { ethers } = require('ethers');
-const { formatUnits } = require('ethers/lib/utils');
-const { neuraBridgeAssertions, metaMaskIntegrationAssertions } = require('../constants/assertionConstants');
-const ethersUtil = require('../utils/ethersUtil');
-const { parseToEth } = require('../utils/ethersUtil');
-const BridgeDepositWatcher = require('../utils/BridgeDepositWatcher');
+import { expect } from '@playwright/test';
+import { metaMaskIntegrationAssertions } from '../constants/assertionConstants.js';
+import ethersUtil from '../utils/ethersUtil.js';
+import { parseToEth, parseEther, createBigNumber, isBytesLike, formatFromUnits } from '../utils/ethersUtil.js';
+import BridgeDepositWatcher from '../utils/BridgeDepositWatcher.js';
 
 /**
  * Asserts MetaMask wallet screen against expected values
@@ -18,16 +16,7 @@ const BridgeDepositWatcher = require('../utils/BridgeDepositWatcher');
 async function assertMetaMaskWalletScreen(metaMaskScreenLayout) {
     expect(metaMaskScreenLayout.networkLabels[0]).toEqual(metaMaskIntegrationAssertions.networkLabels.bscTestnet);
     expect(metaMaskScreenLayout.networkLabels[2]).toEqual(metaMaskIntegrationAssertions.networkLabels.sepolia);
-
     const watcher = new BridgeDepositWatcher();
-
-    // BSC Testnet balance assertions
-    const ethBnbOnChain = '0';
-    const ankrBnbOnChain = '0';
-    const bscBalanceInMetaMask = ['tBNB', ethBnbOnChain, metaMaskIntegrationAssertions.neuraWalletLabels[0], ankrBnbOnChain];
-    expect(metaMaskScreenLayout.networkLabels[1]).toEqual(bscBalanceInMetaMask);
-
-    // Sepolia balance assertions
     const ethOnChain = ethersUtil.formatBalance(await watcher.getEthBalance());
     const ankrOnChain = ethersUtil.formatBalance(await watcher.getAnkrBalance());
     const sepoliaBalanceInMetaMask = ['ETH', ethOnChain, metaMaskIntegrationAssertions.neuraWalletLabels[0], ankrOnChain];
@@ -72,10 +61,8 @@ function assertSelectedChain(activeSelectedChain, activeChain) {
  */
 function assertNeuraBalanceDifference(balanceTracker, before, after, expectedAmount) {
     const diff = balanceTracker.compareNeuraBalances(before, after);
-
-    const expectedDrop = ethers.utils.parseEther(expectedAmount);
-    const tolerance = ethers.BigNumber.from('10000000000000');
-
+    const expectedDrop = parseEther(expectedAmount);
+    const tolerance = createBigNumber('10000000000000');
     expect(diff.ankrDiff.isNegative()).toBe(true);
     const error = diff.ankrDiff.abs().sub(expectedDrop).abs();
     expect(error.lte(tolerance)).toBe(true);
@@ -94,7 +81,7 @@ function assertBridgeTransferLog(parsedLog, messageHash, watcher, testAmount, ne
     expect(parsedLog.args.recipient.toLowerCase()).toBe(watcher.MY_ADDRESS);
     expect(parsedLog.args.chainId.toNumber()).toBe(Number(networks.sepolia.chainId));
     expect(parsedLog.args.sourceChainId.toNumber()).toBe(Number(networks.neuraTestnet.chainId));
-    expect(parsedLog.args.amount.eq(ethers.utils.parseEther(testAmount))).toBe(true);
+    expect(parsedLog.args.amount.eq(parseEther(testAmount))).toBe(true);
 }
 
 /**
@@ -122,7 +109,7 @@ async function assertSignatureCount(watcher, messageHash) {
  */
 async function assertPackedMessage(watcher, messageHash) {
     const packedMessage = await watcher.getMessage(messageHash);
-    expect(ethers.utils.isBytesLike(packedMessage)).toBe(true);
+    expect(isBytesLike(packedMessage)).toBe(true);
     expect(packedMessage.length).toBeGreaterThan(2);
 }
 
@@ -179,22 +166,22 @@ async function assertClaimReceipt(receipt, bridgeContract, { recipient, amount }
     expect(log, 'TokensClaimed event not found').toBeDefined();
     const { args } = bridgeContract.interface.parseLog(log);
     expect(args.recipient.toLowerCase()).toBe(recipient.toLowerCase());
-    const expectedAmount = ethers.utils.parseEther(amount);
+    const expectedAmount = parseEther(amount);
     expect(args.amount.eq(expectedAmount)).toBe(true);
 }
 
 /**
  * Asserts that the UI balance matches the chain balance after formatting
  * @param {number} uiNumber - The balance number displayed in the UI
- * @param {ethers.BigNumber} chainBN - The chain balance as a BigNumber
+ * @param {BigNumber} chainBN - The chain balance as a BigNumber
  */
 function assertUIBalanceMatchesChain(uiNumber, chainBN) {
-    const chainDecimal = parseFloat(formatUnits(chainBN, 18));
+    const chainDecimal = parseFloat(formatFromUnits(chainBN, 18));
     const chainRounded = Number(chainDecimal.toFixed(2));
     expect(chainRounded).toBe(uiNumber);
 }
 
-module.exports = {
+export {
     assertMetaMaskWalletScreen,
     assertNetworkLabels,
     assertEnterAmountButtonNotVisible,

@@ -1,4 +1,4 @@
-const BasePage = require('./BasePage');
+import BasePage from './BasePage.js';
 
 /**
  * Base class for wallet extension pages
@@ -227,4 +227,4 @@ class WalletPage extends BasePage {
   }
 }
 
-module.exports = WalletPage;
+export default WalletPage;

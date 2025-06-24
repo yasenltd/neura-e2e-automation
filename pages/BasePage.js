@@ -1,4 +1,4 @@
-const { DEFAULT_TIMEOUT, LONG_TIMEOUT } = require('../constants/timeoutConstants');
+import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from '../constants/timeoutConstants.js';
 
 class BasePage {
   constructor(window) {
@@ -988,4 +988,4 @@ class BasePage {
   }
 }
 
-module.exports = BasePage;
+export default BasePage;

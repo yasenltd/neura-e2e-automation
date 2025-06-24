@@ -24,8 +24,8 @@ const networks = {
     chainId: '11155111',
     currencySymbol: 'SepoliaETH',
     name: 'Sepolia',
-    explorer: process.env.SEPOLION_EXPLORER
+    explorer: process.env.SEPOLIA_EXPLORER
   }
 };
 
-module.exports = networks;
+export default networks;

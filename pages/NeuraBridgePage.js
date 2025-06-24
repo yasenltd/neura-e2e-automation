@@ -1,23 +1,13 @@
-import { expect } from "playwright/test";
-import { formatBalanceString } from "../utils/util";
-import ethersUtil from "../utils/ethersUtil";
-import BridgeDepositWatcher from '../utils/BridgeDepositWatcher';
-
-const BasePage = require('./BasePage');
-const selectors = require('../locators/neuraLocators');
-const { neuraBridgeAssertions } = require('../constants/assertionConstants');
-const { TransactionAction } = require('../constants/testConstants');
-const {
-  DEFAULT_TIMEOUT,
-  TRANSACTION_APPROVAL_TIMEOUT,
-  NETWORK_OPERATION_TIMEOUT,
-  WALLET_OPERATION_TIMEOUT,
-  BRIDGE_OPERATION_TIMEOUT,
-  TOKEN_TRANSFER_TIMEOUT,
-  METAMASK_POPUP_TIMEOUT,
-  AMOUNT_FILL_TIMEOUT
-} = require('../constants/timeoutConstants');
-const assertionHelpers = require('./AssertionHelpers');
+import { expect }                                    from '@playwright/test';
+import BasePage                                      from './BasePage.js';
+import selectors                                     from '../locators/neuraLocators.js';
+import BridgeDepositWatcher                          from '../utils/BridgeDepositWatcher.js';
+import ethersUtil                                    from '../utils/ethersUtil.js';
+import { formatBalanceString }                       from '../utils/util.js';
+import { TransactionAction }                         from '../constants/testConstants.js';
+import { neuraBridgeAssertions }                     from '../constants/assertionConstants.js';
+import * as timeouts from '../constants/timeoutConstants.js';
+import * as assertionHelpers                         from './AssertionHelpers.js';
 
 class NeuraBridgePage extends BasePage {
   constructor(page) {
@@ -34,16 +24,10 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<NeuraBridgePage>} - Returns a new NeuraBridgePage instance
    */
   static async initialize(context, bridgePageUrl) {
-    // Open the Bridge page
     const page = await context.newPage();
     await page.goto(bridgePageUrl);
-
-    // Create the page object
     const bridgePage = new NeuraBridgePage(page);
-
-    // Clean up unnecessary pages
     await bridgePage.closeUnnecessaryPages(context);
-
     return bridgePage;
   }
 
@@ -53,7 +37,7 @@ class NeuraBridgePage extends BasePage {
   }
 
   async claimLatestTransaction(context, amount) {
-    await new Promise(r => setTimeout(r, TRANSACTION_APPROVAL_TIMEOUT));
+    await new Promise(r => setTimeout(r, timeouts.TRANSACTION_APPROVAL_TIMEOUT));
     await this.assertClaimTokenPageLayout();
     await this.clickDescLoc(this.selectors.bridgeDescriptors.refreshClaimTransactionButton);
     await this.claimTransaction(context, amount);
@@ -131,7 +115,7 @@ class NeuraBridgePage extends BasePage {
     await popupWallet.connectWallet();
 
     // Signing user message for authentication
-    await new Promise(r => setTimeout(r, TRANSACTION_APPROVAL_TIMEOUT / 3));
+    await new Promise(r => setTimeout(r, timeouts.TRANSACTION_APPROVAL_TIMEOUT / 3));
     console.log('Signing message for authentication');
 
     await this.click(this.selectors.connection.signMessage);
@@ -197,8 +181,8 @@ class NeuraBridgePage extends BasePage {
 
     try {
       [extensionPopup] = await Promise.all([
-        context.waitForEvent('page', { timeout: DEFAULT_TIMEOUT }),
-        this.page.waitForTimeout(DEFAULT_TIMEOUT / 5), // Short timeout for waiting
+        context.waitForEvent('page', { timeout: timeouts.DEFAULT_TIMEOUT }),
+        this.page.waitForTimeout(timeouts.DEFAULT_TIMEOUT / 5), // Short timeout for waiting
       ]);
       console.log('✅ MetaMask popup opened as new tab');
     } catch (error) {
@@ -215,7 +199,7 @@ class NeuraBridgePage extends BasePage {
     try {
       const popupWallet = new this.wallet.constructor(extensionPopup);
       await popupWallet.approveSepoliaChainRequest();
-      await new Promise(r => setTimeout(r, NETWORK_OPERATION_TIMEOUT));
+      await new Promise(r => setTimeout(r, timeouts.NETWORK_OPERATION_TIMEOUT));
     } catch (error) {
       console.error('Error approving custom network:', error.message);
       throw error;
@@ -306,7 +290,7 @@ class NeuraBridgePage extends BasePage {
     }
   }
 
-  async confirmTransactionInMetaMask(context, action = 'confirmTransaction', timeout = METAMASK_POPUP_TIMEOUT) {
+  async confirmTransactionInMetaMask(context, action = 'confirmTransaction', timeout = timeouts.METAMASK_POPUP_TIMEOUT) {
     try {
       console.log(`Looking for MetaMask tab to perform action: ${action}`);
 
@@ -399,13 +383,13 @@ class NeuraBridgePage extends BasePage {
     return null;
   }
 
-  async waitForMetaMaskTab(timeout = METAMASK_POPUP_TIMEOUT) {
+  async waitForMetaMaskTab(timeout = timeouts.METAMASK_POPUP_TIMEOUT) {
     const context = this.page.context();
 
     try {
       const [newPage] = await Promise.all([
         context.waitForEvent('page', { timeout }),
-        this.page.waitForTimeout(DEFAULT_TIMEOUT / 2), // or your click that triggers MetaMask
+        this.page.waitForTimeout(timeouts.DEFAULT_TIMEOUT / 2), // or your click that triggers MetaMask
       ]);
 
       await newPage.waitForLoadState('domcontentloaded');
@@ -513,19 +497,19 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<Object>} - The preview transaction layout
    */
   async assertPreviewTransactionLayout(checkApproveButton = false, amount) {
-    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.titleLabel, null, WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.fromChainLabel, null, WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.toChainLabel, null, WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.amountLabel, null, WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.neuraLabel, null, WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.sepoliaLabel, null, WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.titleLabel, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.fromChainLabel, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.toChainLabel, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.amountLabel, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.neuraLabel, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.sepoliaLabel, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
     const previewAnkrBalance = await this.getNumericMatch(this.selectors.previewTransactionDescriptors.ankrBalance, 1, 1);
     const expectedValue = formatBalanceString(amount);
     await expect(previewAnkrBalance).toBe(Number(expectedValue));
     if (checkApproveButton) {
-      await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.approveButton, null, WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+      await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.approveButton, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
     } else {
-      await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.bridgeButton, null, WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+      await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.bridgeButton, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
     }
   }
 
@@ -542,7 +526,7 @@ class NeuraBridgePage extends BasePage {
   }
 
   async fillAmount(amount) {
-    await new Promise(r => setTimeout(r, AMOUNT_FILL_TIMEOUT));
+    await new Promise(r => setTimeout(r, timeouts.AMOUNT_FILL_TIMEOUT));
     await this.fillDescLoc(this.selectors.walletScreen.amountField, amount);
     return await this.getElementWithDescLoc(this.selectors.walletScreen.amountField).inputValue();
   }
@@ -561,12 +545,7 @@ class NeuraBridgePage extends BasePage {
     }
     await this.clickDescLoc(this.selectors.connection.selectMetaMaskWallet);
     await this.attachWallet(context);
-    await new Promise(r => setTimeout(r, NETWORK_OPERATION_TIMEOUT));
-  }
-
-  async bridgeTokensFromChainToNeura(context,) {
-    await this.approveTokenTransfer(context);
-    await this.approveBridgingTokens(context);
+    await new Promise(r => setTimeout(r, timeouts.NETWORK_OPERATION_TIMEOUT));
   }
 
   async bridgeTokensFromNeuraToChain(context) {
@@ -582,8 +561,8 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<Object>} - The preview transaction layout
    */
   async clickBridgeButtonApprovingCustomChain(context, checkApproveButton = false, amount) {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn, null, WALLET_OPERATION_TIMEOUT);
-    await new Promise(r => setTimeout(r, NETWORK_OPERATION_TIMEOUT));
+    await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn, null, timeouts.WALLET_OPERATION_TIMEOUT);
+    await new Promise(r => setTimeout(r, timeouts.NETWORK_OPERATION_TIMEOUT));
     await this.confirmTransactionWithExplicitPageSearch(context);
     return await this.assertPreviewTransactionLayout(checkApproveButton, amount);
   }
@@ -595,34 +574,29 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<Object>} - The preview transaction layout
    */
   async clickBridgeButton(checkApproveButton = false, amount) {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn, null, WALLET_OPERATION_TIMEOUT);
-    await new Promise(r => setTimeout(r, DEFAULT_TIMEOUT));
+    await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn, null, timeouts.WALLET_OPERATION_TIMEOUT);
+    await new Promise(r => setTimeout(r, timeouts.DEFAULT_TIMEOUT));
     return await this.assertPreviewTransactionLayout(checkApproveButton, amount);
   }
 
   async approveTokenTransfer(context) {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.approveTokenTransferButton, null, WALLET_OPERATION_TIMEOUT);
+    await this.clickDescLoc(this.selectors.bridgeDescriptors.approveTokenTransferButton, null, timeouts.WALLET_OPERATION_TIMEOUT);
     await this.confirmTransaction(context);
-    await this.waitForDescLocElementToDisappear({ text: 'Approving token transfer...' }, { timeout: TOKEN_TRANSFER_TIMEOUT, longTimeout: TOKEN_TRANSFER_TIMEOUT });
+    await this.waitForDescLocElementToDisappear({ text: 'Approving token transfer...' }, { timeout: timeouts.TOKEN_TRANSFER_TIMEOUT, longTimeout: timeouts.TOKEN_TRANSFER_TIMEOUT });
   }
 
   async approveBridgingTokens(context) {
     await this.confirmTransactionInMetaMask(context);
-    await this.waitForDescLocElementToDisappear({ text: 'Bridging tokens...' }, { timeout: BRIDGE_OPERATION_TIMEOUT, longTimeout: BRIDGE_OPERATION_TIMEOUT });
-  }
-
-  async claimTokens() {
-    await new Promise(r => setTimeout(r, TRANSACTION_APPROVAL_TIMEOUT));
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.claimTokensBtn);
+    await this.waitForDescLocElementToDisappear({ text: 'Bridging tokens...' }, { timeout: timeouts.BRIDGE_OPERATION_TIMEOUT, longTimeout: timeouts.BRIDGE_OPERATION_TIMEOUT });
   }
 
   async claimTransaction(context, amount) {
-    await new Promise(r => setTimeout(r, WALLET_OPERATION_TIMEOUT));
+    await new Promise(r => setTimeout(r, timeouts.WALLET_OPERATION_TIMEOUT));
     await this.clickDescLoc(this.selectors.bridgeDescriptors.claimTransactionButton);
     await this.confirmTransactionInMetaMask(context, 'approveSepoliaChainRequest');
     await this.confirmTransaction(context);
     await this.waitForDescLocElementToDisappear({ text: `Claiming ${amount} ANKR on Sepolia, please don\'t close the page` },
-      { timeout: BRIDGE_OPERATION_TIMEOUT, longTimeout: BRIDGE_OPERATION_TIMEOUT });
+      { timeout: timeouts.BRIDGE_OPERATION_TIMEOUT, longTimeout: timeouts.BRIDGE_OPERATION_TIMEOUT });
   }
 
   async navigateToFaucetPage() {
@@ -652,7 +626,7 @@ class NeuraBridgePage extends BasePage {
    */
   async verifyMetaMaskWalletScreen() {
     await this.clickDescLoc(this.selectors.connection.avatarButton);
-    await new Promise(r => setTimeout(r, WALLET_OPERATION_TIMEOUT));
+    await new Promise(r => setTimeout(r, timeouts.WALLET_OPERATION_TIMEOUT));
     const testNetLabels = await this.getAllRowTexts(this.selectors.walletScreen.testNetLabels, this.selectors.general.cellCss);
     const activityLabel = await this.getAllTextsInit(this.selectors.walletScreen.activityLabel);
     return {
@@ -670,7 +644,7 @@ class NeuraBridgePage extends BasePage {
     await this.assertTokenWithDynamicBalance();
     await assertionHelpers.assertMetaMaskWalletScreen(metaMaskScreenLayout);
     await this.clickDescLoc(this.selectors.walletScreen.expandWallet);
-    await new Promise(r => setTimeout(r, NETWORK_OPERATION_TIMEOUT));
+    await new Promise(r => setTimeout(r, timeouts.NETWORK_OPERATION_TIMEOUT));
     return metaMaskScreenLayout;
   }
 
@@ -760,4 +734,4 @@ class NeuraBridgePage extends BasePage {
   }
 }
 
-module.exports = NeuraBridgePage;
+export default NeuraBridgePage;

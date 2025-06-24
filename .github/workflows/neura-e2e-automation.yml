@@ -44,6 +44,16 @@ jobs:
       SUBGRAPH_URL:                 ${{ vars.SUBGRAPH_URL }}
       HEADLESS:                     ${{ vars.HEADLESS }}
       BROWSER_CHANNEL:              ${{ vars.BROWSER_CHANNEL }}
+      TEST_TIMEOUT:                 ${{ vars.TEST_TIMEOUT }}
+      DEFAULT_TIMEOUT:              ${{ vars.DEFAULT_TIMEOUT }}
+      LONG_TIMEOUT:                 ${{ vars.LONG_TIMEOUT }}
+      METAMASK_POPUP_TIMEOUT:       ${{ vars.METAMASK_POPUP_TIMEOUT }}
+      WALLET_OPERATION_TIMEOUT:     ${{ vars.WALLET_OPERATION_TIMEOUT }}
+      AMOUNT_FILL_TIMEOUT:          ${{ vars.AMOUNT_FILL_TIMEOUT }}
+      TRANSACTION_APPROVAL_TIMEOUT: ${{ vars.TRANSACTION_APPROVAL_TIMEOUT }}
+      NETWORK_OPERATION_TIMEOUT:    ${{ vars.NETWORK_OPERATION_TIMEOUT }}
+      BRIDGE_OPERATION_TIMEOUT:     ${{ vars.BRIDGE_OPERATION_TIMEOUT }}
+      TOKEN_TRANSFER_TIMEOUT:       ${{ vars.TOKEN_TRANSFER_TIMEOUT }}
 
     steps:
       - name: Check out repo

@@ -1,9 +1,9 @@
-const fs = require('fs');
-const fsPromises = require('fs').promises;
-const path = require('path');
-const axios = require('axios');
-const JSZip = require('jszip');
-const extensionConstants = require('../constants/extensionConstants');
+import fs from 'fs';
+import fsPromises from 'fs/promises';
+import path from 'path';
+import axios from 'axios';
+import JSZip from 'jszip';
+import extensionConstants from '../constants/extensionConstants.js';
 
 /**
  * Extracts a CRX file (Chrome extension package) to a specified directory.
@@ -272,4 +272,4 @@ async function modifyManifestFile(extensionPath, walletName) {
   }
 }
 
-module.exports = { downloadAndExtractWalletAuto };
+export { downloadAndExtractWalletAuto };

@@ -1,5 +1,6 @@
 {
   "name": "limechain-qa-framework",
+  "type": "module",
   "main": "playwright.config.js",
   "directories": {
     "test": "tests"
@@ -8,8 +9,8 @@
     "test": "npx playwright test",
     "report": "npx playwright show-report",
     "format": "npx prettier . --write",
-    "demoUi": "npx playwright test -g 'Neura Bridge page validation' && npx playwright show-report",
-    "demoSC": "npx playwright test -g 'ANKR deposit from Sepolia to Neura' && npx playwright show-report"
+    "demoUi": "npx playwright test -g \"Neura Bridge page validation\" && npx playwright show-report",
+    "demoSC": "npx playwright test -g \"ANKR deposit from Sepolia to Neura\" && npx playwright show-report"
   },
   "devDependencies": {
     "@playwright/test": "^1.53.0",

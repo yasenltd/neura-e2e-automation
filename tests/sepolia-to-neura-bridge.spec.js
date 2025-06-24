@@ -1,14 +1,13 @@
-import BridgeDepositWatcher from '../utils/BridgeDepositWatcher.js';
-import { parseToEth, parseToNegativeEth } from '../utils/ethersUtil.js';
-
-const { expect } = require('@playwright/test');
-const { testWithoutSepolia: test } = require('../test-utils/testFixtures');
-const { waitForAnyDepositInSubgraph } = require('../utils/subgraphQueryUtil');
-const { TEST_AMOUNT } = require('../constants/testConstants');
-const { TEST_TIMEOUT } = require('../constants/timeoutConstants');
-const BalanceTracker = require('../utils/BalanceTracker');
-
-require('dotenv').config();
+import { expect } from '@playwright/test';
+import { testWithoutSepolia as test } from '../test-utils/testFixtures.js';
+import BalanceTracker                                     from '../utils/BalanceTracker.js';
+import BridgeDepositWatcher                              from '../utils/BridgeDepositWatcher.js';
+import { TEST_AMOUNT }                                   from '../constants/testConstants.js';
+import { TEST_TIMEOUT }                                  from '../constants/timeoutConstants.js';
+import { waitForAnyDepositInSubgraph }                   from '../utils/subgraphQueryUtil.js';
+import { parseToEth, parseToNegativeEth }                from '../utils/ethersUtil.js';
+import dotenv from 'dotenv';
+dotenv.config();
 
 test.describe('Sepolia to Neura Bridge UI Automation', () => {
 

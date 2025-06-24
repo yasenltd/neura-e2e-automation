@@ -1,10 +1,9 @@
-const { ethers } = require('ethers');
-require('dotenv').config();
-const networks = require('../constants/networkConstants');
+import dotenv from 'dotenv';
+dotenv.config();
 
-// Common ABI for ERC20 tokens
+import { ethers } from 'ethers';
+
 const ERC20_ABI = [
-  // Read-only functions
   'function balanceOf(address owner) view returns (uint256)',
   'function decimals() view returns (uint8)',
   'function symbol() view returns (string)',
@@ -55,76 +54,6 @@ function formatBalance(raw, decimals = 4) {
 }
 
 /**
- * Waits for a transaction to be confirmed
- * @param {string} txHash - The transaction hash
- * @param {string} networkName - The name of the network (e.g., 'neuraTestnet', 'sepolia')
- * @param {number} confirmations - The number of confirmations to wait for (default: 1)
- * @returns {Promise<ethers.TransactionReceipt>} - The transaction receipt
- */
-async function waitForTransaction(txHash, networkName, confirmations = 1) {
-  const provider = getProvider(networkName);
-  return await provider.waitForTransaction(txHash, confirmations);
-}
-
-/**
- * Verifies if a transaction was successful
- * @param {string} txHash - The transaction hash
- * @param {string} networkName - The name of the network (e.g., 'neuraTestnet', 'sepolia')
- * @returns {Promise<boolean>} - True if the transaction was successful, false otherwise
- */
-async function verifyTransaction(txHash, networkName) {
-  try {
-    const receipt = await waitForTransaction(txHash, networkName);
-    return receipt.status === 1; // 1 means success, 0 means failure
-  } catch (error) {
-    console.error(`Error verifying transaction ${txHash}:`, error);
-    return false;
-  }
-}
-
-/**
- * Verifies if a token transfer was successful by checking the token balance before and after
- * @param {string} address - The address to check
- * @param {string} tokenAddress - The address of the token contract
- * @param {string} networkName - The name of the network (e.g., 'neuraTestnet', 'sepolia')
- * @param {ethers.BigNumber} expectedBalance - The expected balance after the transfer
- * @returns {Promise<boolean>} - True if the balance matches the expected value, false otherwise
- */
-async function verifyTokenTransfer(address, tokenAddress, networkName, expectedBalance) {
-  try {
-    const balance = await getTokenBalance(address, tokenAddress, networkName);
-    return balance.eq(expectedBalance);
-  } catch (error) {
-    console.error(`Error verifying token transfer for ${address}:`, error);
-    return false;
-  }
-}
-
-/**
- * Verifies if a bridge transaction was successful by checking the balance on the destination chain
- * @param {string} address - The address to check
- * @param {string} destinationNetwork - The name of the destination network (e.g., 'neuraTestnet', 'sepolia')
- * @param {ethers.BigNumber} amount - The amount that was bridged
- * @param {number} timeoutMs - The timeout in milliseconds (default: 60000 - 1 minute)
- * @returns {Promise<boolean>} - True if the bridge was successful, false otherwise
- */
-async function verifyBridgeTransaction(address, destinationNetwork, amount, timeoutMs = 60000) {
-  const startTime = Date.now();
-  const initialBalance = await getBalance(address, destinationNetwork);
-  while (Date.now() - startTime < timeoutMs) {
-    await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds between checks
-    const currentBalance = await getBalance(address, destinationNetwork);
-    if (currentBalance.gt(initialBalance)) {
-      console.log(`Bridge verified: Balance on ${destinationNetwork} increased from ${ethers.formatEther(initialBalance)} to ${ethers.formatEther(currentBalance)}`);
-      return true;
-    }
-  }
-
-  console.error(`Bridge verification timed out after ${timeoutMs / 1000} seconds`);
-  return false;
-}
-
-/**
  * Parses a string value to Ethereum units
  * @param {string|number} value - The value to parse
  * @param {number} [decimals=18] - The number of decimals to use (default: 18)
@@ -144,15 +73,65 @@ function parseToNegativeEth(value, decimals = 18) {
   return ethers.utils.parseUnits(value.toString(), decimals).mul(-1);
 }
 
-module.exports = {
-  formatBalance,
-  getProvider,
+/**
+ * Parses a string value to Ethereum units (alias for parseUnits with 18 decimals)
+ * @param {string|number} value - The value to parse
+ * @returns {BigNumber} - The parsed value as BigNumber
+ */
+function parseEther(value) {
+  return ethers.utils.parseEther(value.toString());
+}
+
+/**
+ * Creates a BigNumber from a value
+ * @param {string|number|BigNumber} value - The value to convert to BigNumber
+ * @returns {BigNumber} - The BigNumber instance
+ */
+function createBigNumber(value) {
+  return ethers.BigNumber.from(value);
+}
+
+/**
+ * Checks if a value is BytesLike
+ * @param {any} value - The value to check
+ * @returns {boolean} - True if the value is BytesLike
+ */
+function isBytesLike(value) {
+  return ethers.utils.isBytesLike(value);
+}
+
+/**
+ * Formats a BigNumber to a decimal string with the specified number of decimals
+ * @param {BigNumber} value - The BigNumber to format
+ * @param {number} [decimals=18] - The number of decimals to use
+ * @returns {string} - The formatted string
+ */
+function formatFromUnits(value, decimals = 18) {
+  return ethers.utils.formatUnits(value, decimals);
+}
+
+export {
+  parseEther,
   getBalance,
-  getTokenBalance,
-  waitForTransaction,
-  verifyTransaction,
-  verifyTokenTransfer,
-  verifyBridgeTransaction,
   parseToEth,
+  getProvider,
+  isBytesLike,
+  formatBalance,
+  getTokenBalance,
+  createBigNumber,
+  formatFromUnits,
+  parseToNegativeEth
+};
+
+export default {
+  parseEther,
+  getBalance,
+  parseToEth,
+  getProvider,
+  isBytesLike,
+  formatBalance,
+  getTokenBalance,
+  createBigNumber,
+  formatFromUnits,
   parseToNegativeEth
 };
