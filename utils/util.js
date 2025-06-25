@@ -86,32 +86,39 @@ function updateSelectorsWithIndex(selectorsObj, replacements) {
 }
 
 /**
- * Normalize a raw token string so that:
- *  - “1” or “1.000” → “1.0”
- *  - “1.2” or “1.14” → stays as-is
- *  - anything with >2 decimals → rounded to 1 decimal place
+ * Turn a raw token string (e.g. "797.749999") into a UI-friendly balance.
  *
- * @param {string} tokenStr   e.g. output of ethers.utils.formatEther(...)
- * @param {string} [label]    optional name for the console log
- * @returns {string}          the formatted string
+ * @param {string} tokenStr   – value from formatEther / formatUnits
+ * @param {string} [label=''] – optional label for debug logs
+ * @param {number} [decimals=2] – how many fractional digits you want to keep
+ *                               (2 → 0.00 … 99.99)
+ * @returns {string}          – e.g. "797.75", "0.0"
  */
-function formatBalanceString(tokenStr, label = '') {
+function formatBalanceString(tokenStr, label = '', decimals = 2) {
   const [intPart, fracPart = ''] = tokenStr.split('.');
   let readable;
 
+  // No fractional part or it's all zeros  →  "797.0"
   if (fracPart.length === 0 || /^0+$/.test(fracPart)) {
     readable = `${intPart}.0`;
     console.debug(`🔢 ${label} no decimals → ${readable}`);
-  } else if (fracPart.length <= 2) {
-    readable = tokenStr;
-    console.debug(`🔢 ${label} preserve up to two decimals → ${readable}`);
-  } else {
-    const num     = parseFloat(tokenStr);
-    const rounded = Math.round(num * 100) / 100;
-    readable = rounded.toString();
-    console.debug(`🔢 ${label} rounded to 2dp → ${readable}`);
+    return readable;
   }
 
+  // Short enough → keep as-is ("1.2" with decimals >= 1, etc.)
+  if (fracPart.length <= decimals) {
+    readable = Number(tokenStr).toString();   // drops trailing zeros
+    console.debug(`🔢 ${label} preserve ≤${decimals} dp → ${readable}`);
+    return readable;
+  }
+
+  // Longer → round to desired decimals
+  const num     = parseFloat(tokenStr);
+  const factor  = 10 ** decimals;
+  const rounded = Math.round(num * factor) / factor;
+  readable      = rounded.toString();
+
+  console.debug(`🔢 ${label} rounded to ${decimals} dp → ${readable}`);
   return readable;
 }
 
