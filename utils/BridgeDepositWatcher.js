@@ -60,12 +60,14 @@ class BridgeDepositWatcher {
         return readable;
     }
 
-    async getEthBalance() {
-        const raw = await getBalance(this.MY_ADDRESS, process.env.SEPOLIA_RPC_URL);
-        const tokenStr = ethers.utils.formatEther(raw);
+    async getEthBalance(decimals = 2) {
+        const raw       = await getBalance(this.MY_ADDRESS, process.env.SEPOLIA_RPC_URL);
+        const tokenStr  = ethers.utils.formatEther(raw);
         console.log(`💰 Raw ETH string: ${tokenStr}`);
-        const readable = formatBalanceString(tokenStr, 'ETH on Sepolia');
+
+        const readable  = formatBalanceString(tokenStr, 'ETH on Sepolia', decimals);
         console.log(`💰 ETH on Sepolia: ${readable}`);
+
         return readable;
     }
 

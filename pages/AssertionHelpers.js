@@ -17,7 +17,7 @@ async function assertMetaMaskWalletScreen(metaMaskScreenLayout) {
     expect(metaMaskScreenLayout.networkLabels[0]).toEqual(metaMaskIntegrationAssertions.networkLabels.bscTestnet);
     expect(metaMaskScreenLayout.networkLabels[2]).toEqual(metaMaskIntegrationAssertions.networkLabels.sepolia);
     const watcher = new BridgeDepositWatcher();
-    const ethOnChain = ethersUtil.formatBalance(await watcher.getEthBalance());
+    const ethOnChain = ethersUtil.formatBalance(await watcher.getEthBalance(4));
     const ankrOnChain = ethersUtil.formatBalance(await watcher.getAnkrBalance());
     const sepoliaBalanceInMetaMask = ['ETH', ethOnChain, metaMaskIntegrationAssertions.neuraWalletLabels[0], ankrOnChain];
     expect(metaMaskScreenLayout.networkLabels[3]).toEqual(sepoliaBalanceInMetaMask);
