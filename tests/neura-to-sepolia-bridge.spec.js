@@ -56,10 +56,8 @@ test.describe('Neura to Sepolia Bridge UI Automation', () => {
                     amount: TEST_AMOUNT
                 }
             );
-            // const afterNeuraBalances = await BalanceTracker.getNeuraBalances();
-            // const afterSepoliaBalances = await BalanceTracker.getSepoliaBalances();
-            // assertionHelpers.assertNeuraBalanceDifference(balanceTracker, beforeNeuraBalances, afterNeuraBalances, TEST_AMOUNT);
-            // assertionHelpers.assertNeuraBalanceDifference(balanceTracker, beforeSepoliaBalances, afterSepoliaBalances, TEST_AMOUNT);
+            const resultAfterClaim = await BalanceTracker.compareBalances(beforeBalances, TEST_AMOUNT, true);
+            await assertionHelpers.assertNeuraToSepoliaBalanceChanges(resultAfterClaim);
         } catch (err) {
             console.error(`❌ Neura → Sepolia bridge test failed: ${err.message}`);
             throw err;

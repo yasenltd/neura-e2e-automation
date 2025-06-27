@@ -7,7 +7,7 @@ import networks from '../constants/networkConstants.js';
 import * as assertionHelpers from '../utils/AssertionHelpers.js';
 
 test.describe('Smart-contract bridge flows (no UI)', () => {
-    test('ANKR deposit from Sepolia to Neura', async () => {
+    test('ANKR deposit from Sepolia to Neura',{ tag: '@scheduledRun' }, async () => {
         test.setTimeout(TEST_TIMEOUT);
         const watcher = new BridgeDepositWatcher();
         await watcher.clearAnkrAllowance();
@@ -22,7 +22,7 @@ test.describe('Smart-contract bridge flows (no UI)', () => {
         await assertionHelpers.assertSepoliaToNeuraBalanceChanges(result);
     });
 
-    test('ANKR deposit from Neura to Sepolia', async () => {
+    test('ANKR deposit from Neura to Sepolia',{ tag: '@scheduledRun' }, async () => {
         test.setTimeout(TEST_TIMEOUT);
         const watcher = new BridgeDepositWatcher();
         const beforeBalances = await BalanceTracker.getAllBalances();
