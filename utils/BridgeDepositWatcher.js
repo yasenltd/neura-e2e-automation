@@ -1,11 +1,13 @@
 import dotenv from 'dotenv';
 import path from 'path';
-import { fileURLToPath } from 'url';
-import { BigNumber, ethers } from 'ethers';
-import ethBscBridgeAbi from '../abi/EthBscBridge.json' with { type: 'json' };
-import neuraBridgeAbi from '../abi/NeuraBridge.json' with { type: 'json' };
-import { formatBalanceString } from './util';
-import { getProvider, getBalance, getTokenBalance, parseToEth, parseEther } from './ethersUtil';
+import {fileURLToPath} from 'url';
+import {BigNumber, ethers} from 'ethers';
+import ethBscBridgeAbi from '../abi/EthBscBridge.json' with {type: 'json'};
+import neuraBridgeAbi from '../abi/NeuraBridge.json' with {type: 'json'};
+import {formatBalanceString} from './util';
+import {getBalance, getProvider, getTokenBalance, parseEther, parseToEth} from './ethersUtil';
+import {expect} from "@playwright/test";
+import {TRANSACTION_APPROVAL_TIMEOUT} from "../constants/timeoutConstants.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -84,18 +86,14 @@ class BridgeDepositWatcher {
         const decimals = 18;
         const parsed = parseToEth(amount, decimals);
         const bridge = this.ethBscBridge.connect(this.signer);
-        return bridge.estimateGas.deposit(parsed, recipient, { from: this.MY_ADDRESS });
+        const gasEstimate = await bridge.estimateGas.deposit(parsed, recipient, {from: this.MY_ADDRESS});
+        expect(gasEstimate.gt(0)).toBeTruthy();
     }
 
     /* ─────────────────────── Tracking helpers ───────────────────── */
 
     getMessage(messageHash) {
         return this.neuraBridge.messages(messageHash);
-    }
-
-    async getSignatureCount(messageHash) {
-        const signatures = await this.neuraBridge.getSignatures(messageHash);
-        return signatures.length;
     }
 
     async getFreshBlockNumber(prov = this.provider) {
@@ -294,6 +292,7 @@ class BridgeDepositWatcher {
         return new Promise(async (resolve, reject) => {
             // Past-log scan
             const latest = await this.getFreshBlockNumber(this.neuraProvider);
+            console.log('Latest block:', latest);
             const startBlock = fromBlock ?? Math.max(latest - 30, 0);
 
             const past = await this.neuraProvider.getLogs({
@@ -332,8 +331,8 @@ class BridgeDepositWatcher {
      * @param {number}  blockStart   a marker captured BEFORE the UI click
      * @param {number} [timeoutMs=30_000]
      */
-    waitForNextDeposit(blockStart, timeoutMs = 30_000) {
-        return new Promise((resolve, reject) => {
+    async waitForNextDeposit(blockStart, timeoutMs = 30_000) {
+        const result = await new Promise((resolve, reject) => {
             const filter = this.ethBscBridge.filters.TokensDeposited(this.MY_ADDRESS);
 
             const handler = (...args) => {
@@ -362,6 +361,11 @@ class BridgeDepositWatcher {
 
             this.ethBscBridge.on(filter, handler);
         });
+
+        console.log(`✅ TokensDeposited event found: ${result.txHash}`);
+        console.log('Waiting for transaction approval…');
+        await new Promise(r => setTimeout(r, TRANSACTION_APPROVAL_TIMEOUT));
+        return result;
     }
 }
 

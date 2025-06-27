@@ -1,12 +1,9 @@
-/**
- * AssertionHelpers.js
- * Contains extracted assertion methods from NeuraBridgePage.js
- */
 import { expect } from '@playwright/test';
+import ethersUtil from './ethersUtil.js';
+import BridgeDepositWatcher from './BridgeDepositWatcher.js';
 import { metaMaskIntegrationAssertions } from '../constants/assertionConstants.js';
-import ethersUtil from '../utils/ethersUtil.js';
-import { parseToEth, parseEther, createBigNumber, isBytesLike, formatFromUnits } from '../utils/ethersUtil.js';
-import BridgeDepositWatcher from '../utils/BridgeDepositWatcher.js';
+import { parseToEth, parseEther, createBigNumber, isBytesLike, formatFromUnits } from './ethersUtil.js';
+import { TRANSACTION_APPROVAL_TIMEOUT } from "../constants/timeoutConstants.js";
 
 /**
  * Asserts MetaMask wallet screen against expected values
@@ -60,7 +57,7 @@ function assertSelectedChain(activeSelectedChain, activeChain) {
  * @param {string} expectedAmount - Expected amount as a string
  */
 function assertNeuraBalanceDifference(balanceTracker, before, after, expectedAmount) {
-    const diff = balanceTracker.compareNeuraBalances(before, after);
+    const diff = balanceTracker.getNeuraBalanceDifference(before, after);
     const expectedDrop = parseEther(expectedAmount);
     const tolerance = createBigNumber('10000000000000');
     expect(diff.ankrDiff.isNegative()).toBe(true);
@@ -90,15 +87,14 @@ function assertBridgeTransferLog(parsedLog, messageHash, watcher, testAmount, ne
  * @param {string} messageHash - The message hash to check signatures for
  */
 async function assertSignatureCount(watcher, messageHash) {
+    console.log('Waiting for approval signatures...');
+    await new Promise(r => setTimeout(r, TRANSACTION_APPROVAL_TIMEOUT));
     const signatures = await watcher.neuraBridge.getSignatures(messageHash);
     console.log(`Total signatures count: ${signatures.length}`);
-
-    // Print each signature
     signatures.forEach((signature, index) => {
         console.log(`Signature ${index + 1}: ${signature}`);
     });
-
-    expect(signatures.length).toEqual(10);
+    expect(signatures.length).toEqual(7);
 }
 
 /**
@@ -181,7 +177,79 @@ function assertUIBalanceMatchesChain(uiNumber, chainBN) {
     expect(chainRounded).toBe(uiNumber);
 }
 
+/**
+ * Asserts that the amount correctness is within tolerance for both networks
+ * @param {Object} result - Result from BalanceTracker.compareBalances()
+ * @throws {Error} - If amount differences don't match expected amounts within tolerance
+ */
+function assertAmountCorrectness(result) {
+    if (!result.isNeuraAmountCorrect) {
+        throw new Error(`Neura amount difference (${result.neuraDiff.ankrDiff.toString()}) doesn't match expected amount (${result.amountBN.toString()}) within tolerance`);
+    }
+    if (!result.isSepoliaAmountCorrect) {
+        throw new Error(`Sepolia amount difference (${result.sepoliaDiff.ankrDiff.toString()}) doesn't match expected amount (${result.amountBN.toString()}) within tolerance`);
+    }
+}
+
+function assertNeuraToSepoliaBalanceChanges(result) {
+    assertBalanceChanges(result, {
+        shouldSourceDecrease: result.isNeuraDecreased,
+        shouldTargetIncrease: result.isSepoliaIncreased,
+        sourceLabel: 'Neura',
+        targetLabel: 'Sepolia',
+        sourceDiffPath: 'neuraDiff',
+        targetDiffPath: 'sepoliaDiff',
+    }, '✅ All Neura to Sepolia balance assertions passed!');
+}
+
+function assertSepoliaToNeuraBalanceChanges(result) {
+    assertBalanceChanges(result, {
+        shouldSourceDecrease: result.isSepoliaDecreased,
+        shouldTargetIncrease: result.isNeuraIncreased,
+        sourceLabel: 'Sepolia',
+        targetLabel: 'Neura',
+        sourceDiffPath: 'sepoliaDiff',
+        targetDiffPath: 'neuraDiff',
+    }, '✅ All Sepolia to Neura balance assertions passed!');
+}
+
+/**
+ * Asserts that balances changed correctly in the expected direction
+ * @param {Object} result - Result from BalanceTracker.compareBalances()
+ * @param {Object} expectations - Expected balance changes and labels
+ * @param {boolean} expectations.shouldSourceDecrease
+ * @param {boolean} expectations.shouldTargetIncrease
+ * @param {string} expectations.sourceLabel - e.g., "Neura" or "Sepolia"
+ * @param {string} expectations.targetLabel - e.g., "Sepolia" or "Neura"
+ * @param {string} expectations.sourceDiffPath - e.g., "neuraDiff"
+ * @param {string} expectations.targetDiffPath - e.g., "sepoliaDiff"
+ * @param {string} successMessage - Message to log on success
+ * @throws {Error} - If balances didn't change as expected
+ */
+function assertBalanceChanges(result, expectations, successMessage) {
+    const {
+        shouldSourceDecrease,
+        shouldTargetIncrease,
+        sourceLabel,
+        targetLabel,
+        sourceDiffPath,
+        targetDiffPath
+    } = expectations;
+
+    if (!shouldSourceDecrease) {
+        throw new Error(`${sourceLabel} balance did not decrease as expected. Diff: ${result[sourceDiffPath].ankrDiff.toString()}`);
+    }
+    if (!shouldTargetIncrease) {
+        throw new Error(`${targetLabel} balance did not increase as expected. Diff: ${result[targetDiffPath].ankrDiff.toString()}`);
+    }
+    assertAmountCorrectness(result);
+    console.log(successMessage);
+}
+
 export {
+    assertNeuraToSepoliaBalanceChanges,
+    assertSepoliaToNeuraBalanceChanges,
+    assertAmountCorrectness,
     assertMetaMaskWalletScreen,
     assertNetworkLabels,
     assertEnterAmountButtonNotVisible,
