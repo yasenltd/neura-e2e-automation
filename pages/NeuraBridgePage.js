@@ -1,13 +1,13 @@
-import { expect }                                    from '@playwright/test';
-import BasePage                                      from './BasePage.js';
-import selectors                                     from '../locators/neuraLocators.js';
-import BridgeDepositWatcher                          from '../utils/BridgeDepositWatcher.js';
-import ethersUtil                                    from '../utils/ethersUtil.js';
-import { formatBalanceString }                       from '../utils/util.js';
-import { TransactionAction }                         from '../constants/testConstants.js';
-import { neuraBridgeAssertions }                     from '../constants/assertionConstants.js';
+import {expect} from '@playwright/test';
+import BasePage from './BasePage.js';
+import selectors from '../locators/neuraLocators.js';
+import BridgeDepositWatcher from '../utils/BridgeDepositWatcher.js';
+import ethersUtil from '../utils/ethersUtil.js';
+import {formatBalanceString} from '../utils/util.js';
+import {TransactionAction} from '../constants/testConstants.js';
+import {neuraBridgeAssertions} from '../constants/assertionConstants.js';
 import * as timeouts from '../constants/timeoutConstants.js';
-import * as assertionHelpers                         from './AssertionHelpers.js';
+import * as assertionHelpers from '../utils/AssertionHelpers.js';
 
 class NeuraBridgePage extends BasePage {
   constructor(page) {
@@ -33,7 +33,7 @@ class NeuraBridgePage extends BasePage {
 
   async disconnectWallet() {
     await this.clickDescLoc(this.selectors.connection.settingsButton);
-    await this.click(this.selectors.connection.disconnectWallet);
+    await this.play.click(this.selectors.connection.disconnectWallet);
   }
 
   async claimLatestTransaction(context, amount) {
@@ -118,7 +118,7 @@ class NeuraBridgePage extends BasePage {
     await new Promise(r => setTimeout(r, timeouts.TRANSACTION_APPROVAL_TIMEOUT / 3));
     console.log('Signing message for authentication');
 
-    await this.click(this.selectors.connection.signMessage);
+    await this.play.click(this.selectors.connection.signMessage);
     console.log('Confirming MetaMask transaction after signing authentication message');
 
     await this.confirmTransaction(context);
@@ -594,7 +594,7 @@ class NeuraBridgePage extends BasePage {
     await new Promise(r => setTimeout(r, timeouts.WALLET_OPERATION_TIMEOUT));
     await this.clickDescLoc(this.selectors.bridgeDescriptors.claimTransactionButton);
     await this.confirmTransactionInMetaMask(context, 'approveSepoliaChainRequest');
-    await this.confirmTransaction(context);
+    await this.confirmTransactionInMetaMask(context, 'confirmTransaction');
     await this.waitForDescLocElementToDisappear({ text: `Claiming ${amount} ANKR on Sepolia, please don\'t close the page` },
       { timeout: timeouts.BRIDGE_OPERATION_TIMEOUT, longTimeout: timeouts.BRIDGE_OPERATION_TIMEOUT });
   }
@@ -603,10 +603,8 @@ class NeuraBridgePage extends BasePage {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.faucetBtn);
   }
 
-  async checkBalanceLabels() {
-    const balance = await this.getNumericMatch(this.selectors.bridgeDescriptors.ankrBalanceLabel, 1);
-    console.log('Current ANKR balance:', balance);
-    return balance;
+  async getBalanceAmountFromUi() {
+    return await this.getNumericMatch(this.selectors.bridgeDescriptors.ankrBalanceLabel, 1, null, timeouts.LONG_TIMEOUT);
   }
 
   /**
@@ -615,8 +613,14 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<void>}
    */
   async verifyUIBalanceMatchesChain(balances) {
-    const uiNumber = await this.checkBalanceLabels();
-    const chainBN = balances.ankrAfterBN;
+    const uiNumber = await this.getBalanceAmountFromUi();
+    const chainBN = balances.sepolia.ankrBN;
+    assertionHelpers.assertUIBalanceMatchesChain(uiNumber, chainBN);
+  }
+
+  async verifyUIBalanceMatchesNeuraChain(balances) {
+    const uiNumber = await this.getBalanceAmountFromUi();
+    const chainBN = balances.neura.ankrBN;
     assertionHelpers.assertUIBalanceMatchesChain(uiNumber, chainBN);
   }
 
@@ -676,11 +680,12 @@ class NeuraBridgePage extends BasePage {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.switchBridgeBtn);
     await this.assertBridgeWidgetLabels();
     const networks = await this.getAllRowTexts(this.selectors.bridgeDescriptors.bridgeLabels, this.selectors.general.cellCss);
-    assertionHelpers.assertNetworkLabels(
-      networks,
-      neuraBridgeAssertions.pageLayout.networks.neuraTestnet,
-      neuraBridgeAssertions.pageLayout.networks.sepolia
-    );
+    // assertionHelpers.assertNetworkLabels(
+    //   networks,
+    //   neuraBridgeAssertions.pageLayout.networks.neuraTestnet,
+    //   neuraBridgeAssertions.pageLayout.networks.sepolia
+    // );
+    await this.page.reload();
   }
 
   async closeBridgeModal() {

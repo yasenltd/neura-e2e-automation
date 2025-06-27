@@ -1,106 +1,151 @@
 import BridgeDepositWatcher from './BridgeDepositWatcher.js';
-import { parseToEth, parseEther } from './ethersUtil.js';
+import { parseToEth, parseEther, createBigNumber } from './ethersUtil.js';
 
-/**
- * Utility class for tracking and comparing token balances before and after operations
- */
-class BalanceTracker {
-    /**
-     * Creates a new BalanceTracker instance
-     * @param {BridgeDepositWatcher} [watcher] - Optional BridgeDepositWatcher instance. If not provided, creates a new one.
-     */
-    constructor(watcher = null) {
-        this.watcher = watcher || new BridgeDepositWatcher();
+export default class BalanceTracker {
+
+    /** Current Sepolia balances */
+    static async getSepoliaBalances() {
+        const watcher    = new BridgeDepositWatcher();
+        const ankrBalStr = await watcher.getAnkrBalance();   // "797.75"
+        const ethBalStr  = await watcher.getEthBalance();    // "1.234"
+
+        return {
+            ankr:   ankrBalStr,
+            eth:    ethBalStr,
+            ankrBN: parseToEth(ankrBalStr),
+            ethBN:  parseEther(ethBalStr),
+        };
     }
 
-    /**
-     * Records current balances
-     * @returns {Promise<Object>} - Current balance snapshot
-     */
-    async recordBalances() {
-        const ankrBalance = await this.watcher.getAnkrBalance();
-        const ethBalance = await this.watcher.getEthBalance();
+    /** Current Neura balances */
+    static async getNeuraBalances() {
+        const watcher    = new BridgeDepositWatcher();
+        const ankrBalStr = await watcher.getAnkrBalanceOnNeura();
+
         return {
-            ankr: ankrBalance,
-            eth: ethBalance,
-            ankrBN: parseToEth(ankrBalance),
-            ethBN: parseEther(ethBalance)
+            ankr:   ankrBalStr,
+            ankrBN: parseToEth(ankrBalStr),
+        };
+    }
+
+    /** Sepolia + Neura snapshot */
+    static async getAllBalances() {
+        return {
+            sepolia: await this.getSepoliaBalances(),
+            neura:   await this.getNeuraBalances(),
         };
     }
 
     /**
-     * Records current balances
-     * @returns {Promise<Object>} - Current balance snapshot
+     * Compares old and current balances considering the amount and direction
+     * @param {Object} oldBalances - Result from getAllBalances()
+     * @param {string} amount - The amount being transferred
+     * @param {boolean} isNeuraToSepolia - Direction flag (true if Neura to Sepolia, false if Sepolia to Neura)
+     * @returns {Object} - Comparison result with differences and validation flags
      */
-    async recordNeuraBalances() {
-        const ankrBalance = await this.watcher.getAnkrBalanceOnNeura();
-        return {
-            ankr: ankrBalance,
-            ankrBN: parseToEth(ankrBalance),
-        };
-    }
+    static async compareBalances(oldBalances, amount, isNeuraToSepolia) {
+        const currentBalances = await this.getAllBalances();
+        const amountBN  = parseEther(amount);
+        const tolerance = createBigNumber('10000000000000');
 
-    /**
-     * Compares two balance snapshots and calculates differences
-     * @param {Object} beforeBalances - Balance snapshot before operation
-     * @param {Object} afterBalances - Balance snapshot after operation
-     * @returns {Object} - Balance comparison results
-     */
-    compareBalances(beforeBalances, afterBalances) {
-        const ankrDiff = afterBalances.ankrBN.sub(beforeBalances.ankrBN);
+        console.log('➖ Transfer amount (wei):', amountBN.toString());
+        console.log('⚖️ Tolerance (wei):',      tolerance.toString());
 
-        // Check if ETH balances exist in both objects
-        const hasEthBalances = beforeBalances.ethBN && afterBalances.ethBN;
+        const sepoliaDiff = this.getBalanceDifference(
+            oldBalances.sepolia,
+            currentBalances.sepolia
+        );
+        const neuraDiff   = this.getNeuraBalanceDifference(
+            oldBalances.neura,
+            currentBalances.neura
+        );
 
-        // Only calculate ETH diff if both balances exist
-        const ethDiff = hasEthBalances ? afterBalances.ethBN.sub(beforeBalances.ethBN) : null;
+        console.table({
+            'Sepolia ANKR diff (wei)': sepoliaDiff.ankrDiff.toString(),
+            'Neura   ANKR diff (wei)': neuraDiff.ankrDiff.toString(),
+        });
 
-        console.log(`🪙 ANKR before: ${beforeBalances.ankr}`);
-        console.log(`🪙 ANKR after : ${afterBalances.ankr}`);
+        const calcError   = diffBN => diffBN.abs().sub(amountBN).abs();
+        const neuraError     = calcError(neuraDiff.ankrDiff);
+        const sepoliaError   = calcError(sepoliaDiff.ankrDiff);
 
-        if (hasEthBalances) {
-            console.log(`💰 ETH before : ${beforeBalances.eth}`);
-            console.log(`💰 ETH after  : ${afterBalances.eth}`);
-            console.log('💡 ETH diff :', ethDiff.toString());
-        }
+        console.table({
+            'Neura error (wei)':   neuraError.toString(),
+            'Sepolia error (wei)': sepoliaError.toString(),
+        });
 
-        console.log('💡 ANKR diff:', ankrDiff.toString());
+        const isNeuraDecreased   = neuraDiff.ankrDiff.isNegative();
+        const isSepoliaDecreased = sepoliaDiff.ankrDiff.isNegative();
 
+        /* ---------- build result once, then extend per direction ---------- */
         const result = {
-            ankrBeforeBN: beforeBalances.ankrBN,
-            ankrAfterBN: afterBalances.ankrBN,
-            ankrDiff
+            sepoliaDiff,
+            neuraDiff,
+            isNeuraAmountCorrect:   neuraError.lte(tolerance),
+            isSepoliaAmountCorrect: sepoliaError.lte(tolerance),
         };
 
-        // Only include ETH properties if ETH balances exist
-        if (hasEthBalances) {
-            result.ethBeforeBN = beforeBalances.ethBN;
-            result.ethAfterBN = afterBalances.ethBN;
-            result.ethDiff = ethDiff;
+        /* ---------- direction-specific flags ---------- */
+        if (isNeuraToSepolia) {
+            Object.assign(result, {
+                isNeuraDecreased,
+                isSepoliaIncreased: !isSepoliaDecreased,
+            });
+            console.log('🔄 Direction: Neura ➜ Sepolia');
+        } else {
+            Object.assign(result, {
+                isSepoliaDecreased,
+                isNeuraIncreased: !isNeuraDecreased,
+            });
+            console.log('🔄 Direction: Sepolia ➜ Neura');
         }
+
+        console.table({
+            'isNeuraAmountCorrect':   result.isNeuraAmountCorrect,
+            'isSepoliaAmountCorrect': result.isSepoliaAmountCorrect
+        });
+
+        result.amountBN = amountBN;
+        result.tolerance = tolerance;
 
         return result;
     }
 
-    /**
-     * Compares two balance snapshots and calculates differences
-     * @param {Object} beforeBalances - Balance snapshot before operation
-     * @param {Object} afterBalances - Balance snapshot after operation
-     * @returns {Object} - Balance comparison results
-     */
-    compareNeuraBalances(beforeBalances, afterBalances) {
-        const ankrDiff = afterBalances.ankrBN.sub(beforeBalances.ankrBN);
+    /* -------------- Diff helpers -------------- */
+    static getBalanceDifference(beforeB, afterB) {
+        const ankrDiff = afterB.ankrBN.sub(beforeB.ankrBN);
+        const hasEth   = !!beforeB.ethBN && !!afterB.ethBN;
+        const ethDiff  = hasEth ? afterB.ethBN.sub(beforeB.ethBN) : null;
 
-        console.log(`🪙 ANKR before: ${beforeBalances.ankr}`);
-        console.log(`🪙 ANKR after : ${afterBalances.ankr}`);
-        console.log('💡 ANKR diff:', ankrDiff.toString());
+        const label = hasEth ? 'Sepolia' : 'Neura';
+        console.log(`🟡 ${label} ANKR  before ${beforeB.ankr} → after ${afterB.ankr}`);
 
+        if (hasEth) {
+            console.log(`🟠 ${label} ETH   before ${beforeB.eth}  → after ${afterB.eth}`);
+            console.log('📉 ETH  diff (wei):', ethDiff.toString());
+        }
+
+        console.log('📉 ANKR diff (wei):', ankrDiff.toString());
         return {
-            ankrBeforeBN: beforeBalances.ankrBN,
-            ankrAfterBN: afterBalances.ankrBN,
+            ankrBeforeBN: beforeB.ankrBN,
+            ankrAfterBN:  afterB.ankrBN,
+            ankrDiff,
+            ...(hasEth && {
+                ethBeforeBN: beforeB.ethBN,
+                ethAfterBN:  afterB.ethBN,
+                ethDiff,
+            }),
+        };
+    }
+
+    /** Compare two Neura-only snapshots */
+    static getNeuraBalanceDifference(beforeB, afterB) {
+        const ankrDiff = afterB.ankrBN.sub(beforeB.ankrBN);
+        console.log(`🪙 ANKR before ${beforeB.ankr} → after ${afterB.ankr}`);
+        return {
+            ankrBeforeBN: beforeB.ankrBN,
+            ankrAfterBN:  afterB.ankrBN,
             ankrDiff,
         };
     }
 }
-
-export default BalanceTracker;

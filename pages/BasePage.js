@@ -1,8 +1,10 @@
 import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from '../constants/timeoutConstants.js';
+import PlaywrightFactory from './PlaywrightFactory.js';
 
 class BasePage {
   constructor(window) {
     this.window = window;
+    this.play = PlaywrightFactory.getWrapper(window);
     this.DEFAULT_TIMEOUT = DEFAULT_TIMEOUT;
     this.LONG_TIMEOUT = LONG_TIMEOUT;
   }

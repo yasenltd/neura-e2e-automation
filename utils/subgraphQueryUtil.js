@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
-dotenv.config();
-
 import fetch from 'node-fetch';
 import TokensDepositedQuery from '../models/TokensDepositedQuery.js';
+
+dotenv.config();
 
 /**
  * Execute a GraphQL query against the specified subgraph URL
@@ -39,7 +39,7 @@ async function getTokensDeposited(recipient) {
  * @param {number} delay - The delay between retries in milliseconds (default: 4000)
  * @returns {Promise<Array>} - The matching deposit events
  */
-async function waitForAnyDeposit(recipient, expectedAmount, retries = 6, delay = 4000) {
+async function waitForAnyDeposit(recipient, expectedAmount, retries = 6, delay = 5000) {
   for (let i = 0; i < retries; i++) {
     const data = await getTokensDeposited(recipient);
     const allMatches = data?.data?.tokensDepositeds?.filter(
@@ -75,10 +75,24 @@ async function waitForAnyDeposit(recipient, expectedAmount, retries = 6, delay =
  * @param {number} delay - The delay between retries in milliseconds (default: 4000)
  * @returns {Promise<Array>} - The matching deposit events
  */
-async function waitForAnyDepositInSubgraph(recipient, expectedAmount, retries = 6, delay = 4000) {
+async function waitForAnyDepositInSubgraph(recipient, expectedAmount, retries = 6, delay = 5000) {
   return await waitForAnyDeposit(recipient, expectedAmount, retries, delay);
 }
 
+/**
+ * Waits for a deposit by recipient address to appear in the subgraph and returns the transaction hash.
+ * @param {string} recipient - The recipient address
+ * @param {string} expectedAmount - The expected amount
+ * @param {number} retries - The number of retries (default: 6)
+ * @param {number} delay - The delay between retries in milliseconds (default: 5000)
+ * @returns {Promise<string>} - The transaction hash of the deposit
+ */
+async function getDepositTransactionHash(recipient, expectedAmount, retries = 6, delay = 5000) {
+  const depositTxnInSubgraph = await waitForAnyDepositInSubgraph(recipient, expectedAmount, retries, delay);
+  return depositTxnInSubgraph[0].transactionHash;
+}
+
 export {
-  waitForAnyDepositInSubgraph
+  waitForAnyDepositInSubgraph,
+  getDepositTransactionHash
 };
