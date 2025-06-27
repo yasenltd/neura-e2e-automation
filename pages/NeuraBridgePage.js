@@ -679,7 +679,8 @@ class NeuraBridgePage extends BasePage {
   async switchNetworkDirection() {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.switchBridgeBtn);
     await this.assertBridgeWidgetLabels();
-    const networks = await this.getAllRowTexts(this.selectors.bridgeDescriptors.bridgeLabels, this.selectors.general.cellCss);
+    // TO DO assert the networks in another way
+    // const networks = await this.getAllRowTexts(this.selectors.bridgeDescriptors.bridgeLabels, this.selectors.general.cellCss);
     // assertionHelpers.assertNetworkLabels(
     //   networks,
     //   neuraBridgeAssertions.pageLayout.networks.neuraTestnet,

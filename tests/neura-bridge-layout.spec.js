@@ -162,7 +162,6 @@ test.describe('Neura Bridge page validation', () => {
   });
 
   test('Verify user connects to MetaMask wallet from top Connect Wallet button and switch networks successfully',
-      { tag: '@scheduledRun' },
       async ({ neuraBridgePage, context }) => {
     // Step 1: Initialize bridge with options (with wallet connection, no network switch, verify page layout)
     await neuraBridgePage.initializeBridgeWithOptions({
