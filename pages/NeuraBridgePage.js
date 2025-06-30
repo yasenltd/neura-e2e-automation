@@ -550,6 +550,14 @@ class NeuraBridgePage extends BasePage {
     await this.page.reload({ waitUntil: 'domcontentloaded' });
   }
 
+  async debugCookies(label = 'default') {
+    const cookies = await this.page.context().cookies();
+    console.log(`🍪 Cookies at ${label}:`, cookies.map(c => ({ name: c.name, value: c.value, domain: c.domain })));
+  }
+
+  async reloadNatively() {
+    await this.page.reload({ waitUntil: 'domcontentloaded' });
+  }
 
   async captureAuthState() {
     const { authStorage, connectorId } = await this.page.evaluate(() => {
