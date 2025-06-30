@@ -529,11 +529,11 @@ class NeuraBridgePage extends BasePage {
   /**
    * Reloads the page with timeout and checks if authentication persisted
    * @param {Object} [options]
-   * @param {string} [options.tokenCookieName] - Cookie name used for auth (if applicable)
+   * @param {string} [options.tokenCookieName] - Cookie name used for auth (optional)
    * @param {string} [options.localStorageKey='auth-storage'] - LocalStorage key for auth
-   * @param {number} [options.postReloadWait=500] - Optional delay after reload (ms)
-   * @param {number} [options.reloadTimeout=10000] - Max wait for page reload
-   * @returns {Promise<boolean>} - True if auth survived, false otherwise
+   * @param {number} [options.postReloadWait=500] - Delay after reload (ms)
+   * @param {number} [options.reloadTimeout=10000] - Max wait for reload
+   * @returns {Promise<boolean>} - True if auth is still valid, false otherwise
    */
   async reloadWithAuthCheck({
                               tokenCookieName,
@@ -541,7 +541,10 @@ class NeuraBridgePage extends BasePage {
                               postReloadWait = 500,
                               reloadTimeout = 10000
                             } = {}) {
-    console.log(`🔁 Reloading page (timeout: ${reloadTimeout}ms)...`);
+    console.log(`🔁 Reloading page with timeout: ${reloadTimeout}ms`);
+
+    // Debug cookies before reload
+    await this.debugCookies('before reload');
 
     try {
       await Promise.race([
@@ -555,6 +558,9 @@ class NeuraBridgePage extends BasePage {
         await this.page.waitForTimeout(postReloadWait);
       }
 
+      // Debug cookies after reload
+      await this.debugCookies('after reload');
+
       const [cookies, authStorageValue] = await Promise.all([
         this.page.context().cookies(),
         this.page.evaluate(key => localStorage.getItem(key), localStorageKey)
@@ -565,20 +571,33 @@ class NeuraBridgePage extends BasePage {
 
       const isAuthenticated = Boolean(authStorageValue || hasAuthCookie);
 
-      // Logging
-      console.log('✅ Reload completed');
       console.log(`📦 LocalStorage["${localStorageKey}"] =`, authStorageValue ?? 'null');
       if (tokenCookieName) {
         console.log(`🍪 Cookie "${tokenCookieName}" present:`, !!hasAuthCookie);
       }
-      console.log(`🔒 Auth state: ${isAuthenticated ? '✔️ Authenticated' : '❌ Logged out'}`);
 
+      console.log(`🔒 Auth state after reload: ${isAuthenticated ? '✔️ Authenticated' : '❌ Logged out'}`);
       return isAuthenticated;
 
     } catch (error) {
-      console.error(`❌ Failed to reload or check auth state: ${error.message}`);
+      console.error(`❌ Reload or auth check failed: ${error.message}`);
       return false;
     }
+  }
+
+  /**
+   * Logs simplified cookie list with optional label
+   * @param {string} [label='default']
+   * @returns {Promise<void>}
+   */
+  async debugCookies(label = 'default') {
+    const cookies = await this.page.context().cookies();
+    const simplified = cookies.map(c => ({
+      name: c.name,
+      value: c.value,
+      domain: c.domain
+    }));
+    console.log(`🍪 Cookies at [${label}]:`, simplified);
   }
 
   async fillAmount(amount) {
