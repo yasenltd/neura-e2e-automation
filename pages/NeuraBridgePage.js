@@ -558,13 +558,25 @@ class NeuraBridgePage extends BasePage {
     });
     await this.debugCookies('before reload');
 
-    // Step 2: Restore cookies and storage
+    // Step 2: Restore cookies and localStorage
     if (cookies?.length) {
-      const cookiesWithUrls = cookies.map(c => ({
-        ...c,
-        url: `http${c.secure ? 's' : ''}://${c.domain.replace(/^\./, '')}`
-      }));
-      await context.addCookies(cookiesWithUrls);
+      const cookiesWithUrls = cookies
+          .filter(c => c.name && (c.url || c.domain)) // Only keep valid cookies
+          .map(c => {
+            if (c.url) return c;
+            const protocol = c.secure ? 'https' : 'http';
+            const domain = c.domain?.replace(/^\./, '');
+            return {
+              ...c,
+              url: `${protocol}://${domain}`
+            };
+          });
+
+      try {
+        await context.addCookies(cookiesWithUrls);
+      } catch (err) {
+        console.error('❌ Failed to add cookies:', err);
+      }
     }
 
     await this.page.addInitScript((auth, connector, authKey, connectorKey) => {
