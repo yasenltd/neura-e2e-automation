@@ -527,77 +527,84 @@ class NeuraBridgePage extends BasePage {
   }
 
   /**
-   * Reloads the page with timeout and checks if authentication persisted
+   * Reload the page while preserving auth state (localStorage + cookies + connector)
+   * and debug cookies before and after reload.
+   *
    * @param {Object} [options]
-   * @param {string} [options.tokenCookieName] - Cookie name used for auth (optional)
-   * @param {string} [options.localStorageKey='auth-storage'] - LocalStorage key for auth
-   * @param {number} [options.postReloadWait=500] - Delay after reload (ms)
-   * @param {number} [options.reloadTimeout=10000] - Max wait for reload
-   * @returns {Promise<boolean>} - True if auth is still valid, false otherwise
+   * @param {string} [options.localStorageKey='auth-storage']
+   * @param {string} [options.connectorKey='wagmi.recentConnectorId']
+   * @param {number} [options.postReloadWait=500]
+   * @param {number} [options.reloadTimeout=10000]
+   * @returns {Promise<boolean>} - True if still authenticated, false otherwise
    */
-  async reloadWithAuthCheck({
-                              tokenCookieName,
-                              localStorageKey = 'auth-storage',
-                              postReloadWait = 500,
-                              reloadTimeout = 3000
-                            } = {}) {
-    console.log(`🔁 Reloading page with timeout: ${reloadTimeout}ms`);
+  async reloadPreservingAuth({
+                               localStorageKey = 'auth-storage',
+                               connectorKey = 'wagmi.recentConnectorId',
+                               postReloadWait = 500,
+                               reloadTimeout = 10000
+                             } = {}) {
+    const context = this.page.context();
 
-    // Debug cookies before reload
+    // Step 1: Capture auth + cookies
+    const [authValue, connectorValue, cookies] = await Promise.all([
+      this.page.evaluate(key => localStorage.getItem(key), localStorageKey),
+      this.page.evaluate(key => localStorage.getItem(key), connectorKey),
+      context.cookies()
+    ]);
+
+    console.log('📥 Captured auth:', {
+      [localStorageKey]: authValue,
+      [connectorKey]: connectorValue
+    });
     await this.debugCookies('before reload');
 
-    try {
-      await Promise.race([
-        this.page.reload({ waitUntil: 'domcontentloaded' }),
-        new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('⏱️ Reload timed out')), reloadTimeout)
-        )
-      ]);
-
-      if (postReloadWait) {
-        await this.page.waitForTimeout(postReloadWait);
-      }
-
-      // Debug cookies after reload
-      await this.debugCookies('after reload');
-
-      const [cookies, authStorageValue] = await Promise.all([
-        this.page.context().cookies(),
-        this.page.evaluate(key => localStorage.getItem(key), localStorageKey)
-      ]);
-
-      const hasAuthCookie =
-          tokenCookieName && cookies.some(c => c.name === tokenCookieName);
-
-      const isAuthenticated = Boolean(authStorageValue || hasAuthCookie);
-
-      console.log(`📦 LocalStorage["${localStorageKey}"] =`, authStorageValue ?? 'null');
-      if (tokenCookieName) {
-        console.log(`🍪 Cookie "${tokenCookieName}" present:`, !!hasAuthCookie);
-      }
-
-      console.log(`🔒 Auth state after reload: ${isAuthenticated ? '✔️ Authenticated' : '❌ Logged out'}`);
-      return isAuthenticated;
-
-    } catch (error) {
-      console.error(`❌ Reload or auth check failed: ${error.message}`);
-      return false;
+    // Step 2: Restore cookies and storage
+    if (cookies?.length) {
+      const cookiesWithUrls = cookies.map(c => ({
+        ...c,
+        url: `http${c.secure ? 's' : ''}://${c.domain.replace(/^\./, '')}`
+      }));
+      await context.addCookies(cookiesWithUrls);
     }
+
+    await this.page.addInitScript((auth, connector, authKey, connectorKey) => {
+      if (auth) localStorage.setItem(authKey, auth);
+      if (connector) localStorage.setItem(connectorKey, connector);
+    }, authValue, connectorValue, localStorageKey, connectorKey);
+
+    // Step 3: Reload page
+    console.log('🔁 Reloading page with preserved auth...');
+    await Promise.race([
+      this.page.reload({ waitUntil: 'domcontentloaded' }),
+      new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('⏱️ Reload timed out')), reloadTimeout)
+      )
+    ]);
+
+    if (postReloadWait) {
+      await this.page.waitForTimeout(postReloadWait);
+    }
+
+    // Step 4: Check post-reload state
+    await this.debugCookies('after reload');
+
+    const finalAuthValue = await this.page.evaluate(key => localStorage.getItem(key), localStorageKey);
+    const isAuthed = finalAuthValue?.includes('"status":"authenticated"');
+
+    console.log('✅ Reload complete');
+    console.log(`📦 Post-reload LocalStorage["${localStorageKey}"] =`, finalAuthValue);
+    console.log(`🔒 Auth persisted: ${isAuthed ? '✔️ YES' : '❌ NO'}`);
+
+    return isAuthed;
   }
 
-  /**
-   * Logs simplified cookie list with optional label
-   * @param {string} [label='default']
-   * @returns {Promise<void>}
-   */
   async debugCookies(label = 'default') {
     const cookies = await this.page.context().cookies();
-    const simplified = cookies.map(c => ({
+    console.log(`🍪 Cookies at [${label}]:`, cookies.map(c => ({
       name: c.name,
       value: c.value,
       domain: c.domain
-    }));
-    console.log(`🍪 Cookies at [${label}]:`, simplified);
+    })));
   }
 
   async fillAmount(amount) {
