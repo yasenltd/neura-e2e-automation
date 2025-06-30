@@ -83,7 +83,7 @@ test.describe('Neura to Sepolia Bridge UI Automation', () => {
             const newBalances = await BalanceTracker.getAllBalances();
             await neuraBridgePage.verifyUIBalanceMatchesNeuraChain(newBalances);
             await neuraBridgePage.switchNetworkDirection();
-            await neuraBridgePage.reNavigateToBridgePageToSimulatePageRefresh(getConfig().bridgePageUrl);
+            await neuraBridgePage.refreshManually();
             await neuraBridgePage.verifyUIBalanceMatchesChain(newBalances);
         } catch (err) {
             console.error(`❌ Neura → Sepolia bridge test failed: ${err.message}`);

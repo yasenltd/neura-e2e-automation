@@ -693,6 +693,11 @@ class NeuraBridgePage extends BasePage {
     await this.page.goto(bridgePageUrl);
   }
 
+  async refreshManually() {
+    console.log('Refresh manually');
+    await this.page.keyboard.press('F5', { delay: 3000 });
+  }
+
   async closeBridgeModal() {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.closeBridgeModalButton);
   }
