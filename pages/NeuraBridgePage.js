@@ -610,6 +610,12 @@ class NeuraBridgePage extends BasePage {
     return isAuthed;
   }
 
+  async simpleReload() {
+    console.log('🔁 Reloading page...');
+    await this.page.reload({ timeout: 7500, waitUntil: 'domcontentloaded' });
+    console.log('✅ Page reloaded');
+  }
+
   async debugCookies(label = 'default') {
     const cookies = await this.page.context().cookies();
     console.log(`🍪 Cookies at [${label}]:`, cookies.map(c => ({
