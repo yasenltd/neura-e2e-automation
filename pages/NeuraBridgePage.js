@@ -686,7 +686,7 @@ class NeuraBridgePage extends BasePage {
     //   neuraBridgeAssertions.pageLayout.networks.neuraTestnet,
     //   neuraBridgeAssertions.pageLayout.networks.sepolia
     // );
-    await this.page.reload();
+    this.page.reload();
   }
 
   async closeBridgeModal() {
