@@ -65,7 +65,7 @@ test.describe('Neura to Sepolia Bridge UI Automation', () => {
     });
 
     test('Verify Neura to Sepolia Bridge and Claim transactions via UI',
-        { tag: '@scheduledRun' },
+        { tag: '@testRun' },
         async ({neuraBridgePage, context}) => {
         test.setTimeout(TEST_TIMEOUT);
         const watcher = new BridgeDepositWatcher();
