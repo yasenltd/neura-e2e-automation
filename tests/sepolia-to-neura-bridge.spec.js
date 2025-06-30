@@ -87,8 +87,11 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             await neuraBridgePage.verifyUIBalanceMatchesChain(newBalances);
             await neuraBridgePage.switchNetworkDirection();
 
-            await neuraBridgePage.captureAuthState();
-            await neuraBridgePage.refreshWithPreservedAuth(context);
+            await neuraBridgePage.captureCookies();
+            await neuraBridgePage.restoreCookies();
+
+            // await neuraBridgePage.captureAuthState();
+            // await neuraBridgePage.refreshWithPreservedAuth(context);
 
             // await neuraBridgePage.pageRefresh();
             // await neuraBridgePage.ensureWalletConnected(context);

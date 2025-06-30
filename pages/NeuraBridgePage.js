@@ -526,6 +526,31 @@ class NeuraBridgePage extends BasePage {
     await this.wireMetaMask(context, useConnectWalletWidgetButton);
   }
 
+  async captureCookies() {
+    this.cachedCookies = await this.page.context().cookies();
+    console.log('✅ Captured cookies:', this.cachedCookies);
+  }
+
+  async restoreCookies() {
+    if (!this.cachedCookies?.length) {
+      console.warn('⚠️ No cookies cached to restore');
+      return;
+    }
+
+    const validCookies = this.cachedCookies.map(cookie => {
+      // Don't assign URL if domain already exists
+      if (!cookie.url && !cookie.domain) {
+        cookie.url = this.page.url();
+      }
+      return cookie;
+    });
+
+    await this.page.context().addCookies(validCookies);
+    console.log('✅ Re-applied cookies');
+    await this.page.reload({ waitUntil: 'domcontentloaded' });
+  }
+
+
   async captureAuthState() {
     const { authStorage, connectorId } = await this.page.evaluate(() => {
       return {
