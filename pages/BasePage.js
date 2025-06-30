@@ -13,6 +13,11 @@ class BasePage {
   // Helper Methods
   // --------------------------
 
+  refreshPage() {
+    console.log('Refreshing the page');
+    return this.window.reload();
+  }
+
   /**
    * Helper method to determine if a selector is a CSS selector.
    * @param {string} selector - The selector to check.

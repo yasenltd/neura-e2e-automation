@@ -686,7 +686,8 @@ class NeuraBridgePage extends BasePage {
     //   neuraBridgeAssertions.pageLayout.networks.neuraTestnet,
     //   neuraBridgeAssertions.pageLayout.networks.sepolia
     // );
-    this.page.reload();
+    console.log('Network direction switched successfully');
+    this.refreshPage();
   }
 
   async closeBridgeModal() {

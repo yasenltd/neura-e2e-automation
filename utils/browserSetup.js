@@ -12,13 +12,10 @@ const USER_DATA_DIR = path.join(__dirname, '..', 'user_data');
 
 const CHANNEL  = process.env.BROWSER_CHANNEL || 'chrome';
 const HEADLESS = false;
-const isCI = process.env.CI === 'true'; // GitHub sets this automatically
 
 async function launchBrowserWithExtension(walletName) {
-  if (!isCI) {
-    clearUserDataDir(USER_DATA_DIR);
-  }
-  
+  clearUserDataDir(USER_DATA_DIR);
+
   const wallet = extensionConsts[walletName];
   if (!wallet) {
     throw new Error(`Unsupported wallet: ${walletName}`);
