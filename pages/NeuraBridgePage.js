@@ -531,12 +531,10 @@ class NeuraBridgePage extends BasePage {
                                connectorKey = 'wagmi.recentConnectorId',
                                postReloadWait = 3000,
                                reloadTimeout = 10000,
-                               tokenCookieName = null,
                                debug = true
                              } = {}) {
     const context = this.page.context();
 
-    // 1. Capture current auth + cookies
     const [authValue, connectorValue, cookies] = await Promise.all([
       this.page.evaluate(key => localStorage.getItem(key), localStorageKey),
       this.page.evaluate(key => localStorage.getItem(key), connectorKey),
@@ -551,37 +549,6 @@ class NeuraBridgePage extends BasePage {
       await this.debugCookies('before reload');
     }
 
-    // 2. Filter cookies with domain and construct valid `url`
-    const cookiesWithUrls = [];
-
-    // for (const cookie of cookies) {
-    //   if (!cookie.name) continue;
-    //
-    //   if (!cookie.domain) {
-    //     console.warn(`⚠️ Skipping cookie "${cookie.name}" due to missing domain`);
-    //     continue;
-    //   }
-    //
-    //   cookiesWithUrls.push({
-    //     ...cookie,
-    //     url: `http${cookie.secure ? 's' : ''}://${cookie.domain.replace(/^\./, '')}`
-    //   });
-    // }
-    //
-    // if (cookiesWithUrls.length > 0) {
-    //   await context.addCookies(cookiesWithUrls);
-    //   console.log(`✅ Re-applied ${cookiesWithUrls.length} cookies`);
-    // } else {
-    //   console.warn('⚠️ No valid cookies to restore');
-    // }
-
-    // 3. Inject localStorage before reload
-    await this.page.addInitScript((auth, connector, key1, key2) => {
-      if (auth) localStorage.setItem(key1, auth);
-      if (connector) localStorage.setItem(key2, connector);
-    }, authValue, connectorValue, localStorageKey, connectorKey);
-
-    // 4. Optional: block /logout for debug
     if (debug) {
       await this.page.route('**/logout', route => {
         console.log('🛑 Blocked /logout call during reload');
@@ -589,7 +556,11 @@ class NeuraBridgePage extends BasePage {
       });
     }
 
-    // 5. Perform reload
+    await this.page.addInitScript((auth, connector, key1, key2) => {
+      if (auth) localStorage.setItem(key1, auth);
+      if (connector) localStorage.setItem(key2, connector);
+    }, authValue, connectorValue, localStorageKey, connectorKey);
+
     console.log('🔁 Reloading page...');
     await Promise.race([
       this.page.reload({ waitUntil: 'domcontentloaded' }),
@@ -598,14 +569,11 @@ class NeuraBridgePage extends BasePage {
       )
     ]);
 
-    // 6. Post-reload delay
     if (postReloadWait) {
       await this.page.waitForTimeout(postReloadWait);
     }
 
-    // 7. Final validation
     if (debug) await this.debugCookies('after reload');
-
     const finalAuth = await this.page.evaluate(key => localStorage.getItem(key), localStorageKey);
     const isAuthed = finalAuth?.includes('"status":"authenticated"');
 
