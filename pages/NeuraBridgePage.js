@@ -539,7 +539,7 @@ class NeuraBridgePage extends BasePage {
                               tokenCookieName,
                               localStorageKey = 'auth-storage',
                               postReloadWait = 500,
-                              reloadTimeout = 10000
+                              reloadTimeout = 3000
                             } = {}) {
     console.log(`🔁 Reloading page with timeout: ${reloadTimeout}ms`);
 
