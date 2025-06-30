@@ -15,6 +15,7 @@ class NeuraBridgePage extends BasePage {
     this.page = page;
     this.selectors = selectors;
     this.wallet = null;
+    this.cachedAuthToken = null; // Store the cached auth token
   }
 
   /**
@@ -523,6 +524,40 @@ class NeuraBridgePage extends BasePage {
     const enterAmountBtnIsHidden = await this.isElementHidden(this.selectors.bridgeDescriptors.enterAmountBtnLabel.text);
     assertionHelpers.assertEnterAmountButtonNotVisible(enterAmountBtnIsHidden);
     await this.wireMetaMask(context, useConnectWalletWidgetButton);
+  }
+
+  async captureAuthState() {
+    const { authStorage, connectorId } = await this.page.evaluate(() => {
+      return {
+        authStorage: localStorage.getItem('auth-storage'),
+        connectorId: localStorage.getItem('wagmi.recentConnectorId'),
+      };
+    });
+
+    this.cachedAuthToken = authStorage;
+    this.cachedConnectorId = connectorId;
+
+    console.log('✅ Captured auth-storage:', authStorage);
+    console.log('✅ Captured wagmi.recentConnectorId:', connectorId);
+  }
+
+  async refreshWithPreservedAuth(context) {
+    if (!this.cachedAuthToken && !this.cachedConnectorId) {
+      console.warn('⚠️ No cached auth state found, calling captureAuthState() now');
+      await this.captureAuthState();
+    }
+
+    await context.addInitScript((auth, connector) => {
+      if (auth) {
+        localStorage.setItem('auth-storage', auth);
+      }
+      if (connector) {
+        localStorage.setItem('wagmi.recentConnectorId', connector);
+      }
+    }, this.cachedAuthToken, this.cachedConnectorId);
+
+    console.log('🔄 Reloading page with restored auth and connector');
+    await this.page.reload({ waitUntil: 'domcontentloaded' });
   }
 
   async fillAmount(amount) {
