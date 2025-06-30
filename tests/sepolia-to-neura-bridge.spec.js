@@ -16,7 +16,6 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
         test.setTimeout(TEST_TIMEOUT);
 
         try {
-            // Step 2: Initialize bridge with options (with wallet connection, no network switch)
             await neuraBridgePage.initializeBridgeWithOptions({
                 context,
                 walletConnection: {
@@ -25,7 +24,6 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
                 switchNetworkDirection: false
             });
 
-            // Step 3: Record balances and perform the bridge operation
             const watcher = new BridgeDepositWatcher();
             await watcher.clearAnkrAllowance();
 
@@ -46,18 +44,14 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
         }
     });
 
-    test('Verify Sepolia to Neura Bridge approving and bridging transaction via UI',
-        { tag: '@testRun' },
-        async ({ neuraBridgePage, context }) => {
+    test('Verify Sepolia to Neura Bridge approving and bridging transaction via UI', { tag: '@scheduledRun' }, async ({ neuraBridgePage, context }) => {
         test.setTimeout(TEST_TIMEOUT);
 
-        // Step 1: Setup test data
         const from = process.env.MY_ADDRESS.toLowerCase();
         const rawAmount = parseToEth(TEST_AMOUNT);
         const amount = rawAmount.toString();
 
         try {
-            // Step 2: Initialize bridge with options (with wallet connection, no network switch)
             await neuraBridgePage.initializeBridgeWithOptions({
                 context,
                 walletConnection: {
@@ -66,7 +60,6 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
                 switchNetworkDirection: false
             });
 
-            // Step 3: Record balances and perform the bridge operation
             const beforeBalances = await BalanceTracker.getAllBalances();
             const watcher = new BridgeDepositWatcher();
             await watcher.clearAnkrAllowance();
@@ -84,7 +77,6 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
 
             const result = await BalanceTracker.compareBalances(beforeBalances, TEST_AMOUNT, false);
             await assertionHelpers.assertSepoliaToNeuraBalanceChanges(result);
-
             const newBalances = await BalanceTracker.getAllBalances();
             await neuraBridgePage.verifyUIBalanceMatchesChain(newBalances);
             await neuraBridgePage.switchNetworkDirection();
@@ -99,12 +91,10 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
     test('Verify Sepolia to Neura approve and then bridge transaction', async ({ neuraBridgePage, context }) => {
         test.setTimeout(TEST_TIMEOUT);
 
-        // Step 1: Setup test data
         const from = process.env.MY_ADDRESS.toLowerCase();
         const rawAmount = parseToEth(TEST_AMOUNT);
         const amount = rawAmount.toString();
         try {
-            // Step 2: Initialize bridge with options (with wallet connection, no network switch)
             await neuraBridgePage.initializeBridgeWithOptions({
                 context,
                 walletConnection: {
@@ -113,9 +103,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
                 switchNetworkDirection: false
             });
 
-            // Step 3: Record balances and perform the bridge operation
             const beforeBalances = await BalanceTracker.getAllBalances();
-
             const watcher = new BridgeDepositWatcher();
             await watcher.clearAnkrAllowance();
 
@@ -136,7 +124,6 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
 
             const result = await BalanceTracker.compareBalances(beforeBalances, TEST_AMOUNT, false);
             await assertionHelpers.assertSepoliaToNeuraBalanceChanges(result);
-
             const newBalances = await BalanceTracker.getAllBalances();
             await neuraBridgePage.verifyUIBalanceMatchesChain(newBalances);
             await neuraBridgePage.switchNetworkDirection();

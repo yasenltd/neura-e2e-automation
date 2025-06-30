@@ -27,7 +27,6 @@ async function initializeAndBridgeFromNeuraToSepolia(neuraBridgePage, context, w
     await neuraBridgePage.fillAmount(TEST_AMOUNT);
     await neuraBridgePage.clickBridgeButton(false, TEST_AMOUNT);
     const messageHash = await watcher.predictNativeDepositHash(TEST_AMOUNT, networks.sepolia.chainId);
-    console.log('📬 messageHash:', messageHash);
     await neuraBridgePage.bridgeTokensFromNeuraToChain(context);
     const blockStart = await watcher.getFreshBlockNumber(watcher.neuraProvider);
     const parsed = await assertionHelpers.assertApprovalReceipt(watcher, messageHash, BRIDGE_OPERATION_TIMEOUT, blockStart);
@@ -38,7 +37,6 @@ async function initializeAndBridgeFromNeuraToSepolia(neuraBridgePage, context, w
 test.describe('Neura to Sepolia Bridge UI Automation', () => {
 
     test('Verify Neura to Sepolia Bridge transaction via UI and Claim transaction via SC call', async ({neuraBridgePage, context}) => {
-
         test.setTimeout(TEST_TIMEOUT);
         const watcher = new BridgeDepositWatcher();
         const balanceTracker = new BalanceTracker();
@@ -64,8 +62,7 @@ test.describe('Neura to Sepolia Bridge UI Automation', () => {
         }
     });
 
-    test('Verify Neura to Sepolia Bridge and Claim transactions via UI', { tag: '@testRun' },
-        async ({neuraBridgePage, context}) => {
+    test('Verify Neura to Sepolia Bridge and Claim transactions via UI', { tag: '@scheduledRun' }, async ({neuraBridgePage, context}) => {
         test.setTimeout(TEST_TIMEOUT);
         const watcher = new BridgeDepositWatcher();
         const balanceTracker = new BalanceTracker();
