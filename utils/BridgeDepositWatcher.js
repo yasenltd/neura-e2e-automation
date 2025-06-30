@@ -201,7 +201,7 @@ class BridgeDepositWatcher {
     async predictNativeDepositHash(amount, destChainId, recipient = this.MY_ADDRESS) {
         const value = parseEther(amount.toString());
         const bridge = this.neuraBridge.connect(this.neuraSigner);
-        let messageHash = bridge.callStatic.deposit(recipient, destChainId, { value });
+        let messageHash = await bridge.callStatic.deposit(recipient, destChainId, { value });
         console.log('📬 messageHash:', messageHash);
         return messageHash;
     }

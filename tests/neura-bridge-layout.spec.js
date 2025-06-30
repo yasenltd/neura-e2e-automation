@@ -7,7 +7,7 @@ dotenv.config();
 
 test.describe('Neura Bridge page validation', () => {
 
-  test('Verify Neura Bridge page without connected wallet', async ({ neuraBridgePage, context }) => {
+  test('Verify Neura Bridge page without connected wallet', { tag: '@scheduledRun' }, async ({ neuraBridgePage, context }) => {
     try {
       await neuraBridgePage.initializeBridgeWithOptions({
         context,
@@ -24,7 +24,7 @@ test.describe('Neura Bridge page validation', () => {
     }
   });
 
-  test('Verify Neura Bridge page without connected wallet after network switch', async ({ neuraBridgePage, context }) => {
+  test('Verify Neura Bridge page without connected wallet after network switch', { tag: '@scheduledRun' }, async ({ neuraBridgePage, context }) => {
     try {
       await neuraBridgePage.initializeBridgeWithOptions({
         context,
@@ -95,7 +95,6 @@ test.describe('Neura Bridge page validation', () => {
   });
 
   test('Verify user connects to MetaMask wallet from widget Connect Wallet button and switch networks successfully', async ({ neuraBridgePage, context }) => {
-    // Step 1: Initialize bridge with options (with wallet connection, no network switch, verify page layout)
     await neuraBridgePage.initializeBridgeWithOptions({
       context,
       walletConnection: {
@@ -106,12 +105,8 @@ test.describe('Neura Bridge page validation', () => {
       verifyBridgePageLayout: false
     });
     await neuraBridgePage.verifyMetaMaskWalletScreenWithAssertions();
-
-    // Step 2: Verify that the Enter Amount button is disabled initially
     const enterAmountBtnIsDisabled = await neuraBridgePage.getEnterAmountBtnState();
     expect(enterAmountBtnIsDisabled).toBe(true);
-
-    // Step 3: Fill amount and assert that the amount is entered correctly
     const enteredAmount = await neuraBridgePage.fillAmount(TEST_AMOUNT);
     expect(enteredAmount).toBe(TEST_AMOUNT);
   });
@@ -133,8 +128,7 @@ test.describe('Neura Bridge page validation', () => {
     expect(enteredAmount).toBe(TEST_AMOUNT);
   });
 
-  test('Verify user connects to MetaMask wallet from top Connect Wallet button and switch networks successfully',
-      async ({ neuraBridgePage, context }) => {
+  test('Verify user connects to MetaMask wallet from top Connect Wallet button and switch networks successfully', async ({ neuraBridgePage, context }) => {
     await neuraBridgePage.initializeBridgeWithOptions({
       context,
       walletConnection: {
