@@ -182,7 +182,7 @@ class NeuraBridgePage extends BasePage {
     try {
       [extensionPopup] = await Promise.all([
         context.waitForEvent('page', { timeout: timeouts.DEFAULT_TIMEOUT }),
-        this.page.waitForTimeout(timeouts.DEFAULT_TIMEOUT / 5), // Short timeout for waiting
+        this.page.waitForTimeout(timeouts.DEFAULT_TIMEOUT / 2), // Short timeout for waiting
       ]);
       console.log('✅ MetaMask popup opened as new tab');
     } catch (error) {
@@ -686,8 +686,11 @@ class NeuraBridgePage extends BasePage {
     //   neuraBridgeAssertions.pageLayout.networks.neuraTestnet,
     //   neuraBridgeAssertions.pageLayout.networks.sepolia
     // );
-    console.log('Network direction switched successfully');
-    this.refreshPage();
+  }
+
+  async reNavigateToBridgePageToSimulatePageRefresh(bridgePageUrl) {
+    console.log('Re-navigating to bridge page:', bridgePageUrl);
+    await this.page.goto(bridgePageUrl);
   }
 
   async closeBridgeModal() {
@@ -736,7 +739,7 @@ class NeuraBridgePage extends BasePage {
 
     // Switch network direction if requested
     if (switchNetworkDirection) {
-      await this.switchNetworkDirection();
+      await this.switchNetworkDirection(context);
     }
   }
 }

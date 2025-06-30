@@ -1,4 +1,4 @@
-import { testWithoutSepolia as test } from '../test-utils/testFixtures.js';
+import {getConfig, testWithoutSepolia as test} from '../test-utils/testFixtures.js';
 import BalanceTracker                     from '../utils/BalanceTracker.js';
 import BridgeDepositWatcher               from '../utils/BridgeDepositWatcher.js';
 import networks                           from '../constants/networkConstants.js';
@@ -83,6 +83,7 @@ test.describe('Neura to Sepolia Bridge UI Automation', () => {
             const newBalances = await BalanceTracker.getAllBalances();
             await neuraBridgePage.verifyUIBalanceMatchesNeuraChain(newBalances);
             await neuraBridgePage.switchNetworkDirection();
+            await neuraBridgePage.reNavigateToBridgePageToSimulatePageRefresh(getConfig().bridgePageUrl);
             await neuraBridgePage.verifyUIBalanceMatchesChain(newBalances);
         } catch (err) {
             console.error(`❌ Neura → Sepolia bridge test failed: ${err.message}`);

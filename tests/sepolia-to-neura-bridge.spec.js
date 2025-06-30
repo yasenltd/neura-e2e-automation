@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { testWithoutSepolia as test } from '../test-utils/testFixtures.js';
+import {getConfig, testWithoutSepolia as test} from '../test-utils/testFixtures.js';
 import BalanceTracker                                     from '../utils/BalanceTracker.js';
 import BridgeDepositWatcher                              from '../utils/BridgeDepositWatcher.js';
 import { TEST_AMOUNT }                                   from '../constants/testConstants.js';
@@ -37,6 +37,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             const newBalances = await BalanceTracker.getAllBalances();
             await neuraBridgePage.verifyUIBalanceMatchesChain(newBalances);
             await neuraBridgePage.switchNetworkDirection();
+            await neuraBridgePage.reNavigateToBridgePageToSimulatePageRefresh(getConfig().bridgePageUrl);
             await neuraBridgePage.verifyUIBalanceMatchesNeuraChain(newBalances);
         } catch (error) {
             console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
@@ -86,6 +87,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             const newBalances = await BalanceTracker.getAllBalances();
             await neuraBridgePage.verifyUIBalanceMatchesChain(newBalances);
             await neuraBridgePage.switchNetworkDirection();
+            await neuraBridgePage.reNavigateToBridgePageToSimulatePageRefresh(getConfig().bridgePageUrl);
             await neuraBridgePage.verifyUIBalanceMatchesNeuraChain(newBalances);
         } catch (error) {
             console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
@@ -137,6 +139,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             const newBalances = await BalanceTracker.getAllBalances();
             await neuraBridgePage.verifyUIBalanceMatchesChain(newBalances);
             await neuraBridgePage.switchNetworkDirection();
+            await neuraBridgePage.reNavigateToBridgePageToSimulatePageRefresh(getConfig().bridgePageUrl);
             await neuraBridgePage.verifyUIBalanceMatchesNeuraChain(newBalances);
         } catch (error) {
             console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
