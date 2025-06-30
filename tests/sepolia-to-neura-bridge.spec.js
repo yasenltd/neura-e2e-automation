@@ -37,6 +37,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             const newBalances = await BalanceTracker.getAllBalances();
             await neuraBridgePage.verifyUIBalanceMatchesChain(newBalances);
             await neuraBridgePage.switchNetworkDirection();
+            await neuraBridgePage.reloadNatively();
             await neuraBridgePage.verifyUIBalanceMatchesNeuraChain(newBalances);
         } catch (error) {
             console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
@@ -45,7 +46,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
     });
 
     test('Verify Sepolia to Neura Bridge approving and bridging transaction via UI',
-        { tag: '@testRun' },
+        { tag: '@scheduledRun' },
         async ({ neuraBridgePage, context }) => {
         test.setTimeout(TEST_TIMEOUT);
 
@@ -69,10 +70,6 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             const watcher = new BridgeDepositWatcher();
             await watcher.clearAnkrAllowance();
 
-            await neuraBridgePage.debugCookies();
-            await neuraBridgePage.reloadNatively();
-            await neuraBridgePage.debugCookies();
-
             await neuraBridgePage.fillAmount(TEST_AMOUNT);
             await neuraBridgePage.clickBridgeButtonApprovingCustomChain(context, true, TEST_AMOUNT);
             await neuraBridgePage.approveTokenTransfer(context);
@@ -94,9 +91,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             // await neuraBridgePage.captureCookies();
             // await neuraBridgePage.restoreCookies();
 
-            await neuraBridgePage.debugCookies();
             await neuraBridgePage.reloadNatively();
-            await neuraBridgePage.debugCookies();
 
             // await neuraBridgePage.captureAuthState();
             // await neuraBridgePage.refreshWithPreservedAuth(context);
