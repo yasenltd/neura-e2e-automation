@@ -707,12 +707,8 @@ class NeuraBridgePage extends BasePage {
   }
 
   async ensureWalletConnected(context) {
-    await this.page.waitForFunction(() => typeof window.ethereum !== 'undefined');
-    const isConnected = await this.page.evaluate(() => !!window.ethereum?.selectedAddress);
-    if (!isConnected) {
-      console.log('Wallet is not connected, attempting to connect...');
-      await this.wireMetaMask(context, true);
-    }
+    console.log('Wallet is not connected, attempting to connect...');
+    await this.wireMetaMask(context, true);
   }
 
   async closeBridgeModal() {
