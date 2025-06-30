@@ -103,27 +103,22 @@ class NeuraBridgePage extends BasePage {
   }
 
   async attachWallet(context) {
-    // Wait for the extension prompt modal to open
     console.log('Waiting for MetaMask to load');
     const [extensionPopup] = await Promise.all([context.waitForEvent('page')]);
     await extensionPopup.waitForLoadState('domcontentloaded');
-
-    // Bring the extension prompt modal to the front
     await extensionPopup.bringToFront();
 
     const popupWallet = new this.wallet.constructor(extensionPopup);
     console.log('Connecting MetaMask wallet');
     await popupWallet.connectWallet();
 
-    // Signing user message for authentication
     await new Promise(r => setTimeout(r, timeouts.TRANSACTION_APPROVAL_TIMEOUT / 3));
     console.log('Signing message for authentication');
 
     await this.play.click(this.selectors.connection.signMessage);
     console.log('Confirming MetaMask transaction after signing authentication message');
-
     await this.confirmTransaction(context);
-    // Return to the dapp page
+    console.log('MetaMask wallet connected and authenticated successfully');
     await this.page.bringToFront();
   }
 
@@ -134,10 +129,7 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<void>}
    */
   async handleTransactionPopup(context, action) {
-    // Wait for the extension prompt modal to open
     const [extensionPopup] = await Promise.all([context.waitForEvent('page')]);
-
-    // Bring the extension prompt modal to the front
     await extensionPopup.bringToFront();
 
     const popupWallet = new this.wallet.constructor(extensionPopup);
@@ -549,12 +541,12 @@ class NeuraBridgePage extends BasePage {
       await this.debugCookies('before reload');
     }
 
-    if (debug) {
-      await this.page.route('**/logout', route => {
-        console.log('🛑 Blocked /logout call during reload');
-        route.abort();
-      });
-    }
+    // if (debug) {
+    //   await this.page.route('**/logout', route => {
+    //     console.log('🛑 Blocked /logout call during reload');
+    //     route.abort();
+    //   });
+    // }
 
     await this.page.addInitScript((auth, connector, key1, key2) => {
       if (auth) localStorage.setItem(key1, auth);
@@ -579,18 +571,6 @@ class NeuraBridgePage extends BasePage {
 
     console.log(`🔒 Auth persisted: ${isAuthed ? '✔️ YES' : '❌ NO'}`);
     return isAuthed;
-  }
-
-  async simpleReload(waitAfterMs = 5000) {
-    console.log('🔁 Reloading page...');
-    await this.page.reload({ timeout: 7500, waitUntil: 'domcontentloaded' });
-
-    if (waitAfterMs > 0) {
-      console.log(`⏳ Waiting ${waitAfterMs}ms after reload for stabilization...`);
-      await this.page.waitForTimeout(waitAfterMs);
-    }
-
-    console.log('✅ Page reloaded and stabilized');
   }
 
   async debugCookies(label = 'default') {
@@ -765,11 +745,6 @@ class NeuraBridgePage extends BasePage {
     //   neuraBridgeAssertions.pageLayout.networks.sepolia
     // );
     console.log('Switched network direction successfully');
-  }
-
-  async reNavigateToBridgePageToSimulatePageRefresh(bridgePageUrl) {
-    console.log('Re-navigating to bridge page:', bridgePageUrl);
-    await this.page.goto(bridgePageUrl);
   }
 
   async closeBridgeModal() {
