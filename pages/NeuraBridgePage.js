@@ -698,6 +698,7 @@ class NeuraBridgePage extends BasePage {
     console.log('Refresh manually');
     // await this.page.keyboard.press('F5', { delay: 1000 });
     await this.page.evaluate(() => window.location.reload());
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   async closeBridgeModal() {
