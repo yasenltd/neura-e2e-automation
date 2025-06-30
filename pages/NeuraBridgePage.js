@@ -610,10 +610,16 @@ class NeuraBridgePage extends BasePage {
     return isAuthed;
   }
 
-  async simpleReload() {
+  async simpleReload(waitAfterMs = 5000) {
     console.log('🔁 Reloading page...');
     await this.page.reload({ timeout: 7500, waitUntil: 'domcontentloaded' });
-    console.log('✅ Page reloaded');
+
+    if (waitAfterMs > 0) {
+      console.log(`⏳ Waiting ${waitAfterMs}ms after reload for stabilization...`);
+      await this.page.waitForTimeout(waitAfterMs);
+    }
+
+    console.log('✅ Page reloaded and stabilized');
   }
 
   async debugCookies(label = 'default') {
