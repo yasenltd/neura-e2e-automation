@@ -541,12 +541,13 @@ class NeuraBridgePage extends BasePage {
       await this.debugCookies('before reload');
     }
 
-    // if (debug) {
-    //   await this.page.route('**/logout', route => {
-    //     console.log('🛑 Blocked /logout call during reload');
-    //     route.abort();
-    //   });
-    // }
+    if (debug) {
+      console.log('🛑 Setting up /logout blocking during reload');
+      await this.page.route('**/logout', route => {
+        console.log('🛑 Blocked /logout call during reload');
+        route.abort();
+      });
+    }
 
     await this.page.addInitScript((auth, connector, key1, key2) => {
       if (auth) localStorage.setItem(key1, auth);
