@@ -534,7 +534,7 @@ class NeuraBridgePage extends BasePage {
     ]);
 
     if (debug) {
-      console.log('📥 Captured auth:', {
+      console.debug('📥 Captured auth:', {
         [localStorageKey]: authValue,
         [connectorKey]: connectorValue
       });
@@ -576,7 +576,7 @@ class NeuraBridgePage extends BasePage {
 
   async debugCookies(label = 'default') {
     const cookies = await this.page.context().cookies();
-    console.log(`🍪 Cookies at [${label}]:`, cookies.map(c => ({
+    console.debug(`🍪 Cookies at [${label}]:`, cookies.map(c => ({
       name: c.name,
       value: c.value,
       domain: c.domain,
