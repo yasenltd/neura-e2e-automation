@@ -2,7 +2,7 @@ import { test } from '@playwright/test';
 import BalanceTracker from '../utils/BalanceTracker.js';
 import BridgeDepositWatcher from '../utils/BridgeDepositWatcher.js';
 import { TEST_AMOUNT } from '../constants/testConstants.js';
-import { TEST_TIMEOUT, TRANSACTION_APPROVAL_TIMEOUT } from '../constants/timeoutConstants.js';
+import { BRIDGE_OPERATION_TIMEOUT, TEST_TIMEOUT, TRANSACTION_APPROVAL_TIMEOUT} from '../constants/timeoutConstants.js';
 import networks from '../constants/networkConstants.js';
 import * as assertionHelpers from '../utils/AssertionHelpers.js';
 
@@ -27,7 +27,7 @@ test.describe('Smart-contract bridge flows (no UI)', () => {
         const watcher = new BridgeDepositWatcher();
         const beforeBalances = await BalanceTracker.getAllBalances();
         const { messageHash } = await watcher.depositNativeOnNeura(TEST_AMOUNT, networks.sepolia.chainId);
-        const parsed = await assertionHelpers.assertApprovalReceipt(watcher, messageHash, 180_000);
+        const parsed = await assertionHelpers.assertApprovalReceipt(watcher, messageHash, BRIDGE_OPERATION_TIMEOUT);
         await new Promise(r => setTimeout(r, TRANSACTION_APPROVAL_TIMEOUT));
         await assertionHelpers.assertBridgeTransferLog(parsed, messageHash, watcher, TEST_AMOUNT, networks);
         await assertionHelpers.assertSignatureCount(watcher, messageHash);

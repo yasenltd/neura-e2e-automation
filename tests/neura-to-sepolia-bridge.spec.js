@@ -1,9 +1,9 @@
-import {getConfig, testWithoutSepolia as test} from '../test-utils/testFixtures.js';
+import { testWithoutSepolia as test} from '../test-utils/testFixtures.js';
 import BalanceTracker                     from '../utils/BalanceTracker.js';
 import BridgeDepositWatcher               from '../utils/BridgeDepositWatcher.js';
 import networks                           from '../constants/networkConstants.js';
 import { TEST_AMOUNT }                    from '../constants/testConstants.js';
-import { TEST_TIMEOUT }                   from '../constants/timeoutConstants.js';
+import { BRIDGE_OPERATION_TIMEOUT, TEST_TIMEOUT} from '../constants/timeoutConstants.js';
 import * as assertionHelpers from '../utils/AssertionHelpers.js';
 
 import dotenv from 'dotenv';
@@ -30,7 +30,7 @@ async function initializeAndBridgeFromNeuraToSepolia(neuraBridgePage, context, w
     console.log('📬 messageHash:', messageHash);
     await neuraBridgePage.bridgeTokensFromNeuraToChain(context);
     const blockStart = await watcher.getFreshBlockNumber(watcher.neuraProvider);
-    const parsed = await assertionHelpers.assertApprovalReceipt(watcher, messageHash, 60_000, blockStart);
+    const parsed = await assertionHelpers.assertApprovalReceipt(watcher, messageHash, BRIDGE_OPERATION_TIMEOUT, blockStart);
     await assertionHelpers.assertBridgeTransferLog(parsed, messageHash, watcher, TEST_AMOUNT, networks);
     return { messageHash, parsed, blockStart, beforeBalances };
 }
@@ -82,7 +82,7 @@ test.describe('Neura to Sepolia Bridge UI Automation', () => {
             const newBalances = await BalanceTracker.getAllBalances();
             await neuraBridgePage.verifyUIBalanceMatchesNeuraChain(newBalances);
             await neuraBridgePage.switchNetworkDirection();
-            await neuraBridgePage.simpleReload();
+            await neuraBridgePage.reloadPreservingAuth();
             await neuraBridgePage.verifyUIBalanceMatchesChain(newBalances);
         } catch (err) {
             console.error(`❌ Neura → Sepolia bridge test failed: ${err.message}`);

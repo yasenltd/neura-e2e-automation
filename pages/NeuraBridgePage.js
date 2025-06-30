@@ -526,66 +526,71 @@ class NeuraBridgePage extends BasePage {
     await this.wireMetaMask(context, useConnectWalletWidgetButton);
   }
 
-  /**
-   * Reload the page while preserving auth state (localStorage + cookies + connector)
-   * and debug cookies before and after reload.
-   *
-   * @param {Object} [options]
-   * @param {string} [options.localStorageKey='auth-storage']
-   * @param {string} [options.connectorKey='wagmi.recentConnectorId']
-   * @param {number} [options.postReloadWait=500]
-   * @param {number} [options.reloadTimeout=10000]
-   * @returns {Promise<boolean>} - True if still authenticated, false otherwise
-   */
   async reloadPreservingAuth({
                                localStorageKey = 'auth-storage',
                                connectorKey = 'wagmi.recentConnectorId',
-                               postReloadWait = 500,
-                               reloadTimeout = 10000
+                               postReloadWait = 3000,
+                               reloadTimeout = 10000,
+                               tokenCookieName = null,
+                               debug = true
                              } = {}) {
     const context = this.page.context();
 
-    // Step 1: Capture auth + cookies
+    // 1. Capture current auth + cookies
     const [authValue, connectorValue, cookies] = await Promise.all([
       this.page.evaluate(key => localStorage.getItem(key), localStorageKey),
       this.page.evaluate(key => localStorage.getItem(key), connectorKey),
       context.cookies()
     ]);
 
-    console.log('📥 Captured auth:', {
-      [localStorageKey]: authValue,
-      [connectorKey]: connectorValue
-    });
-    await this.debugCookies('before reload');
-
-    // Step 2: Restore cookies and localStorage
-    if (cookies?.length) {
-      const cookiesWithUrls = cookies
-          .filter(c => c.name && (c.url || c.domain)) // Only keep valid cookies
-          .map(c => {
-            if (c.url) return c;
-            const protocol = c.secure ? 'https' : 'http';
-            const domain = c.domain?.replace(/^\./, '');
-            return {
-              ...c,
-              url: `${protocol}://${domain}`
-            };
-          });
-
-      try {
-        await context.addCookies(cookiesWithUrls);
-      } catch (err) {
-        console.error('❌ Failed to add cookies:', err);
-      }
+    if (debug) {
+      console.log('📥 Captured auth:', {
+        [localStorageKey]: authValue,
+        [connectorKey]: connectorValue
+      });
+      await this.debugCookies('before reload');
     }
 
-    await this.page.addInitScript((auth, connector, authKey, connectorKey) => {
-      if (auth) localStorage.setItem(authKey, auth);
-      if (connector) localStorage.setItem(connectorKey, connector);
+    // 2. Filter cookies with domain and construct valid `url`
+    const cookiesWithUrls = [];
+
+    // for (const cookie of cookies) {
+    //   if (!cookie.name) continue;
+    //
+    //   if (!cookie.domain) {
+    //     console.warn(`⚠️ Skipping cookie "${cookie.name}" due to missing domain`);
+    //     continue;
+    //   }
+    //
+    //   cookiesWithUrls.push({
+    //     ...cookie,
+    //     url: `http${cookie.secure ? 's' : ''}://${cookie.domain.replace(/^\./, '')}`
+    //   });
+    // }
+    //
+    // if (cookiesWithUrls.length > 0) {
+    //   await context.addCookies(cookiesWithUrls);
+    //   console.log(`✅ Re-applied ${cookiesWithUrls.length} cookies`);
+    // } else {
+    //   console.warn('⚠️ No valid cookies to restore');
+    // }
+
+    // 3. Inject localStorage before reload
+    await this.page.addInitScript((auth, connector, key1, key2) => {
+      if (auth) localStorage.setItem(key1, auth);
+      if (connector) localStorage.setItem(key2, connector);
     }, authValue, connectorValue, localStorageKey, connectorKey);
 
-    // Step 3: Reload page
-    console.log('🔁 Reloading page with preserved auth...');
+    // 4. Optional: block /logout for debug
+    if (debug) {
+      await this.page.route('**/logout', route => {
+        console.log('🛑 Blocked /logout call during reload');
+        route.abort();
+      });
+    }
+
+    // 5. Perform reload
+    console.log('🔁 Reloading page...');
     await Promise.race([
       this.page.reload({ waitUntil: 'domcontentloaded' }),
       new Promise((_, reject) =>
@@ -593,20 +598,18 @@ class NeuraBridgePage extends BasePage {
       )
     ]);
 
+    // 6. Post-reload delay
     if (postReloadWait) {
       await this.page.waitForTimeout(postReloadWait);
     }
 
-    // Step 4: Check post-reload state
-    await this.debugCookies('after reload');
+    // 7. Final validation
+    if (debug) await this.debugCookies('after reload');
 
-    const finalAuthValue = await this.page.evaluate(key => localStorage.getItem(key), localStorageKey);
-    const isAuthed = finalAuthValue?.includes('"status":"authenticated"');
+    const finalAuth = await this.page.evaluate(key => localStorage.getItem(key), localStorageKey);
+    const isAuthed = finalAuth?.includes('"status":"authenticated"');
 
-    console.log('✅ Reload complete');
-    console.log(`📦 Post-reload LocalStorage["${localStorageKey}"] =`, finalAuthValue);
     console.log(`🔒 Auth persisted: ${isAuthed ? '✔️ YES' : '❌ NO'}`);
-
     return isAuthed;
   }
 
@@ -627,7 +630,8 @@ class NeuraBridgePage extends BasePage {
     console.log(`🍪 Cookies at [${label}]:`, cookies.map(c => ({
       name: c.name,
       value: c.value,
-      domain: c.domain
+      domain: c.domain,
+      url: c.url
     })));
   }
 
