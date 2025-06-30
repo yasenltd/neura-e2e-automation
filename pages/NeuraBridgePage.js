@@ -686,6 +686,7 @@ class NeuraBridgePage extends BasePage {
     //   neuraBridgeAssertions.pageLayout.networks.neuraTestnet,
     //   neuraBridgeAssertions.pageLayout.networks.sepolia
     // );
+    console.log('Switched network direction successfully');
   }
 
   async reNavigateToBridgePageToSimulatePageRefresh(bridgePageUrl) {
@@ -695,7 +696,8 @@ class NeuraBridgePage extends BasePage {
 
   async refreshManually() {
     console.log('Refresh manually');
-    await this.page.keyboard.press('F5', { delay: 3000 });
+    // await this.page.keyboard.press('F5', { delay: 1000 });
+    await this.page.evaluate(() => window.location.reload());
   }
 
   async closeBridgeModal() {
