@@ -68,7 +68,6 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             const beforeBalances = await BalanceTracker.getAllBalances();
             const watcher = new BridgeDepositWatcher();
             await watcher.clearAnkrAllowance();
-            await neuraBridgePage.refreshManually();
 
             await neuraBridgePage.fillAmount(TEST_AMOUNT);
             await neuraBridgePage.clickBridgeButtonApprovingCustomChain(context, true, TEST_AMOUNT);
@@ -88,6 +87,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             await neuraBridgePage.verifyUIBalanceMatchesChain(newBalances);
             await neuraBridgePage.switchNetworkDirection();
             await neuraBridgePage.refreshManually();
+            await neuraBridgePage.ensureWalletConnected(context);
             await neuraBridgePage.verifyUIBalanceMatchesNeuraChain(newBalances);
         } catch (error) {
             console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
