@@ -689,6 +689,11 @@ class NeuraBridgePage extends BasePage {
     console.log('Switched network direction successfully');
   }
 
+  async pageRefresh() {
+    console.log('Refreshing page using native page reload');
+    await this.page.reload();
+  }
+
   async reNavigateToBridgePageToSimulatePageRefresh(bridgePageUrl) {
     console.log('Re-navigating to bridge page:', bridgePageUrl);
     await this.page.goto(bridgePageUrl);
