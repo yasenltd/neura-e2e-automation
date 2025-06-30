@@ -526,71 +526,59 @@ class NeuraBridgePage extends BasePage {
     await this.wireMetaMask(context, useConnectWalletWidgetButton);
   }
 
-  async captureCookies() {
-    this.cachedCookies = await this.page.context().cookies();
-    console.log('✅ Captured cookies:', this.cachedCookies);
-  }
+  /**
+   * Reloads the page with timeout and checks if authentication persisted
+   * @param {Object} [options]
+   * @param {string} [options.tokenCookieName] - Cookie name used for auth (if applicable)
+   * @param {string} [options.localStorageKey='auth-storage'] - LocalStorage key for auth
+   * @param {number} [options.postReloadWait=500] - Optional delay after reload (ms)
+   * @param {number} [options.reloadTimeout=10000] - Max wait for page reload
+   * @returns {Promise<boolean>} - True if auth survived, false otherwise
+   */
+  async reloadWithAuthCheck({
+                              tokenCookieName,
+                              localStorageKey = 'auth-storage',
+                              postReloadWait = 500,
+                              reloadTimeout = 10000
+                            } = {}) {
+    console.log(`🔁 Reloading page (timeout: ${reloadTimeout}ms)...`);
 
-  async restoreCookies() {
-    if (!this.cachedCookies?.length) {
-      console.warn('⚠️ No cookies cached to restore');
-      return;
+    try {
+      await Promise.race([
+        this.page.reload({ waitUntil: 'domcontentloaded' }),
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('⏱️ Reload timed out')), reloadTimeout)
+        )
+      ]);
+
+      if (postReloadWait) {
+        await this.page.waitForTimeout(postReloadWait);
+      }
+
+      const [cookies, authStorageValue] = await Promise.all([
+        this.page.context().cookies(),
+        this.page.evaluate(key => localStorage.getItem(key), localStorageKey)
+      ]);
+
+      const hasAuthCookie =
+          tokenCookieName && cookies.some(c => c.name === tokenCookieName);
+
+      const isAuthenticated = Boolean(authStorageValue || hasAuthCookie);
+
+      // Logging
+      console.log('✅ Reload completed');
+      console.log(`📦 LocalStorage["${localStorageKey}"] =`, authStorageValue ?? 'null');
+      if (tokenCookieName) {
+        console.log(`🍪 Cookie "${tokenCookieName}" present:`, !!hasAuthCookie);
+      }
+      console.log(`🔒 Auth state: ${isAuthenticated ? '✔️ Authenticated' : '❌ Logged out'}`);
+
+      return isAuthenticated;
+
+    } catch (error) {
+      console.error(`❌ Failed to reload or check auth state: ${error.message}`);
+      return false;
     }
-
-    const validCookies = this.cachedCookies.map(cookie => {
-      // Don't assign URL if domain already exists
-      if (!cookie.url && !cookie.domain) {
-        cookie.url = this.page.url();
-      }
-      return cookie;
-    });
-
-    await this.page.context().addCookies(validCookies);
-    console.log('✅ Re-applied cookies');
-    await this.page.reload({ waitUntil: 'domcontentloaded' });
-  }
-
-  async debugCookies(label = 'default') {
-    const cookies = await this.page.context().cookies();
-    console.log(`🍪 Cookies at ${label}:`, cookies.map(c => ({ name: c.name, value: c.value, domain: c.domain })));
-  }
-
-  async reloadNatively() {
-    await this.page.reload({ waitUntil: 'domcontentloaded' });
-  }
-
-  async captureAuthState() {
-    const { authStorage, connectorId } = await this.page.evaluate(() => {
-      return {
-        authStorage: localStorage.getItem('auth-storage'),
-        connectorId: localStorage.getItem('wagmi.recentConnectorId'),
-      };
-    });
-
-    this.cachedAuthToken = authStorage;
-    this.cachedConnectorId = connectorId;
-
-    console.log('✅ Captured auth-storage:', authStorage);
-    console.log('✅ Captured wagmi.recentConnectorId:', connectorId);
-  }
-
-  async refreshWithPreservedAuth(context) {
-    if (!this.cachedAuthToken && !this.cachedConnectorId) {
-      console.warn('⚠️ No cached auth state found, calling captureAuthState() now');
-      await this.captureAuthState();
-    }
-
-    await context.addInitScript((auth, connector) => {
-      if (auth) {
-        localStorage.setItem('auth-storage', auth);
-      }
-      if (connector) {
-        localStorage.setItem('wagmi.recentConnectorId', connector);
-      }
-    }, this.cachedAuthToken, this.cachedConnectorId);
-
-    console.log('🔄 Reloading page with restored auth and connector');
-    await this.page.reload({ waitUntil: 'domcontentloaded' });
   }
 
   async fillAmount(amount) {
@@ -757,26 +745,9 @@ class NeuraBridgePage extends BasePage {
     console.log('Switched network direction successfully');
   }
 
-  async pageRefresh() {
-    console.log('Refreshing page using native page reload');
-    await this.page.reload();
-  }
-
   async reNavigateToBridgePageToSimulatePageRefresh(bridgePageUrl) {
     console.log('Re-navigating to bridge page:', bridgePageUrl);
     await this.page.goto(bridgePageUrl);
-  }
-
-  async refreshManually() {
-    console.log('Refresh manually');
-    // await this.page.keyboard.press('F5', { delay: 1000 });
-    await this.page.evaluate(() => location.reload());
-    await this.page.waitForLoadState('domcontentloaded');
-  }
-
-  async ensureWalletConnected(context) {
-    console.log('Wallet is not connected, attempting to connect...');
-    await this.wireMetaMask(context, true);
   }
 
   async closeBridgeModal() {
@@ -803,7 +774,6 @@ class NeuraBridgePage extends BasePage {
       verifyBridgePageLayout = false
     } = options;
 
-    // Extract wallet connection options with defaults
     const {
       connect: connectWallet = false,
       useConnectWalletWidgetButton = false
@@ -813,17 +783,14 @@ class NeuraBridgePage extends BasePage {
       throw new Error('Context is required for bridge initialization');
     }
 
-    // Connect wallet if requested
     if (connectWallet) {
       await this.connectMetaMaskWallet(context, useConnectWalletWidgetButton);
     }
 
-    // Verify the initial layout if requested
     if (verifyBridgePageLayout) {
       await this.assertBridgeWidgetLayout();
     }
 
-    // Switch network direction if requested
     if (switchNetworkDirection) {
       await this.switchNetworkDirection(context);
     }

@@ -28,6 +28,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             // Step 3: Record balances and perform the bridge operation
             const watcher = new BridgeDepositWatcher();
             await watcher.clearAnkrAllowance();
+
             await neuraBridgePage.fillAmount(TEST_AMOUNT);
             await neuraBridgePage.clickBridgeButtonApprovingCustomChain(context, true, TEST_AMOUNT);
             await neuraBridgePage.approveTokenTransfer(context);
@@ -37,7 +38,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             const newBalances = await BalanceTracker.getAllBalances();
             await neuraBridgePage.verifyUIBalanceMatchesChain(newBalances);
             await neuraBridgePage.switchNetworkDirection();
-            await neuraBridgePage.reloadNatively();
+            await neuraBridgePage.reloadWithAuthCheck();
             await neuraBridgePage.verifyUIBalanceMatchesNeuraChain(newBalances);
         } catch (error) {
             console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
@@ -87,17 +88,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             const newBalances = await BalanceTracker.getAllBalances();
             await neuraBridgePage.verifyUIBalanceMatchesChain(newBalances);
             await neuraBridgePage.switchNetworkDirection();
-
-            // await neuraBridgePage.captureCookies();
-            // await neuraBridgePage.restoreCookies();
-
-            await neuraBridgePage.reloadNatively();
-
-            // await neuraBridgePage.captureAuthState();
-            // await neuraBridgePage.refreshWithPreservedAuth(context);
-
-            // await neuraBridgePage.pageRefresh();
-            // await neuraBridgePage.ensureWalletConnected(context);
+            await neuraBridgePage.reloadWithAuthCheck();
             await neuraBridgePage.verifyUIBalanceMatchesNeuraChain(newBalances);
         } catch (error) {
             console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
@@ -149,7 +140,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             const newBalances = await BalanceTracker.getAllBalances();
             await neuraBridgePage.verifyUIBalanceMatchesChain(newBalances);
             await neuraBridgePage.switchNetworkDirection();
-            await neuraBridgePage.reNavigateToBridgePageToSimulatePageRefresh(getConfig().bridgePageUrl);
+            await neuraBridgePage.reloadWithAuthCheck();
             await neuraBridgePage.verifyUIBalanceMatchesNeuraChain(newBalances);
         } catch (error) {
             console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
