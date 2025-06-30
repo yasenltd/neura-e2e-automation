@@ -303,6 +303,7 @@ class BridgeDepositWatcher {
 
             if (past.length) {
                 const rc = await this.neuraProvider.getTransactionReceipt(past[0].transactionHash);
+                console.log(`✅ BridgeTransferApproved event found in past logs: ${past[0].transactionHash}`);
                 return resolve(rc);
             }
 
@@ -315,6 +316,7 @@ class BridgeDepositWatcher {
             const handler = (log) => {
                 clearTimeout(timer);
                 this.neuraProvider.off(filter, handler);
+                console.log(`✅ BridgeTransferApproved event detected: ${log.transactionHash}`);
                 this.neuraProvider
                     .getTransactionReceipt(log.transactionHash)
                     .then(resolve)

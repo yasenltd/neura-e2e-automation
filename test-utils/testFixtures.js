@@ -135,7 +135,16 @@ const testWithoutNeuraAndSepolia = createTestFixture({
   setupNeuraNetwork: false
 });
 
+const getConfig = () => {
+    return {
+        seedPhrase: process.env.SEED_PHRASE,
+        password: process.env.WALLET_PASSWORD,
+        bridgePageUrl: process.env.NEURA_TESTNET_URL,
+    };
+}
+
 export {
+  getConfig,
   createTestFixture,
   testWithoutSepolia,
   testWithoutNeura,

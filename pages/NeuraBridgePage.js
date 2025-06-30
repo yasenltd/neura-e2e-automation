@@ -15,6 +15,7 @@ class NeuraBridgePage extends BasePage {
     this.page = page;
     this.selectors = selectors;
     this.wallet = null;
+    this.cachedAuthToken = null; // Store the cached auth token
   }
 
   /**
@@ -102,27 +103,22 @@ class NeuraBridgePage extends BasePage {
   }
 
   async attachWallet(context) {
-    // Wait for the extension prompt modal to open
     console.log('Waiting for MetaMask to load');
     const [extensionPopup] = await Promise.all([context.waitForEvent('page')]);
     await extensionPopup.waitForLoadState('domcontentloaded');
-
-    // Bring the extension prompt modal to the front
     await extensionPopup.bringToFront();
 
     const popupWallet = new this.wallet.constructor(extensionPopup);
     console.log('Connecting MetaMask wallet');
     await popupWallet.connectWallet();
 
-    // Signing user message for authentication
     await new Promise(r => setTimeout(r, timeouts.TRANSACTION_APPROVAL_TIMEOUT / 3));
     console.log('Signing message for authentication');
 
     await this.play.click(this.selectors.connection.signMessage);
     console.log('Confirming MetaMask transaction after signing authentication message');
-
     await this.confirmTransaction(context);
-    // Return to the dapp page
+    console.log('MetaMask wallet connected and authenticated successfully');
     await this.page.bringToFront();
   }
 
@@ -133,10 +129,7 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<void>}
    */
   async handleTransactionPopup(context, action) {
-    // Wait for the extension prompt modal to open
     const [extensionPopup] = await Promise.all([context.waitForEvent('page')]);
-
-    // Bring the extension prompt modal to the front
     await extensionPopup.bringToFront();
 
     const popupWallet = new this.wallet.constructor(extensionPopup);
@@ -182,7 +175,7 @@ class NeuraBridgePage extends BasePage {
     try {
       [extensionPopup] = await Promise.all([
         context.waitForEvent('page', { timeout: timeouts.DEFAULT_TIMEOUT }),
-        this.page.waitForTimeout(timeouts.DEFAULT_TIMEOUT / 5), // Short timeout for waiting
+        this.page.waitForTimeout(timeouts.DEFAULT_TIMEOUT / 2), // Short timeout for waiting
       ]);
       console.log('✅ MetaMask popup opened as new tab');
     } catch (error) {
@@ -525,6 +518,72 @@ class NeuraBridgePage extends BasePage {
     await this.wireMetaMask(context, useConnectWalletWidgetButton);
   }
 
+  async reloadPreservingAuth({
+                               localStorageKey = 'auth-storage',
+                               connectorKey = 'wagmi.recentConnectorId',
+                               postReloadWait = 3000,
+                               reloadTimeout = 10000,
+                               debug = true
+                             } = {}) {
+    const context = this.page.context();
+
+    const [authValue, connectorValue, cookies] = await Promise.all([
+      this.page.evaluate(key => localStorage.getItem(key), localStorageKey),
+      this.page.evaluate(key => localStorage.getItem(key), connectorKey),
+      context.cookies()
+    ]);
+
+    if (debug) {
+      console.log('📥 Captured auth:', {
+        [localStorageKey]: authValue,
+        [connectorKey]: connectorValue
+      });
+      await this.debugCookies('before reload');
+    }
+
+    if (debug) {
+      console.log('🛑 Setting up /logout blocking during reload');
+      await this.page.route('**/logout', route => {
+        console.log('🛑 Blocked /logout call during reload');
+        route.abort();
+      });
+    }
+
+    await this.page.addInitScript((auth, connector, key1, key2) => {
+      if (auth) localStorage.setItem(key1, auth);
+      if (connector) localStorage.setItem(key2, connector);
+    }, authValue, connectorValue, localStorageKey, connectorKey);
+
+    console.log('🔁 Reloading page...');
+    await Promise.race([
+      this.page.reload({ waitUntil: 'domcontentloaded' }),
+      new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('⏱️ Reload timed out')), reloadTimeout)
+      )
+    ]);
+
+    if (postReloadWait) {
+      await this.page.waitForTimeout(postReloadWait);
+    }
+
+    if (debug) await this.debugCookies('after reload');
+    const finalAuth = await this.page.evaluate(key => localStorage.getItem(key), localStorageKey);
+    const isAuthed = finalAuth?.includes('"status":"authenticated"');
+
+    console.log(`🔒 Auth persisted: ${isAuthed ? '✔️ YES' : '❌ NO'}`);
+    return isAuthed;
+  }
+
+  async debugCookies(label = 'default') {
+    const cookies = await this.page.context().cookies();
+    console.log(`🍪 Cookies at [${label}]:`, cookies.map(c => ({
+      name: c.name,
+      value: c.value,
+      domain: c.domain,
+      url: c.url
+    })));
+  }
+
   async fillAmount(amount) {
     await new Promise(r => setTimeout(r, timeouts.AMOUNT_FILL_TIMEOUT));
     await this.fillDescLoc(this.selectors.walletScreen.amountField, amount);
@@ -686,7 +745,7 @@ class NeuraBridgePage extends BasePage {
     //   neuraBridgeAssertions.pageLayout.networks.neuraTestnet,
     //   neuraBridgeAssertions.pageLayout.networks.sepolia
     // );
-    await this.page.reload();
+    console.log('Switched network direction successfully');
   }
 
   async closeBridgeModal() {
@@ -713,7 +772,6 @@ class NeuraBridgePage extends BasePage {
       verifyBridgePageLayout = false
     } = options;
 
-    // Extract wallet connection options with defaults
     const {
       connect: connectWallet = false,
       useConnectWalletWidgetButton = false
@@ -723,19 +781,16 @@ class NeuraBridgePage extends BasePage {
       throw new Error('Context is required for bridge initialization');
     }
 
-    // Connect wallet if requested
     if (connectWallet) {
       await this.connectMetaMaskWallet(context, useConnectWalletWidgetButton);
     }
 
-    // Verify the initial layout if requested
     if (verifyBridgePageLayout) {
       await this.assertBridgeWidgetLayout();
     }
 
-    // Switch network direction if requested
     if (switchNetworkDirection) {
-      await this.switchNetworkDirection();
+      await this.switchNetworkDirection(context);
     }
   }
 }

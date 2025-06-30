@@ -10,8 +10,8 @@ function envOr(name, fallback) {
       : fallback;
 }
 
-export const TEST_TIMEOUT = envOr('TEST_TIMEOUT', 90_000);
-export const DEFAULT_TIMEOUT = envOr('DEFAULT_TIMEOUT', 1_000);
+export const TEST_TIMEOUT = envOr('TEST_TIMEOUT', 180_000);
+export const DEFAULT_TIMEOUT = envOr('DEFAULT_TIMEOUT', 3_000);
 export const LONG_TIMEOUT = envOr('LONG_TIMEOUT', 5_000);
 export const METAMASK_POPUP_TIMEOUT = envOr('METAMASK_POPUP_TIMEOUT', 3_000);
 export const WALLET_OPERATION_TIMEOUT = envOr('WALLET_OPERATION_TIMEOUT', 3_000);

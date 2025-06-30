@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { testWithoutSepolia as test } from '../test-utils/testFixtures.js';
+import {getConfig, testWithoutSepolia as test} from '../test-utils/testFixtures.js';
 import BalanceTracker                                     from '../utils/BalanceTracker.js';
 import BridgeDepositWatcher                              from '../utils/BridgeDepositWatcher.js';
 import { TEST_AMOUNT }                                   from '../constants/testConstants.js';
@@ -28,6 +28,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             // Step 3: Record balances and perform the bridge operation
             const watcher = new BridgeDepositWatcher();
             await watcher.clearAnkrAllowance();
+
             await neuraBridgePage.fillAmount(TEST_AMOUNT);
             await neuraBridgePage.clickBridgeButtonApprovingCustomChain(context, true, TEST_AMOUNT);
             await neuraBridgePage.approveTokenTransfer(context);
@@ -37,6 +38,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             const newBalances = await BalanceTracker.getAllBalances();
             await neuraBridgePage.verifyUIBalanceMatchesChain(newBalances);
             await neuraBridgePage.switchNetworkDirection();
+            await neuraBridgePage.reloadPreservingAuth();
             await neuraBridgePage.verifyUIBalanceMatchesNeuraChain(newBalances);
         } catch (error) {
             console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
@@ -44,7 +46,9 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
         }
     });
 
-    test('Verify Sepolia to Neura Bridge approving and bridging transaction via UI', { tag: '@scheduledRun' }, async ({ neuraBridgePage, context }) => {
+    test('Verify Sepolia to Neura Bridge approving and bridging transaction via UI',
+        { tag: '@testRun' },
+        async ({ neuraBridgePage, context }) => {
         test.setTimeout(TEST_TIMEOUT);
 
         // Step 1: Setup test data
@@ -84,6 +88,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             const newBalances = await BalanceTracker.getAllBalances();
             await neuraBridgePage.verifyUIBalanceMatchesChain(newBalances);
             await neuraBridgePage.switchNetworkDirection();
+            await neuraBridgePage.reloadPreservingAuth();
             await neuraBridgePage.verifyUIBalanceMatchesNeuraChain(newBalances);
         } catch (error) {
             console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
@@ -135,6 +140,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             const newBalances = await BalanceTracker.getAllBalances();
             await neuraBridgePage.verifyUIBalanceMatchesChain(newBalances);
             await neuraBridgePage.switchNetworkDirection();
+            await neuraBridgePage.reloadPreservingAuth();
             await neuraBridgePage.verifyUIBalanceMatchesNeuraChain(newBalances);
         } catch (error) {
             console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
