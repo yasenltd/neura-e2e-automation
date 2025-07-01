@@ -15,7 +15,6 @@ class NeuraBridgePage extends BasePage {
     this.page = page;
     this.selectors = selectors;
     this.wallet = null;
-    this.cachedAuthToken = null; // Store the cached auth token
   }
 
   /**
@@ -112,7 +111,7 @@ class NeuraBridgePage extends BasePage {
     console.log('Connecting MetaMask wallet');
     await popupWallet.connectWallet();
 
-    await new Promise(r => setTimeout(r, timeouts.TRANSACTION_APPROVAL_TIMEOUT / 3));
+    await new Promise(r => setTimeout(r, timeouts.METAMASK_POPUP_TIMEOUT / 2));
     console.log('Signing message for authentication');
 
     await this.play.click(this.selectors.connection.signMessage);
@@ -382,7 +381,7 @@ class NeuraBridgePage extends BasePage {
     try {
       const [newPage] = await Promise.all([
         context.waitForEvent('page', { timeout }),
-        this.page.waitForTimeout(timeouts.DEFAULT_TIMEOUT / 2), // or your click that triggers MetaMask
+        this.page.waitForTimeout(timeouts.METAMASK_POPUP_TIMEOUT / 2), // or your click that triggers MetaMask
       ]);
 
       await newPage.waitForLoadState('domcontentloaded');
@@ -641,7 +640,7 @@ class NeuraBridgePage extends BasePage {
   async approveTokenTransfer(context) {
     await this.clickDescLoc(this.selectors.bridgeDescriptors.approveTokenTransferButton, null, timeouts.WALLET_OPERATION_TIMEOUT);
     await this.confirmTransaction(context);
-    await this.waitForDescLocElementToDisappear({ text: 'Approving token transfer...' }, { timeout: timeouts.TOKEN_TRANSFER_TIMEOUT, longTimeout: timeouts.TOKEN_TRANSFER_TIMEOUT });
+    await this.waitForDescLocElementToDisappear({ text: 'Approving token transfer...' }, { timeout: timeouts.BRIDGE_OPERATION_TIMEOUT, longTimeout: timeouts.BRIDGE_OPERATION_TIMEOUT });
   }
 
   async approveBridgingTokens(context) {
