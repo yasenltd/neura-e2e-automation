@@ -1,5 +1,5 @@
 import {expect} from '@playwright/test';
-import BasePage from './BasePage.js';
+import BasePage from './common/BasePage.js';
 import selectors from '../locators/neuraLocators.js';
 import BridgeDepositWatcher from '../utils/BridgeDepositWatcher.js';
 import ethersUtil from '../utils/ethersUtil.js';
@@ -32,33 +32,33 @@ class NeuraBridgePage extends BasePage {
   }
 
   async disconnectWallet() {
-    await this.clickDescLoc(this.selectors.connection.settingsButton);
+    await this.play.clickDescLoc(this.selectors.connection.settingsButton);
     await this.play.click(this.selectors.connection.disconnectWallet);
   }
 
   async claimLatestTransaction(context, amount) {
     await new Promise(r => setTimeout(r, timeouts.TRANSACTION_APPROVAL_TIMEOUT));
     await this.assertClaimTokenPageLayout();
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.refreshClaimTransactionButton);
+    await this.play.clickDescLoc(this.selectors.bridgeDescriptors.refreshClaimTransactionButton);
     await this.claimTransaction(context, amount);
   }
 
   async openBurgerMenu() {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.burgerMenuButton);
+    await this.play.clickDescLoc(this.selectors.bridgeDescriptors.burgerMenuButton);
   }
 
   async selectBridgeFromBurgerMenu() {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeButtonInBurgerMenu);
+    await this.play.clickDescLoc(this.selectors.bridgeDescriptors.bridgeButtonInBurgerMenu);
   }
 
   async selectFaucetFromBurgerMenu() {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.faucetButtonInBurgerMenu);
+    await this.play.clickDescLoc(this.selectors.bridgeDescriptors.faucetButtonInBurgerMenu);
   }
 
   async verifySourceChainModal(activeChain) {
-    await this.clickDescLoc(this.selectors.sourceChainModal.openNetworkSourceMenu);
+    await this.play.clickDescLoc(this.selectors.sourceChainModal.openNetworkSourceMenu);
     await this.assertSourceChainModalLayout(activeChain);
-    await this.clickDescLoc(this.selectors.sourceChainModal.closeChainModal);
+    await this.play.clickDescLoc(this.selectors.sourceChainModal.closeChainModal);
   }
 
   /**
@@ -429,20 +429,20 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<void>}
    */
   async assertBridgeWidgetLabels() {
-    await expect(this.isElementVisibleDesc(this.selectors.bridgeDescriptors.bridgeLabel)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.bridgeDescriptors.fromLabel)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.bridgeDescriptors.toLabel)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.bridgeDescriptors.amountLabel)).resolves.toBe(true);
-    await expect(this.isElementVisibleDesc(this.selectors.bridgeDescriptors.limitLabel)).resolves.toBe(true);
+    await expect(this.play.isElementVisibleDesc(this.selectors.bridgeDescriptors.bridgeLabel)).resolves.toBe(true);
+    await expect(this.play.doesTextMatchDescriptor(this.selectors.bridgeDescriptors.fromLabel)).resolves.toBe(true);
+    await expect(this.play.doesTextMatchDescriptor(this.selectors.bridgeDescriptors.toLabel)).resolves.toBe(true);
+    await expect(this.play.doesTextMatchDescriptor(this.selectors.bridgeDescriptors.amountLabel)).resolves.toBe(true);
+    await expect(this.play.isElementVisibleDesc(this.selectors.bridgeDescriptors.limitLabel)).resolves.toBe(true);
   }
 
   async assertSourceChainModalLayout(activeChain) {
-    const title = await this.getElementWithDescLoc(this.selectors.sourceChainModal.selectSourceChainTitle).isVisible();
+    const title = await this.play.getElementWithDescLoc(this.selectors.sourceChainModal.selectSourceChainTitle).isVisible();
     expect(title).toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.sourceChainModal.bscTestnet)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.sourceChainModal.neuraLabel)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.sourceChainModal.sepoliaLabel)).resolves.toBe(true);
-    const activeSelectedChain = this.getElementWithDescLoc(this.selectors.sourceChainModal.activeChain);
+    await expect(this.play.doesTextMatchDescriptor(this.selectors.sourceChainModal.bscTestnet)).resolves.toBe(true);
+    await expect(this.play.doesTextMatchDescriptor(this.selectors.sourceChainModal.neuraLabel)).resolves.toBe(true);
+    await expect(this.play.doesTextMatchDescriptor(this.selectors.sourceChainModal.sepoliaLabel)).resolves.toBe(true);
+    const activeSelectedChain = this.play.getElementWithDescLoc(this.selectors.sourceChainModal.activeChain);
     assertionHelpers.assertSelectedChain(activeSelectedChain, activeChain);
   }
 
@@ -452,7 +452,7 @@ class NeuraBridgePage extends BasePage {
    */
   async assertBridgeWidgetLayout() {
     await this.assertBridgeWidgetLabels();
-    const networks = await this.getAllRowTexts(this.selectors.bridgeDescriptors.bridgeLabels, this.selectors.general.cellCss);
+    const networks = await this.play.getAllRowTexts(this.selectors.bridgeDescriptors.bridgeLabels, this.selectors.general.cellCss);
     assertionHelpers.assertNetworkLabels(
       networks,
       neuraBridgeAssertions.pageLayout.networks.sepolia,
@@ -461,19 +461,19 @@ class NeuraBridgePage extends BasePage {
   }
 
   async getEnterAmountBtnState() {
-    return await this.isDisabledByDescLoc(this.selectors.bridgeDescriptors.enterAmountBtnLabel);
+    return await this.play.isDisabledByDescLoc(this.selectors.bridgeDescriptors.enterAmountBtnLabel);
   }
 
   async isConnectWalletBtnVisible() {
-    return await this.isElementHidden(this.selectors.connection.connectWalletButton.name);
+    return await this.play.isElementHidden(this.selectors.connection.connectWalletButton.name);
   }
 
   async assertClaimTokenPageLayout() {
-    const title = await this.getElementWithDescLoc(this.selectors.claimPageDescriptors.title);
+    const title = await this.play.getElementWithDescLoc(this.selectors.claimPageDescriptors.title);
     await expect(title).toBeVisible();
-    const subTitle = await this.getElementWithDescLoc(this.selectors.claimPageDescriptors.subTitle);
+    const subTitle = await this.play.getElementWithDescLoc(this.selectors.claimPageDescriptors.subTitle);
     await expect(subTitle).toBeVisible();
-    const tableLabels = await this.getAllRowTexts(this.selectors.claimTokensDescriptors.tableLabel, this.selectors.general.cellCss);
+    const tableLabels = await this.play.getAllRowTexts(this.selectors.claimTokensDescriptors.tableLabel, this.selectors.general.cellCss);
 
     return {
       title: title,
@@ -489,19 +489,19 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<Object>} - The preview transaction layout
    */
   async assertPreviewTransactionLayout(checkApproveButton = false, amount) {
-    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.titleLabel, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.fromChainLabel, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.toChainLabel, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.amountLabel, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.neuraLabel, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
-    await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.sepoliaLabel, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
-    const previewAnkrBalance = await this.getNumericMatch(this.selectors.previewTransactionDescriptors.ankrBalance, 1, 1);
+    await expect(this.play.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.titleLabel, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+    await expect(this.play.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.fromChainLabel, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+    await expect(this.play.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.toChainLabel, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+    await expect(this.play.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.amountLabel, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+    await expect(this.play.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.neuraLabel, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+    await expect(this.play.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.sepoliaLabel, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+    const previewAnkrBalance = await this.play.getNumericMatch(this.selectors.previewTransactionDescriptors.ankrBalance, 1, 1);
     const expectedValue = formatBalanceString(amount);
     await expect(previewAnkrBalance).toBe(Number(expectedValue));
     if (checkApproveButton) {
-      await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.approveButton, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+      await expect(this.play.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.approveButton, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
     } else {
-      await expect(this.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.bridgeButton, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
+      await expect(this.play.doesTextMatchDescriptor(this.selectors.previewTransactionDescriptors.bridgeButton, null, timeouts.WALLET_OPERATION_TIMEOUT)).resolves.toBe(true);
     }
   }
 
@@ -512,7 +512,7 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<void>} - Resolves when the connection is complete
    */
   async connectMetaMaskWallet(context, useConnectWalletWidgetButton = false) {
-    const enterAmountBtnIsHidden = await this.isElementHidden(this.selectors.bridgeDescriptors.enterAmountBtnLabel.text);
+    const enterAmountBtnIsHidden = await this.play.isElementHidden(this.selectors.bridgeDescriptors.enterAmountBtnLabel.text);
     assertionHelpers.assertEnterAmountButtonNotVisible(enterAmountBtnIsHidden);
     await this.wireMetaMask(context, useConnectWalletWidgetButton);
   }
@@ -585,8 +585,8 @@ class NeuraBridgePage extends BasePage {
 
   async fillAmount(amount) {
     await new Promise(r => setTimeout(r, timeouts.AMOUNT_FILL_TIMEOUT));
-    await this.fillDescLoc(this.selectors.walletScreen.amountField, amount);
-    return await this.getElementWithDescLoc(this.selectors.walletScreen.amountField).inputValue();
+    await this.play.fillDescLoc(this.selectors.walletScreen.amountField, amount);
+    return await this.play.getElementWithDescLoc(this.selectors.walletScreen.amountField).inputValue();
   }
 
   /**
@@ -597,17 +597,17 @@ class NeuraBridgePage extends BasePage {
    */
   async wireMetaMask(context, useConnectWalletWidgetButton = false) {
     if (useConnectWalletWidgetButton) {
-      await this.clickDescLoc(this.selectors.bridgeDescriptors.connectWalletButtonInWidget);
+      await this.play.clickDescLoc(this.selectors.bridgeDescriptors.connectWalletButtonInWidget);
     } else {
-      await this.clickDescLoc(this.selectors.connection.connectWalletButton);
+      await this.play.clickDescLoc(this.selectors.connection.connectWalletButton);
     }
-    await this.clickDescLoc(this.selectors.connection.selectMetaMaskWallet);
+    await this.play.clickDescLoc(this.selectors.connection.selectMetaMaskWallet);
     await this.attachWallet(context);
     await new Promise(r => setTimeout(r, timeouts.NETWORK_OPERATION_TIMEOUT));
   }
 
   async bridgeTokensFromNeuraToChain(context) {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeTokensBtn);
+    await this.play.clickDescLoc(this.selectors.bridgeDescriptors.bridgeTokensBtn);
     await this.approveBridgingTokens(context);
   }
 
@@ -619,7 +619,7 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<Object>} - The preview transaction layout
    */
   async clickBridgeButtonApprovingCustomChain(context, checkApproveButton = false, amount) {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn, null, timeouts.WALLET_OPERATION_TIMEOUT);
+    await this.play.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn, null, timeouts.WALLET_OPERATION_TIMEOUT);
     await new Promise(r => setTimeout(r, timeouts.NETWORK_OPERATION_TIMEOUT));
     await this.confirmTransactionWithExplicitPageSearch(context);
     return await this.assertPreviewTransactionLayout(checkApproveButton, amount);
@@ -632,37 +632,37 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<Object>} - The preview transaction layout
    */
   async clickBridgeButton(checkApproveButton = false, amount) {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn, null, timeouts.WALLET_OPERATION_TIMEOUT);
+    await this.play.clickDescLoc(this.selectors.bridgeDescriptors.bridgeBtn, null, timeouts.WALLET_OPERATION_TIMEOUT);
     await new Promise(r => setTimeout(r, timeouts.DEFAULT_TIMEOUT));
     return await this.assertPreviewTransactionLayout(checkApproveButton, amount);
   }
 
   async approveTokenTransfer(context) {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.approveTokenTransferButton, null, timeouts.WALLET_OPERATION_TIMEOUT);
+    await this.play.clickDescLoc(this.selectors.bridgeDescriptors.approveTokenTransferButton, null, timeouts.WALLET_OPERATION_TIMEOUT);
     await this.confirmTransaction(context);
-    await this.waitForDescLocElementToDisappear({ text: 'Approving token transfer...' }, { timeout: timeouts.BRIDGE_OPERATION_TIMEOUT, longTimeout: timeouts.BRIDGE_OPERATION_TIMEOUT });
+    await this.play.waitForDescLocElementToDisappear({ text: 'Approving token transfer...' }, { timeout: timeouts.BRIDGE_OPERATION_TIMEOUT, longTimeout: timeouts.BRIDGE_OPERATION_TIMEOUT });
   }
 
   async approveBridgingTokens(context) {
     await this.confirmTransactionInMetaMask(context);
-    await this.waitForDescLocElementToDisappear({ text: 'Bridging tokens...' }, { timeout: timeouts.BRIDGE_OPERATION_TIMEOUT, longTimeout: timeouts.BRIDGE_OPERATION_TIMEOUT });
+    await this.play.waitForDescLocElementToDisappear({ text: 'Bridging tokens...' }, { timeout: timeouts.BRIDGE_OPERATION_TIMEOUT, longTimeout: timeouts.BRIDGE_OPERATION_TIMEOUT });
   }
 
   async claimTransaction(context, amount) {
     await new Promise(r => setTimeout(r, timeouts.WALLET_OPERATION_TIMEOUT));
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.claimTransactionButton);
+    await this.play.clickDescLoc(this.selectors.bridgeDescriptors.claimTransactionButton);
     await this.confirmTransactionInMetaMask(context, 'approveSepoliaChainRequest');
     await this.confirmTransactionInMetaMask(context, 'confirmTransaction');
-    await this.waitForDescLocElementToDisappear({ text: `Claiming ${amount} ANKR on Sepolia, please don\'t close the page` },
+    await this.play.waitForDescLocElementToDisappear({ text: `Claiming ${amount} ANKR on Sepolia, please don\'t close the page` },
       { timeout: timeouts.BRIDGE_OPERATION_TIMEOUT, longTimeout: timeouts.BRIDGE_OPERATION_TIMEOUT });
   }
 
   async navigateToFaucetPage() {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.faucetBtn);
+    await this.play.clickDescLoc(this.selectors.bridgeDescriptors.faucetBtn);
   }
 
   async getBalanceAmountFromUi() {
-    return await this.getNumericMatch(this.selectors.bridgeDescriptors.ankrBalanceLabel, 1, null, timeouts.LONG_TIMEOUT);
+    return await this.play.getNumericMatch(this.selectors.bridgeDescriptors.ankrBalanceLabel, 1, null, timeouts.LONG_TIMEOUT);
   }
 
   /**
@@ -687,10 +687,10 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<Object>} - Returns an object containing wallet screen layout information
    */
   async verifyMetaMaskWalletScreen() {
-    await this.clickDescLoc(this.selectors.connection.avatarButton);
+    await this.play.clickDescLoc(this.selectors.connection.avatarButton);
     await new Promise(r => setTimeout(r, timeouts.WALLET_OPERATION_TIMEOUT));
-    const testNetLabels = await this.getAllRowTexts(this.selectors.walletScreen.testNetLabels, this.selectors.general.cellCss);
-    const activityLabel = await this.getAllTextsInit(this.selectors.walletScreen.activityLabel);
+    const testNetLabels = await this.play.getAllRowTexts(this.selectors.walletScreen.testNetLabels, this.selectors.general.cellCss);
+    const activityLabel = await this.play.getAllTextsInit(this.selectors.walletScreen.activityLabel);
     return {
       networkLabels: testNetLabels,
       activityLabel: activityLabel
@@ -705,7 +705,7 @@ class NeuraBridgePage extends BasePage {
     const metaMaskScreenLayout = await this.verifyMetaMaskWalletScreen();
     await this.assertTokenWithDynamicBalance();
     await assertionHelpers.assertMetaMaskWalletScreen(metaMaskScreenLayout);
-    await this.clickDescLoc(this.selectors.walletScreen.expandWallet);
+    await this.play.clickDescLoc(this.selectors.walletScreen.expandWallet);
     await new Promise(r => setTimeout(r, timeouts.NETWORK_OPERATION_TIMEOUT));
     return metaMaskScreenLayout;
   }
@@ -719,7 +719,7 @@ class NeuraBridgePage extends BasePage {
     const ANKR_LABEL = 'ANKR';
     const NEURA_CHAIN_LABEL = 'Neura Chain';
 
-    const textFromElementInContainer = await this.getTextFromContainerElement(
+    const textFromElementInContainer = await this.play.getTextFromContainerElement(
         this.selectors.walletScreen.neuraContainer,
         this.selectors.walletScreen.neuraBalance.css,
         ANKR_LABEL,
@@ -735,10 +735,10 @@ class NeuraBridgePage extends BasePage {
    * @returns {Promise<void>}
    */
   async switchNetworkDirection() {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.switchBridgeBtn);
+    await this.play.clickDescLoc(this.selectors.bridgeDescriptors.switchBridgeBtn);
     await this.assertBridgeWidgetLabels();
     // TO DO assert the networks in another way
-    // const networks = await this.getAllRowTexts(this.selectors.bridgeDescriptors.bridgeLabels, this.selectors.general.cellCss);
+    // const networks = await this.play.getAllRowTexts(this.selectors.bridgeDescriptors.bridgeLabels, this.selectors.general.cellCss);
     // assertionHelpers.assertNetworkLabels(
     //   networks,
     //   neuraBridgeAssertions.pageLayout.networks.neuraTestnet,
@@ -748,7 +748,7 @@ class NeuraBridgePage extends BasePage {
   }
 
   async closeBridgeModal() {
-    await this.clickDescLoc(this.selectors.bridgeDescriptors.closeBridgeModalButton);
+    await this.play.clickDescLoc(this.selectors.bridgeDescriptors.closeBridgeModalButton);
   }
 
   /**

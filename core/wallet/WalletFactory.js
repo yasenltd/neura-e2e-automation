@@ -1,4 +1,4 @@
-import MetamaskPage from '../pages/MetamaskPage.js';
+import MetamaskPage from '../../pages/wallets/MetamaskPage.js';
 
 /**
  * Factory class to create wallet instances

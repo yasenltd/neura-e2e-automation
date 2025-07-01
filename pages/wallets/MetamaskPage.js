@@ -1,7 +1,7 @@
-import WalletPage from './WalletPage.js';
-import selectors from '../locators/metamaskLocators.js';
-import { launchBrowserWithExtension } from '../utils/browserSetup.js';
-import { NETWORK_OPERATION_TIMEOUT } from '../constants/timeoutConstants.js';
+import WalletPage from '../common/WalletPage.js';
+import selectors from '../../locators/metamaskLocators.js';
+import { launchBrowserWithExtension } from '../../utils/browserSetup.js';
+import { NETWORK_OPERATION_TIMEOUT } from '../../constants/timeoutConstants.js';
 
 class MetamaskPage extends WalletPage {
   constructor(page) {
@@ -34,9 +34,9 @@ class MetamaskPage extends WalletPage {
    * @returns {Promise<void>} - Returns a promise that resolves after the onboarding is complete
    */
   async completeInitialOnboarding() {
-    await this.click(this.selectors.onboarding.agreementCheckbox);
-    await this.click(this.selectors.onboarding.importExistingButton);
-    await this.click(this.selectors.onboarding.denyMetricsButton);
+    await this.play.click(this.selectors.onboarding.agreementCheckbox);
+    await this.play.click(this.selectors.onboarding.importExistingButton);
+    await this.play.click(this.selectors.onboarding.denyMetricsButton);
   }
 
   /**
@@ -46,7 +46,7 @@ class MetamaskPage extends WalletPage {
    */
   async processCredentials(seedPhrase) {
     await this.fillSeedPhrase(seedPhrase);
-    await this.click(this.selectors.seedPhrase.confirmButton);
+    await this.play.click(this.selectors.seedPhrase.confirmButton);
   }
 
   /**
@@ -55,10 +55,10 @@ class MetamaskPage extends WalletPage {
    * @returns {Promise<void>}
    */
   async setupPassword(password) {
-    await this.fill(this.selectors.password.newInput, password);
-    await this.fill(this.selectors.password.confirmInput, password);
-    await this.click(this.selectors.password.termsCheckbox);
-    await this.click(this.selectors.password.importButton);
+    await this.play.fill(this.selectors.password.newInput, password);
+    await this.play.fill(this.selectors.password.confirmInput, password);
+    await this.play.click(this.selectors.password.termsCheckbox);
+    await this.play.click(this.selectors.password.importButton);
   }
 
   /**
@@ -66,9 +66,9 @@ class MetamaskPage extends WalletPage {
    * @returns {Promise<void>}
    */
   async completeFinalOnboarding() {
-    await this.click(this.selectors.onboarding.doneButton);
-    await this.click(this.selectors.onboarding.extensionNextButton);
-    await this.click(this.selectors.onboarding.extensionDoneButton);
+    await this.play.click(this.selectors.onboarding.doneButton);
+    await this.play.click(this.selectors.onboarding.extensionNextButton);
+    await this.play.click(this.selectors.onboarding.extensionDoneButton);
   }
 
   /**
@@ -100,11 +100,11 @@ class MetamaskPage extends WalletPage {
 
     // Select the dropdown option that corresponds to the seed phrase length.
     // Convert the number to a string
-    await this.selectOptionByValue(this.selectors.seedPhrase.dropdown, String(words.length), 1);
+    await this.play.selectOptionByValue(this.selectors.seedPhrase.dropdown, String(words.length), 1);
 
     // Fill each recovery word input field with the corresponding word from the seed phrase.
     for (let i = 0; i < words.length; i++) {
-      await this.fill(this.selectors.seedPhrase.wordInputPrefix + i, words[i]);
+      await this.play.fill(this.selectors.seedPhrase.wordInputPrefix + i, words[i]);
     }
   }
 
@@ -123,13 +123,13 @@ class MetamaskPage extends WalletPage {
    */
   async addRpcUrl(rpcUrl) {
     // Click on the RPC dropdown button
-    await this.click(this.selectors.network.addRpcDropdownButton);
+    await this.play.click(this.selectors.network.addRpcDropdownButton);
     // Click on the "Add RPC" button
-    await this.click(this.selectors.network.addRpcUrlInModalButton);
+    await this.play.click(this.selectors.network.addRpcUrlInModalButton);
     // Fill the RPC URL field
-    await this.fill(this.selectors.network.networkForm.rpcUrl, rpcUrl);
+    await this.play.fill(this.selectors.network.networkForm.rpcUrl, rpcUrl);
     // Click on the "Add URL" button to confirm
-    await this.click(this.selectors.network.addUrlButton);
+    await this.play.click(this.selectors.network.addUrlButton);
   }
 
   /**
@@ -145,25 +145,25 @@ class MetamaskPage extends WalletPage {
   async addCustomNetwork(networkDetails) {
     const { networkName, rpcUrl, chainId, currencySymbol } = networkDetails;
 
-    const popoverVisible = await this.isElementVisible(this.selectors.network.popOverSelector);
+    const popoverVisible = await this.play.isElementVisible(this.selectors.network.popOverSelector);
     if (popoverVisible) {
       console.log('Popover detected, closing it before proceeding');
-      await this.click(this.selectors.network.popOverSelector);
+      await this.play.click(this.selectors.network.popOverSelector);
     }
     // Click on the network selector dropdown
-    await this.click(this.selectors.network.networkSelector);
+    await this.play.click(this.selectors.network.networkSelector);
 
     // Wait for dropdown and click "Add network"
-    await this.click(this.selectors.network.addCustomNetworkButton);
+    await this.play.click(this.selectors.network.addCustomNetworkButton);
 
     // Fill in the network form
-    await this.fill(this.selectors.network.networkForm.networkName, networkName);
+    await this.play.fill(this.selectors.network.networkForm.networkName, networkName);
     await this.addRpcUrl(rpcUrl);
-    await this.fill(this.selectors.network.networkForm.chainId, chainId);
-    await this.fill(this.selectors.network.networkForm.currencySymbol, currencySymbol);
+    await this.play.fill(this.selectors.network.networkForm.chainId, chainId);
+    await this.play.fill(this.selectors.network.networkForm.currencySymbol, currencySymbol);
 
     // Save the network
-    await this.click(this.selectors.network.networkForm.saveButton);
+    await this.play.click(this.selectors.network.networkForm.saveButton);
 
     console.log(`Successfully added and switched to custom network: ${networkName}`);
   }
@@ -175,22 +175,22 @@ class MetamaskPage extends WalletPage {
    */
   async searchAndSelectNetwork(networkName) {
     // Open the network selection modal
-    await this.click(this.selectors.network.networkSelector);
+    await this.play.click(this.selectors.network.networkSelector);
 
     // Type the network name in the search field
-    await this.fill(this.selectors.network.searchSelector, networkName);
+    await this.play.fill(this.selectors.network.searchSelector, networkName);
 
     await new Promise(r => setTimeout(r, NETWORK_OPERATION_TIMEOUT));
 
     // data-testid matches the network name exactly
     const exactMatchSelector = `[data-testid="${networkName}"]`;
 
-    const networkExists = await this.isElementVisible(exactMatchSelector);
+    const networkExists = await this.play.isElementVisible(exactMatchSelector);
     if (!networkExists) {
       throw new Error(`Network "${networkName}" not found in available networks`);
     }
 
-    await this.click(exactMatchSelector);
+    await this.play.click(exactMatchSelector);
   }
 
   /**
@@ -209,8 +209,8 @@ class MetamaskPage extends WalletPage {
    * @returns {Promise<void>} - Returns a promise that resolves after the wallet is connected
    */
   async connectWallet() {
-    await this.waitForElementToBeVisible(this.selectors.connection.connectWalletButton);
-    await this.click(this.selectors.connection.connectWalletButton);
+    await this.play.waitForElementToBeVisible(this.selectors.connection.connectWalletButton);
+    await this.play.click(this.selectors.connection.connectWalletButton);
   }
 
   /**
@@ -218,13 +218,13 @@ class MetamaskPage extends WalletPage {
    * @returns {Promise<void>} - Returns a promise that resolves after the transaction is confirmed
    */
   async confirmTransaction() {
-    await this.waitForElementToBeVisible(this.selectors.transaction.confirm);
-    await this.click(this.selectors.transaction.confirm);
+    await this.play.waitForElementToBeVisible(this.selectors.transaction.confirm);
+    await this.play.click(this.selectors.transaction.confirm);
   }
 
   async cancelTransaction() {
-    await this.waitForElementToBeVisible(this.selectors.transaction.cancel);
-    await this.click(this.selectors.transaction.cancel);
+    await this.play.waitForElementToBeVisible(this.selectors.transaction.cancel);
+    await this.play.click(this.selectors.transaction.cancel);
   }
 
   /**
@@ -232,13 +232,13 @@ class MetamaskPage extends WalletPage {
    * @returns {Promise<void>} - Returns a promise that resolves after the submission is confirmed
    */
   async approveCustomNetwork() {
-    await this.waitForElementToBeVisible(this.selectors.transaction.submit);
-    await this.click(this.selectors.transaction.submit);
+    await this.play.waitForElementToBeVisible(this.selectors.transaction.submit);
+    await this.play.click(this.selectors.transaction.submit);
   }
 
   async approveSepoliaChainRequest() {
-    await this.waitForElementToBeVisible(this.selectors.transaction.confirmSepoliaChainRequest);
-    await this.click(this.selectors.transaction.confirmSepoliaChainRequest);
+    await this.play.waitForElementToBeVisible(this.selectors.transaction.confirmSepoliaChainRequest);
+    await this.play.click(this.selectors.transaction.confirmSepoliaChainRequest);
   }
 }
 

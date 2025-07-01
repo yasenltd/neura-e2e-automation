@@ -3,7 +3,7 @@
  * This module provides reusable setup and teardown logic for test files
  */
 import { test as baseTest } from '@playwright/test';
-import WalletFactory            from '../factory/WalletFactory.js';
+import WalletFactory            from '../core/wallet/WalletFactory.js';
 import NeuraBridgePage          from '../pages/NeuraBridgePage.js';
 import networks                 from '../constants/networkConstants.js';
 import dotenv from 'dotenv';
