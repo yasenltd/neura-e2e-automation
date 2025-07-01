@@ -3,7 +3,7 @@ import BalanceTracker                     from '../utils/BalanceTracker.js';
 import BridgeDepositWatcher               from '../utils/BridgeDepositWatcher.js';
 import networks                           from '../constants/networkConstants.js';
 import { TEST_AMOUNT }                    from '../constants/testConstants.js';
-import { BRIDGE_OPERATION_TIMEOUT, TEST_TIMEOUT} from '../constants/timeoutConstants.js';
+import { TEST_TIMEOUT, BRIDGE_OPERATION_TIMEOUT } from '../constants/timeoutConstants.js';
 import * as assertionHelpers from '../utils/AssertionHelpers.js';
 
 import dotenv from 'dotenv';
@@ -29,7 +29,7 @@ async function initializeAndBridgeFromNeuraToSepolia(neuraBridgePage, context, w
     const messageHash = await watcher.predictNativeDepositHash(TEST_AMOUNT, networks.sepolia.chainId);
     await neuraBridgePage.bridgeTokensFromNeuraToChain(context);
     const blockStart = await watcher.getFreshBlockNumber(watcher.neuraProvider);
-    const parsed = await assertionHelpers.assertApprovalReceipt(watcher, messageHash, BRIDGE_OPERATION_TIMEOUT, blockStart);
+    const parsed = await assertionHelpers.assertApprovalReceipt(watcher, messageHash, BRIDGE_OPERATION_TIMEOUT);
     await assertionHelpers.assertBridgeTransferLog(parsed, messageHash, watcher, TEST_AMOUNT, networks);
     return { messageHash, parsed, blockStart, beforeBalances };
 }
