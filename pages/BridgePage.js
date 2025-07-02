@@ -9,7 +9,7 @@ import {neuraBridgeAssertions} from '../constants/assertionConstants.js';
 import * as timeouts from '../constants/timeoutConstants.js';
 import * as assertionHelpers from '../utils/AssertionHelpers.js';
 
-class NeuraBridgePage extends BasePage {
+class BridgePage extends BasePage {
   constructor(page) {
     super(page);
     this.page = page;
@@ -18,15 +18,15 @@ class NeuraBridgePage extends BasePage {
   }
 
   /**
-   * Static method to create a new NeuraBridgePage instance and navigate to the dApp URL
+   * Static method to create a new BridgePage instance and navigate to the dApp URL
    * @param {context} context - The browser context
    * @param {string} bridgePageUrl - URL of the dApp
-   * @returns {Promise<NeuraBridgePage>} - Returns a new NeuraBridgePage instance
+   * @returns {Promise<BridgePage>} - Returns a new BridgePage instance
    */
   static async initialize(context, bridgePageUrl) {
     const page = await context.newPage();
     await page.goto(bridgePageUrl);
-    const bridgePage = new NeuraBridgePage(page);
+    const bridgePage = new BridgePage(page);
     await bridgePage.closeUnnecessaryPages(context);
     return bridgePage;
   }
@@ -794,4 +794,4 @@ class NeuraBridgePage extends BasePage {
   }
 }
 
-export default NeuraBridgePage;
+export default BridgePage;

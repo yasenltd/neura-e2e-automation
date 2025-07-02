@@ -89,7 +89,7 @@ The framework implements several design patterns:
 1. **Page Object Model (POM)**: UI interactions are encapsulated in page objects, separating test logic from UI implementation details.
    - `BasePage`: Provides common functionality for all page objects
    - `WalletPage`: Extends BasePage with wallet-specific functionality
-   - Specific page implementations (e.g., `NeuraBridgePage`, `MetamaskPage`)
+   - Specific page implementations (e.g., `BridgePage`, `SwapPage`, `FaucetPage`, `MetamaskPage`)
 
 2. **Factory Pattern**: Used to create instances of complex objects with a common interface.
    - `PlaywrightFactory`: Creates and caches PlaywrightWrapper instances
@@ -99,7 +99,7 @@ The framework implements several design patterns:
    - `WalletPage.importWallet()`: Defines the wallet import workflow, with specific steps implemented by subclasses
 
 4. **Strategy Pattern**: Allows selecting an algorithm's implementation at runtime.
-   - Used in `NeuraBridgePage.setWallet()` to configure different wallet implementations
+   - Used in `BridgePage.setWallet()` to configure different wallet implementations
 
 ### Component Interactions
 
@@ -114,9 +114,10 @@ The framework implements several design patterns:
 The following diagram illustrates the communication between the core PlaywrightFactory, PlaywrightWrapper, BasePage, and dedicated Pages that extend BasePage:
 
 ```mermaid
-graph TD
-    Test[Test Files] -->|uses| Fixture[Test Fixtures]
-    Fixture -->|creates| Page[Dedicated Page Objects]
+graph LR
+    Test[Test Files] -.->|optionally uses| Fixture[Test Fixtures]
+    Test -->|uses| Page[Dedicated Page Objects]
+    Fixture -->|creates| Page
     Page -->|extends| BasePage[BasePage]
     BasePage -->|uses| PlaywrightFactory[PlaywrightFactory]
     PlaywrightFactory -->|creates/caches| PlaywrightWrapper[PlaywrightWrapper]
@@ -135,7 +136,7 @@ graph TD
 In this architecture:
 
 1. **Test Files** use **Test Fixtures** to set up the testing environment.
-2. **Test Fixtures** create instances of **Dedicated Page Objects** (e.g., NeuraBridgePage).
+2. **Test Fixtures** create instances of **Dedicated Page Objects** (e.g., BridgePage, SwapPage, FaucetPage).
 3. **Dedicated Page Objects** extend **BasePage** to inherit common functionality.
 4. **BasePage** uses **PlaywrightFactory** to get a wrapper for the Playwright page.
 5. **PlaywrightFactory** creates and caches **PlaywrightWrapper** instances.
@@ -295,7 +296,7 @@ export { test };
 #### Using Multiple Fixtures in Tests
 
 ```javascript
-import { test } from '../test-utils/testFixtures.js';
+import { test } from '../fixtures/testFixtures.js';
 
 test('navigate using multiple page fixtures', async ({ 
   dashboardPage, 

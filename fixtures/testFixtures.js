@@ -4,7 +4,7 @@
  */
 import { test as baseTest } from '@playwright/test';
 import WalletFactory            from '../core/wallet/WalletFactory.js';
-import NeuraBridgePage          from '../pages/NeuraBridgePage.js';
+import BridgePage          from '../pages/BridgePage.js';
 import networks                 from '../constants/networkConstants.js';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -23,10 +23,10 @@ const createTestFixture = (options = { setupSepoliaNetwork: true, setupNeuraNetw
 
   return slowTest.extend({
     // Define fixtures that will be available in tests
-    neuraBridgePage: async ({ }, use) => {
+    bridgePage: async ({ }, use) => {
       let wallet = null;
       let context = null;
-      let neuraBridgePage = null;
+      let bridgePageInstance = null;
       const walletType = 'metamask';
 
       try {
@@ -54,10 +54,10 @@ const createTestFixture = (options = { setupSepoliaNetwork: true, setupNeuraNetw
         await wallet.importWallet(config.seedPhrase, config.password);
 
         // Initialize the Bridge page (this will also close unnecessary extension pages)
-        neuraBridgePage = await NeuraBridgePage.initialize(context, config.bridgePageUrl);
+        bridgePageInstance = await BridgePage.initialize(context, config.bridgePageUrl);
 
-        // Set wallet for the NeuraBridgePage using the strategy pattern
-        await neuraBridgePage.setWallet(wallet);
+        // Set wallet for the BridgePage using the strategy pattern
+        await bridgePageInstance.setWallet(wallet);
 
         // Configure wallet to Neura Bridge Page
         const { extensionPage, previousPage } = await wallet.openExtension();
@@ -73,11 +73,11 @@ const createTestFixture = (options = { setupSepoliaNetwork: true, setupNeuraNetw
 
         console.log('✅ Test setup completed successfully');
 
-        // Store context and wallet on the neuraBridgePage object so they can be accessed in tests
-        neuraBridgePage.context = context;
-        neuraBridgePage.wallet = wallet;
+        // Store context and wallet on the bridgePageInstance object so they can be accessed in tests
+        bridgePageInstance.context = context;
+        bridgePageInstance.wallet = wallet;
 
-        await use(neuraBridgePage);
+        await use(bridgePageInstance);
 
         // Cleanup after test
         if (context) {
@@ -93,12 +93,12 @@ const createTestFixture = (options = { setupSepoliaNetwork: true, setupNeuraNetw
       }
     },
 
-    wallet: async ({ neuraBridgePage }, use) => {
-      await use(neuraBridgePage.wallet);
+    wallet: async ({ bridgePage }, use) => {
+      await use(bridgePage.wallet);
     },
 
-    context: async ({ neuraBridgePage }, use) => {
-      await use(neuraBridgePage.context);
+    context: async ({ bridgePage }, use) => {
+      await use(bridgePage.context);
     },
   });
 };

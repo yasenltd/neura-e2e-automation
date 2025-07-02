@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import {getConfig, testWithoutSepolia as test} from '../test-utils/testFixtures.js';
+import { testWithoutSepolia as test} from '../fixtures/testFixtures.js';
 import BalanceTracker                                     from '../utils/BalanceTracker.js';
 import BridgeDepositWatcher                              from '../utils/BridgeDepositWatcher.js';
 import { TEST_AMOUNT }                                   from '../constants/testConstants.js';
@@ -12,11 +12,11 @@ dotenv.config();
 
 test.describe('Sepolia to Neura Bridge UI Automation', () => {
 
-    test('Verify Sepolia to Neura only approve transaction', async ({ neuraBridgePage, context }) => {
+    test('Verify Sepolia to Neura only approve transaction', async ({ bridgePage, context }) => {
         test.setTimeout(TEST_TIMEOUT);
 
         try {
-            await neuraBridgePage.initializeBridgeWithOptions({
+            await bridgePage.initializeBridgeWithOptions({
                 context,
                 walletConnection: {
                     connect: true
@@ -27,24 +27,24 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             const watcher = new BridgeDepositWatcher();
             await watcher.clearAnkrAllowance();
 
-            await neuraBridgePage.fillAmount(TEST_AMOUNT);
-            await neuraBridgePage.clickBridgeButtonApprovingCustomChain(context, true, TEST_AMOUNT);
-            await neuraBridgePage.approveTokenTransfer(context);
-            await neuraBridgePage.cancelTransaction(context);
-            await neuraBridgePage.closeBridgeModal();
+            await bridgePage.fillAmount(TEST_AMOUNT);
+            await bridgePage.clickBridgeButtonApprovingCustomChain(context, true, TEST_AMOUNT);
+            await bridgePage.approveTokenTransfer(context);
+            await bridgePage.cancelTransaction(context);
+            await bridgePage.closeBridgeModal();
 
             const newBalances = await BalanceTracker.getAllBalances();
-            await neuraBridgePage.verifyUIBalanceMatchesChain(newBalances);
-            await neuraBridgePage.switchNetworkDirection();
-            await neuraBridgePage.reloadPreservingAuth();
-            await neuraBridgePage.verifyUIBalanceMatchesNeuraChain(newBalances);
+            await bridgePage.verifyUIBalanceMatchesChain(newBalances);
+            await bridgePage.switchNetworkDirection();
+            await bridgePage.reloadPreservingAuth();
+            await bridgePage.verifyUIBalanceMatchesNeuraChain(newBalances);
         } catch (error) {
             console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
             throw error;
         }
     });
 
-    test('Verify Sepolia to Neura Bridge approving and bridging transaction via UI', { tag: '@scheduledRun' }, async ({ neuraBridgePage, context }) => {
+    test('Verify Sepolia to Neura Bridge approving and bridging transaction via UI', { tag: '@scheduledRun' }, async ({ bridgePage, context }) => {
         test.setTimeout(TEST_TIMEOUT);
 
         const from = process.env.MY_ADDRESS.toLowerCase();
@@ -52,7 +52,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
         const amount = rawAmount.toString();
 
         try {
-            await neuraBridgePage.initializeBridgeWithOptions({
+            await bridgePage.initializeBridgeWithOptions({
                 context,
                 walletConnection: {
                     connect: true
@@ -64,10 +64,10 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             const watcher = new BridgeDepositWatcher();
             await watcher.clearAnkrAllowance();
 
-            await neuraBridgePage.fillAmount(TEST_AMOUNT);
-            await neuraBridgePage.clickBridgeButtonApprovingCustomChain(context, true, TEST_AMOUNT);
-            await neuraBridgePage.approveTokenTransfer(context);
-            await neuraBridgePage.approveBridgingTokens(context);
+            await bridgePage.fillAmount(TEST_AMOUNT);
+            await bridgePage.clickBridgeButtonApprovingCustomChain(context, true, TEST_AMOUNT);
+            await bridgePage.approveTokenTransfer(context);
+            await bridgePage.approveBridgingTokens(context);
 
             const blockStart = await watcher.getFreshBlockNumber();
             const subgraphTxHash = await getDepositTransactionHash(from, amount);
@@ -78,24 +78,24 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             const result = await BalanceTracker.compareBalances(beforeBalances, TEST_AMOUNT, false);
             await assertionHelpers.assertSepoliaToNeuraBalanceChanges(result);
             const newBalances = await BalanceTracker.getAllBalances();
-            await neuraBridgePage.verifyUIBalanceMatchesChain(newBalances);
-            await neuraBridgePage.switchNetworkDirection();
-            await neuraBridgePage.reloadPreservingAuth();
-            await neuraBridgePage.verifyUIBalanceMatchesNeuraChain(newBalances);
+            await bridgePage.verifyUIBalanceMatchesChain(newBalances);
+            await bridgePage.switchNetworkDirection();
+            await bridgePage.reloadPreservingAuth();
+            await bridgePage.verifyUIBalanceMatchesNeuraChain(newBalances);
         } catch (error) {
             console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
             throw error;
         }
     });
 
-    test('Verify Sepolia to Neura approve and then bridge transaction', async ({ neuraBridgePage, context }) => {
+    test('Verify Sepolia to Neura approve and then bridge transaction', async ({ bridgePage, context }) => {
         test.setTimeout(TEST_TIMEOUT);
 
         const from = process.env.MY_ADDRESS.toLowerCase();
         const rawAmount = parseToEth(TEST_AMOUNT);
         const amount = rawAmount.toString();
         try {
-            await neuraBridgePage.initializeBridgeWithOptions({
+            await bridgePage.initializeBridgeWithOptions({
                 context,
                 walletConnection: {
                     connect: true
@@ -107,15 +107,15 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             const watcher = new BridgeDepositWatcher();
             await watcher.clearAnkrAllowance();
 
-            await neuraBridgePage.fillAmount(TEST_AMOUNT);
-            await neuraBridgePage.clickBridgeButtonApprovingCustomChain(context, true, TEST_AMOUNT);
-            await neuraBridgePage.approveTokenTransfer(context);
-            await neuraBridgePage.cancelTransaction(context);
-            await neuraBridgePage.closeBridgeModal();
-            await neuraBridgePage.fillAmount(TEST_AMOUNT);
-            await neuraBridgePage.clickBridgeButton(false, TEST_AMOUNT);
-            await neuraBridgePage.clickDescLoc(neuraBridgePage.selectors.bridgeDescriptors.bridgeTokensBtn);
-            await neuraBridgePage.approveBridgingTokens(context);
+            await bridgePage.fillAmount(TEST_AMOUNT);
+            await bridgePage.clickBridgeButtonApprovingCustomChain(context, true, TEST_AMOUNT);
+            await bridgePage.approveTokenTransfer(context);
+            await bridgePage.cancelTransaction(context);
+            await bridgePage.closeBridgeModal();
+            await bridgePage.fillAmount(TEST_AMOUNT);
+            await bridgePage.clickBridgeButton(false, TEST_AMOUNT);
+            await bridgePage.clickDescLoc(bridgePage.selectors.bridgeDescriptors.bridgeTokensBtn);
+            await bridgePage.approveBridgingTokens(context);
 
             const blockStart = await watcher.getFreshBlockNumber();
             const subgraphTxHash = await getDepositTransactionHash(from, amount);
@@ -125,10 +125,10 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
             const result = await BalanceTracker.compareBalances(beforeBalances, TEST_AMOUNT, false);
             await assertionHelpers.assertSepoliaToNeuraBalanceChanges(result);
             const newBalances = await BalanceTracker.getAllBalances();
-            await neuraBridgePage.verifyUIBalanceMatchesChain(newBalances);
-            await neuraBridgePage.switchNetworkDirection();
-            await neuraBridgePage.reloadPreservingAuth();
-            await neuraBridgePage.verifyUIBalanceMatchesNeuraChain(newBalances);
+            await bridgePage.verifyUIBalanceMatchesChain(newBalances);
+            await bridgePage.switchNetworkDirection();
+            await bridgePage.reloadPreservingAuth();
+            await bridgePage.verifyUIBalanceMatchesNeuraChain(newBalances);
         } catch (error) {
             console.error(`❌ Error in Sepolia to Neura bridge test: ${error.message}`);
             throw error;
