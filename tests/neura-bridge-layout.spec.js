@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { testWithoutSepolia as test } from '../fixtures/testFixtures.js';
+import { testWithoutSepolia as test } from '../fixtures/bridgeFixture.js';
 import { TEST_AMOUNT } from '../constants/testConstants.js';
 import { neuraBridgeAssertions } from '../constants/assertionConstants.js';
 import dotenv from 'dotenv';

@@ -41,7 +41,7 @@ const createTestFixture = (options = { setupSepoliaNetwork: true, setupNeuraNetw
         };
 
         if (!config.seedPhrase || !config.password || !config.bridgePageUrl) {
-          console.error('Missing required environment variables:  , WALLET_PASSWORD, and NEURA URL must be set');
+          console.error('Missing required environment variables: SEED_PHRASE, WALLET_PASSWORD, or NEURA URL must be set');
         }
 
         // Initialize browser with MetaMask
@@ -135,16 +135,7 @@ const testWithoutNeuraAndSepolia = createTestFixture({
   setupNeuraNetwork: false
 });
 
-const getConfig = () => {
-    return {
-        seedPhrase: process.env.SEED_PHRASE,
-        password: process.env.WALLET_PASSWORD,
-        bridgePageUrl: process.env.NEURA_TESTNET_URL,
-    };
-}
-
 export {
-  getConfig,
   createTestFixture,
   testWithoutSepolia,
   testWithoutNeura,

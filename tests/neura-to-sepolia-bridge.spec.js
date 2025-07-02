@@ -1,4 +1,4 @@
-import { testWithoutSepolia as test} from '../fixtures/testFixtures.js';
+import { testWithoutSepolia as test} from '../fixtures/bridgeFixture.js';
 import BalanceTracker                     from '../utils/BalanceTracker.js';
 import BridgeDepositWatcher               from '../utils/BridgeDepositWatcher.js';
 import networks                           from '../constants/networkConstants.js';
