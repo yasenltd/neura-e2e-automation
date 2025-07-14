@@ -20,7 +20,7 @@ on:
 
 jobs:
   e2e:
-    name: Neura E2E Automation tests
+    name: Neura E2E Automation
     runs-on: ubuntu-latest
     timeout-minutes: 60
     concurrency:
