@@ -149,7 +149,7 @@ jobs:
           fi
           
           RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          MESSAGE="${STATUS_EMOJI} Neura E2E Automation: <${RUN_URL}|${STATUS_TEXT}>\nTriggered by: ${GITHUB_ACTOR}"
+          MESSAGE="${STATUS_EMOJI} Neura E2E Automation: <${RUN_URL}|${STATUS_TEXT}> (triggered by: ${GITHUB_ACTOR})"
           
           curl -X POST -H 'Content-type: application/json' \
             --data "{\"text\":\"$MESSAGE\"}" \
