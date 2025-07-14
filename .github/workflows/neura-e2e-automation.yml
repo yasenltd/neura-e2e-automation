@@ -120,19 +120,24 @@ jobs:
           fi
 
   slack-notify:
-    needs: [ e2e, check-cancellation ]
+    needs: [e2e, check-cancellation]
     runs-on: ubuntu-latest
     if: |
-      (
-        needs.e2e.result == 'success' ||
-        needs.e2e.result == 'failure' ||
-        (needs.e2e.result == 'cancelled' && needs.check-cancellation.outputs.cancelled_by_user == 'false')
-      )
+      needs.e2e.result == 'success' ||
+      needs.e2e.result == 'failure' ||
+      needs.e2e.result == 'cancelled'
     steps:
       - name: Post Slack notification (Minimal with link)
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          CANCELLED_BY_USER: ${{ needs.check-cancellation.outputs.cancelled_by_user }}
         run: |
+          # If cancelled and manually cancelled, skip notification
+          if [ "${{ needs.e2e.result }}" = "cancelled" ] && [ "${CANCELLED_BY_USER}" != "false" ]; then
+            echo "Run was manually cancelled; not notifying Slack."
+            exit 0
+          fi
+
           if [ "${{ needs.e2e.result }}" = "success" ]; then
             STATUS_EMOJI="✅"
             STATUS_TEXT="SUCCESS"
