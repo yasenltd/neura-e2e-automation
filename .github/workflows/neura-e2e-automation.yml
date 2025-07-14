@@ -129,36 +129,7 @@ jobs:
         (needs.e2e.result == 'cancelled' && needs.check-cancellation.outputs.cancelled_by_user == 'false')
       )
     steps:
-      # - name: Maybe skip if previous run also failed or auto-cancelled
-      #   id: skip_if_repeat_failure
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     CURRENT_RUN_ID: ${{ github.run_id }}
-      #     WORKFLOW_ID: ${{ github.workflow }}
-      #     BRANCH_NAME: ${{ github.ref_name }}
-      #     RUN_RESULT: ${{ needs.e2e.result }}
-      #   run: |
-      #     # Only skip on repeated failure or repeated cancelled, always post on success!
-      #     if [ "$RUN_RESULT" = "failure" ] || [ "$RUN_RESULT" = "cancelled" ]; then
-      #       if [ "$RUN_RESULT" = "failure" ]; then
-      #         REPEAT_TYPE="failure"
-      #       else
-      #         REPEAT_TYPE="cancelled"
-      #       fi
-      #
-      #       PREV_RUN_STATUS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-      #         "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/${WORKFLOW_ID}/runs?branch=${BRANCH_NAME}&status=completed&per_page=2" \
-      #         | jq "[.workflow_runs[] | select(.id != ${CURRENT_RUN_ID})][0].conclusion")
-      #
-      #       echo "Previous run conclusion: $PREV_RUN_STATUS"
-      #       if [ "$PREV_RUN_STATUS" = "\"$REPEAT_TYPE\"" ]; then
-      #         echo "Previous run also $REPEAT_TYPE; skipping Slack notification."
-      #         exit 1  # CAUSES the following step to NOT run
-      #       fi
-      #     fi
-
       - name: Post Slack notification (Minimal with link)
-        # if: steps.skip_if_repeat_failure.outcome != 'failure'  # No skip, always post
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
@@ -172,10 +143,10 @@ jobs:
             STATUS_EMOJI="⚠️"
             STATUS_TEXT="CANCELLED"
           fi
-          
+
           RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           MESSAGE="${STATUS_EMOJI} Neura E2E Automation: <${RUN_URL}|${STATUS_TEXT}>\nTriggered by: ${GITHUB_ACTOR}"
-          
+
           curl -X POST -H 'Content-type: application/json' \
             --data "{\"text\":\"$MESSAGE\"}" \
             $SLACK_WEBHOOK_URL
