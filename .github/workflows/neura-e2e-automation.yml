@@ -1,15 +1,12 @@
 name: Neura E2E Automation
 
 on:
-  # ── every 60 minutes ──
   schedule:
     - cron: '0 * * * *'
   push:
     branches: ['main']
-  # ── on any PR targeting main ──
   pull_request:
     branches: ['main']
-  # ── manual trigger with optional inputs ──
   workflow_dispatch:
     inputs:
       spec_file:
@@ -100,3 +97,104 @@ jobs:
           name: playwright-traces
           path: test-results/**/trace.zip
           retention-days: 14
+
+  check-cancellation:
+    needs: e2e
+    runs-on: ubuntu-latest
+    if: ${{ needs.e2e.result == 'cancelled' }}
+    outputs:
+      cancelled_by_user: ${{ steps.check.outputs.cancelled_by_user }}
+    steps:
+      - name: Check if run was manually cancelled
+        id: check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RUN_INFO=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")
+          CANCELER=$(echo "$RUN_INFO" | jq -r '.canceler.login // empty')
+          if [ -n "$CANCELER" ]; then
+            echo "cancelled_by_user=true" >> $GITHUB_OUTPUT
+          else
+            echo "cancelled_by_user=false" >> $GITHUB_OUTPUT
+          fi
+
+  slack-notify:
+    needs: [e2e, check-cancellation]
+    runs-on: ubuntu-latest
+    if: |
+      always() &&
+      (
+        needs.e2e.result != 'cancelled' ||
+        (needs.e2e.result == 'cancelled' && needs.check-cancellation.outputs.cancelled_by_user == 'false')
+      )
+    steps:
+      - name: Post Slack notification (Blocks)
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ "${{ needs.e2e.result }}" = "success" ]; then
+            STATUS_EMOJI=":white_check_mark:"
+            STATUS_TEXT="*SUCCESS*"
+          elif [ "${{ needs.e2e.result }}" = "failure" ]; then
+            STATUS_EMOJI=":x:"
+            STATUS_TEXT="*FAILURE*"
+          else
+            STATUS_EMOJI=":warning:"
+            STATUS_TEXT="*CANCELLED*"
+          fi
+
+          cat <<EOF > slack-message.json
+  {
+    "blocks": [
+      {
+        "type": "header",
+        "text": {
+          "type": "plain_text",
+          "text": "Neura E2E Automation: $STATUS_TEXT $STATUS_EMOJI",
+          "emoji": true
+        }
+      },
+      {
+        "type": "section",
+        "fields": [
+          {
+            "type": "mrkdwn",
+            "text": "*Repo:*\n<${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}|${GITHUB_REPOSITORY}>"
+          },
+          {
+            "type": "mrkdwn",
+            "text": "*Workflow:*\n<${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}|Run #${GITHUB_RUN_NUMBER}>"
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "fields": [
+          {
+            "type": "mrkdwn",
+            "text": "*Branch:*\n${GITHUB_REF##*/}"
+          },
+          {
+            "type": "mrkdwn",
+            "text": "*Triggered by:*\n${GITHUB_ACTOR}"
+          }
+        ]
+      },
+      {
+        "type": "divider"
+      },
+      {
+        "type": "context",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "Workflow: *Neura E2E Automation*"
+          }
+        ]
+      }
+    ]
+  }
+  EOF
+
+curl -X POST -H 'Content-type: application/json' --data @slack-message.json $SLACK_WEBHOOK_URL

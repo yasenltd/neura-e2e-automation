@@ -22,7 +22,7 @@ test.describe('Smart-contract bridge flows (no UI)', () => {
         await assertionHelpers.assertSepoliaToNeuraBalanceChanges(result);
     });
 
-    test('ANKR deposit from Neura to Sepolia',{ tag: '@scheduledRun' }, async () => {
+    test('ANKR deposit from Neura to Sepolia',{ tag: '@testRun' }, async () => {
         test.setTimeout(TEST_TIMEOUT);
         const watcher = new BridgeDepositWatcher();
         const beforeBalances = await BalanceTracker.getAllBalances();
