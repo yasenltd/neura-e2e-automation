@@ -120,38 +120,37 @@ jobs:
           fi
 
   slack-notify:
-    needs: [e2e, check-cancellation]
+    needs: [ e2e, check-cancellation ]
     runs-on: ubuntu-latest
-    if: |
-      needs.e2e.result == 'success' ||
-      needs.e2e.result == 'failure' ||
-      needs.e2e.result == 'cancelled'
+    if: always()
     steps:
       - name: Post Slack notification (Minimal with link)
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           CANCELLED_BY_USER: ${{ needs.check-cancellation.outputs.cancelled_by_user }}
         run: |
-          # If cancelled and manually cancelled, skip notification
-          if [ "${{ needs.e2e.result }}" = "cancelled" ] && [ "${CANCELLED_BY_USER}" != "false" ]; then
-            echo "Run was manually cancelled; not notifying Slack."
-            exit 0
-          fi
-
-          if [ "${{ needs.e2e.result }}" = "success" ]; then
+          # Only notify on success, failure, or cancelled (but not manually cancelled)
+          if [ "${{ needs.e2e.result }}" = "cancelled" ]; then
+            if [ "${CANCELLED_BY_USER}" != "false" ]; then
+              echo "Run was manually cancelled; not notifying Slack."
+              exit 0
+            fi
+            STATUS_EMOJI="⚠️"
+            STATUS_TEXT="CANCELLED"
+          elif [ "${{ needs.e2e.result }}" = "success" ]; then
             STATUS_EMOJI="✅"
             STATUS_TEXT="SUCCESS"
           elif [ "${{ needs.e2e.result }}" = "failure" ]; then
             STATUS_EMOJI="❌"
             STATUS_TEXT="FAILURE"
           else
-            STATUS_EMOJI="⚠️"
-            STATUS_TEXT="CANCELLED"
+            # Not a final state we care about, do not notify
+            exit 0
           fi
-
+          
           RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           MESSAGE="${STATUS_EMOJI} Neura E2E Automation: <${RUN_URL}|${STATUS_TEXT}>\nTriggered by: ${GITHUB_ACTOR}"
-
+          
           curl -X POST -H 'Content-type: application/json' \
             --data "{\"text\":\"$MESSAGE\"}" \
             $SLACK_WEBHOOK_URL
