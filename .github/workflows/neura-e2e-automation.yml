@@ -2,7 +2,7 @@ name: Neura E2E Automation
 
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '0 */2 * * *'
   push:
     branches: ['main']
   pull_request:
@@ -123,78 +123,59 @@ jobs:
     needs: [e2e, check-cancellation]
     runs-on: ubuntu-latest
     if: |
-      always() &&
       (
-        needs.e2e.result != 'cancelled' ||
+        needs.e2e.result == 'success' ||
+        needs.e2e.result == 'failure' ||
         (needs.e2e.result == 'cancelled' && needs.check-cancellation.outputs.cancelled_by_user == 'false')
       )
     steps:
-      - name: Post Slack notification (Blocks)
+      - name: Skip if previous run already failed or auto-cancelled
+        id: skip_if_repeat_failure
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CURRENT_RUN_ID: ${{ github.run_id }}
+          WORKFLOW_ID: ${{ github.workflow }}
+          BRANCH_NAME: ${{ github.ref_name }}
+          RUN_RESULT: ${{ needs.e2e.result }}
+        run: |
+          # Only check for repeat failures or repeat auto-cancellations (never for success)
+          if [ "$RUN_RESULT" = "failure" ]; then
+            REPEAT_TYPE="failure"
+          elif [ "$RUN_RESULT" = "cancelled" ]; then
+            REPEAT_TYPE="cancelled"
+          else
+            exit 0
+          fi
+
+          PREV_RUN_STATUS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/${WORKFLOW_ID}/runs?branch=${BRANCH_NAME}&status=completed&per_page=2" \
+            | jq "[.workflow_runs[] | select(.id != ${CURRENT_RUN_ID})][0].conclusion")
+
+          echo "Previous run conclusion: $PREV_RUN_STATUS"
+          if [ "$PREV_RUN_STATUS" = "\"$REPEAT_TYPE\"" ]; then
+            echo "Previous run also $REPEAT_TYPE; skipping Slack notification."
+            exit 0
+          fi
+
+      - name: Post Slack notification (Minimal with link)
+        if: steps.skip_if_repeat_failure.outcome == 'success'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           if [ "${{ needs.e2e.result }}" = "success" ]; then
-            STATUS_EMOJI=":white_check_mark:"
-            STATUS_TEXT="*SUCCESS*"
+            STATUS_EMOJI="✅"
+            STATUS_TEXT="SUCCESS"
           elif [ "${{ needs.e2e.result }}" = "failure" ]; then
-            STATUS_EMOJI=":x:"
-            STATUS_TEXT="*FAILURE*"
+            STATUS_EMOJI="❌"
+            STATUS_TEXT="FAILURE"
           else
-            STATUS_EMOJI=":warning:"
-            STATUS_TEXT="*CANCELLED*"
+            STATUS_EMOJI="⚠️"
+            STATUS_TEXT="CANCELLED"
           fi
 
-          cat <<EOF > slack-message.json
-          {
-            "blocks": [
-              {
-                "type": "header",
-                "text": {
-                  "type": "plain_text",
-                  "text": "Neura E2E Automation: ${STATUS_TEXT} ${STATUS_EMOJI}",
-                  "emoji": true
-                }
-              },
-              {
-                "type": "section",
-                "fields": [
-                  {
-                    "type": "mrkdwn",
-                    "text": "*Repo:*\n<${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}|${GITHUB_REPOSITORY}>"
-                  },
-                  {
-                    "type": "mrkdwn",
-                    "text": "*Workflow:*\n<${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}|Run #${GITHUB_RUN_NUMBER}>"
-                  }
-                ]
-              },
-              {
-                "type": "section",
-                "fields": [
-                  {
-                    "type": "mrkdwn",
-                    "text": "*Branch:*\n${GITHUB_REF##*/}"
-                  },
-                  {
-                    "type": "mrkdwn",
-                    "text": "*Triggered by:*\n${GITHUB_ACTOR}"
-                  }
-                ]
-              },
-              {
-                "type": "divider"
-              },
-              {
-                "type": "context",
-                "elements": [
-                  {
-                    "type": "mrkdwn",
-                    "text": "Workflow: *Neura E2E Automation*"
-                  }
-                ]
-              }
-            ]
-          }
-          EOF
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          MESSAGE="${STATUS_EMOJI} Neura E2E Automation: <${RUN_URL}|${STATUS_TEXT}>\nTriggered by: ${GITHUB_ACTOR}"
 
-          curl -X POST -H 'Content-type: application/json' --data @slack-message.json $SLACK_WEBHOOK_URL
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"$MESSAGE\"}" \
+            $SLACK_WEBHOOK_URL
