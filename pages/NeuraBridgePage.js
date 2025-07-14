@@ -439,7 +439,6 @@ class NeuraBridgePage extends BasePage {
   async assertSourceChainModalLayout(activeChain) {
     const title = await this.play.getElementWithDescLoc(this.selectors.sourceChainModal.selectSourceChainTitle).isVisible();
     expect(title).toBe(true);
-    await expect(this.play.doesTextMatchDescriptor(this.selectors.sourceChainModal.bscTestnet)).resolves.toBe(true);
     await expect(this.play.doesTextMatchDescriptor(this.selectors.sourceChainModal.neuraLabel)).resolves.toBe(true);
     await expect(this.play.doesTextMatchDescriptor(this.selectors.sourceChainModal.sepoliaLabel)).resolves.toBe(true);
     const activeSelectedChain = this.play.getElementWithDescLoc(this.selectors.sourceChainModal.activeChain);

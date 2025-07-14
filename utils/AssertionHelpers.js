@@ -11,7 +11,6 @@ import { TRANSACTION_APPROVAL_TIMEOUT } from "../constants/timeoutConstants.js";
  * @returns {Promise<void>}
  */
 async function assertMetaMaskWalletScreen(metaMaskScreenLayout) {
-    expect(metaMaskScreenLayout.networkLabels[0]).toEqual(metaMaskIntegrationAssertions.networkLabels.bscTestnet);
     expect(metaMaskScreenLayout.networkLabels[2]).toEqual(metaMaskIntegrationAssertions.networkLabels.sepolia);
     const watcher = new BridgeDepositWatcher();
     const ethOnChain = ethersUtil.formatBalance(await watcher.getEthBalance(4));

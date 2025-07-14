@@ -47,7 +47,6 @@ export default {
         openNetworkSourceMenu: { css: '.animate-ease-in-out' },
         neuraLabel: { text: 'Neura Testnet', options: { exact: true } },
         sepoliaLabel: { text: 'Sepolia', options: { exact: true } },
-        bscTestnet: { text: 'BSC Testnet', options: { exact: true } },
         activeChain: { css: '.selector-item-active' },
     },
     claimPageDescriptors: {
