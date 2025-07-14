@@ -1,12 +1,15 @@
 name: Neura E2E Automation
 
 on:
+  # ── every 60 minutes ──
   schedule:
     - cron: '0 * * * *'
   push:
     branches: ['main']
+  # ── on any PR targeting main ──
   pull_request:
     branches: ['main']
+  # ── manual trigger with optional inputs ──
   workflow_dispatch:
     inputs:
       spec_file:
