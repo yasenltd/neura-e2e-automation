@@ -44,7 +44,7 @@ test.describe('Sepolia to Neura Bridge UI Automation', () => {
         }
     });
 
-    test('Verify Sepolia to Neura Bridge approving and bridging transaction via UI', { tag: '@scheduledRun' }, async ({ neuraBridgePage, context }) => {
+    test('Verify Sepolia to Neura Bridge approving and bridging transaction via UI', {}, async ({ neuraBridgePage, context }) => {
         test.setTimeout(TEST_TIMEOUT);
 
         const from = process.env.MY_ADDRESS.toLowerCase();
