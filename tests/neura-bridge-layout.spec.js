@@ -7,7 +7,7 @@ dotenv.config();
 
 test.describe('Neura Bridge page validation', () => {
 
-  test('Verify Neura Bridge page without connected wallet', { tag: '@scheduledRun' }, async ({ neuraBridgePage, context }) => {
+  test('Verify Neura Bridge page without connected wallet', {}, async ({ neuraBridgePage, context }) => {
     try {
       await neuraBridgePage.initializeBridgeWithOptions({
         context,
@@ -24,7 +24,7 @@ test.describe('Neura Bridge page validation', () => {
     }
   });
 
-  test('Verify Neura Bridge page without connected wallet after network switch', { tag: '@scheduledRun' }, async ({ neuraBridgePage, context }) => {
+  test('Verify Neura Bridge page without connected wallet after network switch', {}, async ({ neuraBridgePage, context }) => {
     try {
       await neuraBridgePage.initializeBridgeWithOptions({
         context,
@@ -41,7 +41,7 @@ test.describe('Neura Bridge page validation', () => {
     }
   });
 
-  test('Verify Neura Bridge page network switch modal', { tag: '@scheduledRun' }, async ({ neuraBridgePage, context }) => {
+  test('Verify Neura Bridge page network switch modal', {}, async ({ neuraBridgePage, context }) => {
     try {
       await neuraBridgePage.initializeBridgeWithOptions({
         context,
@@ -147,7 +147,7 @@ test.describe('Neura Bridge page validation', () => {
     expect(enteredAmount).toBe(TEST_AMOUNT);
   });
 
-  test('Verify user connects to and disconnects from MetaMask wallet', { tag: '@scheduledRun' }, async ({ neuraBridgePage, context }) => {
+  test('Verify user connects to and disconnects from MetaMask wallet', {}, async ({ neuraBridgePage, context }) => {
     await neuraBridgePage.initializeBridgeWithOptions({
       context,
       walletConnection: {
